@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "start": "node dist/router.js",
+    "buildAndStart": "tsc && node dist/router.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
+  }
+}
