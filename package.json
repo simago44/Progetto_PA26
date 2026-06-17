@@ -1,12 +1,17 @@
 {
+  "name": "progettopa26",
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "start": "node dist/router.js",
-    "buildAndStart": "tsc && node dist/router.js"
+    "start": "nodemon dist/router.js",
+    "buildAndStart": "tsc && nodemon dist/router.js"
   },
   "dependencies": {
     "express": "^5.2.1",
     "typescript": "^6.0.3",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "nodemon": "^3.1.14",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6"

@@ -1,5 +1,5 @@
 services:
-  postgres:
+  db:
     image: postgres:18
     # container_name: postgres_pa26
     restart: unless-stopped
@@ -10,10 +10,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - ${POSTGRES_PORT}:5432
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   redis:
     image: redis:8
@@ -21,7 +27,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${REDIS_PORT}:6379"
+      - ${REDIS_PORT}:6379
 
   node:
     build: .
@@ -33,8 +39,10 @@ services:
     ports:
       - ${NODE_PORT}:3000
     depends_on:
-      - postgres
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   postgres_data:
