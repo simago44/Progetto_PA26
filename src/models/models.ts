@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import { SequelizeConnection } from "../services/sequelize.js";
+import { SequelizeConnection } from "../services/sequelize.ts";
 
 const sequelize = SequelizeConnection.getInstance();
 

@@ -3,15 +3,18 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "nodemon dist/router.js",
-    "buildAndStart": "tsc && nodemon dist/router.js"
+    "build": "tsc",
+    "dev": "nodemon src/router.ts",
+    "start": "node dist/router.js"
   },
   "dependencies": {
     "express": "^5.2.1",
     "typescript": "^6.0.3",
     "sequelize": "^6.37.8",
     "nodemon": "^3.1.14",
-    "pg": "^8.21.0"
+    "pg": "^8.21.0",
+    "ts-node": "^10.9.2",
+    "@types/node": "^25.9.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6"

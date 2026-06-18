@@ -1,6 +1,6 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { SequelizeConnection } from "./services/sequelize.js";
-import { Ship, Ping } from "./models/models.js";
+import express, { type Request, type Response, type NextFunction } from 'express';
+import { SequelizeConnection } from "./services/sequelize.ts";
+import { Ship, Ping } from "./models/models.ts";
 import { Op } from 'sequelize';
 
 // Initialize Express app

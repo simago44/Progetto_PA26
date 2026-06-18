@@ -1,4 +1,4 @@
-import { Dialect, Sequelize } from "sequelize";
+import { Sequelize } from "sequelize";
 
 /**
  * The Singleton class defines the `getInstance` method that lets clients access

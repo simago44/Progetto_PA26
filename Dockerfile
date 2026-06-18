@@ -1,8 +1,10 @@
 FROM node:26
 
 WORKDIR /app
-COPY . .
 
+COPY package*.json ./
 RUN npm install
 
-CMD ["npm", "run", "buildAndStart"]
+COPY . .
+
+CMD ["npm", "run", "dev"]
