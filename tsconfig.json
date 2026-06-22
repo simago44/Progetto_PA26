@@ -39,9 +39,11 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-
-    // Custom options
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "./dist/**/*"
+  ]
 }
