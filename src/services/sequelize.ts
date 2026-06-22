@@ -13,6 +13,7 @@ export class SequelizeConnection {
      * construction calls with the `new` operator.
      */
     private constructor() {
+        // TODO: it's correct to use env variables here?
         const DATABASE_URL = process.env.DATABASE_URL as string;
 
         // Initialize connection

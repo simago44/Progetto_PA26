@@ -39,6 +39,9 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+
+    // Custom options
+    "allowImportingTsExtensions": true
   },
   "exclude": ["node_modules"]
 }

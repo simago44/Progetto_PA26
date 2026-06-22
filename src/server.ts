@@ -1,17 +1,14 @@
-import express, { type Request, type Response, type NextFunction } from 'express';
-import { SequelizeConnection } from "./services/sequelize.ts";
+import express, { type Request, type Response } from 'express';
 import { Ship, Ping } from "./models/models.ts";
 import { Op } from 'sequelize';
+import authRoutes from "./routes/authRoutes.ts";
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
-const DATABASE_URL = process.env.DATABASE_URL;
+const PORT = process.env.NODE_PORT || 3000;
 
-/**
- * Initialize sequelize connection and set singleton instance
- */
-let sequelize = SequelizeConnection.getInstance();
+// Middleware for parsing json bodies
+app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
@@ -21,6 +18,8 @@ app.get('/', (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+app.use("/auth", authRoutes)
 
 const main = async () => {
   //await sequelize.sync()
