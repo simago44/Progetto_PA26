@@ -1,4 +1,3 @@
-import { requiredScopes } from 'express-oauth2-jwt-bearer';
 import { AuthenticationClient, ManagementClient, Management } from "auth0";
 import { Router, type Request, type Response, type NextFunction, type ErrorRequestHandler } from 'express';
 import { checkJwt } from '../middlewares/authMiddleware.ts';
@@ -15,13 +14,6 @@ const Auth0_Roles = {
   admin: "admin",
   user: "user"
 } as const;
-
-const management = new ManagementClient({
-    domain: AUTH0_DOMAIN,
-    audience: AUTH0_AUDIENCE,
-    clientId: AUTH0_CLIENT_ID,
-    clientSecret: AUTH0_CLIENT_SECRET
-});
 
 router.post('/signup', async (req: Request, res: Response) => {
   const client = new ManagementClient({
@@ -53,7 +45,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       roles: [user_role_id]
     });
 
-    res.json({user: user.user_id});
+    res.json({msg: "User created successfully"});
   } catch (err) {
     if (err instanceof Management.BadRequestError) {
       const message = (err?.body as any)?.message;
@@ -139,7 +131,6 @@ router.get('/api/private', checkJwt, (req: Request, res: Response) => {
 const requiredPermissions = (permission: string) => {
   return (req: Request, res: Response, next: Function) => {
     const permissions = (req.auth?.payload.permissions as string[]) || [];
-    console.log(req.auth)
 
     if (!permissions.includes(permission)) {
       return res.status(403).json({ error: "Forbidden" });
@@ -151,7 +142,7 @@ const requiredPermissions = (permission: string) => {
 
 // Protected route with scope - requires 'read:messages' scope
 router.get(
-'/api/private-scoped',
+'/api/private-permissions',
 checkJwt,
 requiredPermissions('read:messages'),
 (req: Request, res: Response) => {

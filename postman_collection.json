@@ -82,7 +82,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auth/api/private-scoped",
+          "raw": "http://{{HOST}}:{{PORT}}/auth/api/private-permissions",
           "protocol": "http",
           "host": [
             "{{HOST}}"
@@ -91,7 +91,36 @@
           "path": [
             "auth",
             "api",
-            "private-scoped"
+            "private-permissions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "signup",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auth/signup",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auth",
+            "signup"
           ]
         }
       },

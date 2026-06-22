@@ -1,6 +1,4 @@
 import express, { type Request, type Response } from 'express';
-import { Ship, Ping } from "./models/models.ts";
-import { Op } from 'sequelize';
 import authRoutes from "./routes/authRoutes.ts";
 
 // Initialize Express app
@@ -20,33 +18,3 @@ app.listen(PORT, () => {
 });
 
 app.use("/auth", authRoutes)
-
-const main = async () => {
-  //await sequelize.sync()
-  // Trova una nave e i suoi pings
-  const nave = await Ship.findOne({
-    where: { mmsi: 247112304 }
-  });
-  console.log(nave ? nave.toJSON() : "nothing...");
-
-  const navi = await Ship.findAll();
-  console.log(navi ? "something..." : "nothing...");
-
-  // Trova un ping e la nave associata
-  const ping = await Ping.findOne({
-    include: Ship
-  });
-  console.log(ping?.toJSON());
-
-  const ships = await Ship.findAll({
-    where: {
-      length: { 
-        [Op.gt]: 100
-      }
-    }
-  }
-  );
-  ships.map(item => console.log(item.toJSON()));
-}
-
-main();
