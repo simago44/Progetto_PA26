@@ -2,6 +2,7 @@
  * Message strings to be returned in the response body
 */
 
+// Errors
 export const noAuthHeader_message: string = "Bad Request - No authorization header";
 export const noPayloadHeader_message: string = "Bad Request - No JSON payload header";
 export const missingToken_message: string = "Bad Request - Missing JWT Token";
@@ -16,3 +17,6 @@ export const serviceUnavailable_message: string = "ERROR - Service unavailable";
 export const badRequest_message: string = "ERROR - Bad request";
 export const duplicateDatetimes_message: string = "Bad Request - Duplicate datetimes";
 export const userNotFound_message: string = "Not Found - User not found";
+
+// Success
+export const userCreatedSuccessfully_message: string = "User created successfully";

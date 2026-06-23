@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import authRoutes from "./routes/authRoutes.ts";
 import exampleRoutes from "./routes/exampleRoutes.ts";
+import { errorHandler } from './middlewares/errorHandler.ts';
 
 // Initialize Express app
 const app = express();
@@ -20,3 +21,5 @@ app.listen(PORT, () => {
 
 app.use("/auth", authRoutes)
 app.use("/", exampleRoutes)
+
+app.use(errorHandler)

@@ -136,3 +136,6 @@ dist
 .pnp.*
 
 package-lock.json
+
+# Postman
+*postman_environment.json

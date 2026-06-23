@@ -1,6 +1,8 @@
-import { AuthenticationClient, ManagementClient, Management } from "auth0";
-import { Router, type Request, type Response, type NextFunction, type ErrorRequestHandler } from 'express';
-import { checkJwt } from '../middlewares/authMiddleware.ts';
+import { AuthenticationClient, ManagementClient } from "auth0";
+import { Router, type Request, type Response, type NextFunction } from 'express';
+import { checkJwt, requiredPermissions } from '../middlewares/authMiddleware.ts';
+import { createError, ErrorEnum, AppError } from "../factory/errorFactory.ts";
+import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
 
 const router = Router();
 
@@ -15,7 +17,21 @@ const Auth0_Roles = {
   user: "user"
 } as const;
 
-router.post('/signup', async (req: Request, res: Response) => {
+function parseAuth0Error(err: unknown): AppError {
+  const e = err as any;
+
+  if (e?.statusCode && e?.body?.message) {
+    return new AppError(e.statusCode, e.body.message, e.constructor?.name);
+  }
+
+  if (err instanceof Error) {
+    return new AppError(ErrorEnum.InternalServer, err.message, err.name);
+  }
+
+  return createError(ErrorEnum.InternalServer);
+}
+
+router.post('/signup', async (req: Request, res: Response, next: NextFunction) => {
   const client = new ManagementClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
@@ -45,30 +61,13 @@ router.post('/signup', async (req: Request, res: Response) => {
       roles: [user_role_id]
     });
 
-    res.json({msg: "User created successfully"});
+    res.json({message: userCreatedSuccessfully_message});
   } catch (err) {
-    if (err instanceof Management.BadRequestError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.UnauthorizedError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.ForbiddenError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.ConflictError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.TooManyRequestsError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else {
-      res.json({err: err});
-    }
+    next(parseAuth0Error(err))
   }
 });
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   const auth0 = new AuthenticationClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
@@ -88,34 +87,17 @@ router.post('/login', async (req: Request, res: Response) => {
 
     res.json({access_token: user.data.access_token});
   } catch (err) {
-    if (err instanceof Management.BadRequestError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.UnauthorizedError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.ForbiddenError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.ConflictError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else if (err instanceof Management.TooManyRequestsError) {
-      const message = (err?.body as any)?.message;
-      res.json({err: message});
-    } else {
-      res.json({err: err});
-    }
+    next(parseAuth0Error(err))
   }
 });
 
 // Public route - no authentication required
 router.get('/api/public', (_req: Request, res: Response) => {
-res.json({
-  message:
-    "Hello from a public endpoint! You don't need to be authenticated to see this.",
-  timestamp: new Date().toISOString(),
-});
+  res.json({
+    message:
+      "Hello from a public endpoint! You don't need to be authenticated to see this.",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Protected route - requires valid access token
@@ -128,50 +110,20 @@ router.get('/api/private', checkJwt, (req: Request, res: Response) => {
   });
 });
 
-const requiredPermissions = (permission: string) => {
-  return (req: Request, res: Response, next: Function) => {
-    const permissions = (req.auth?.payload.permissions as string[]) || [];
-
-    if (!permissions.includes(permission)) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    next();
-  };
-};
-
 // Protected route with scope - requires 'read:messages' scope
 router.get(
-'/api/private-permissions',
-checkJwt,
-requiredPermissions('read:messages'),
-(req: Request, res: Response) => {
-  res.json({
-    message:
-      'Hello from a scoped endpoint! You have the required permission.',
-    user: req.auth?.payload.sub,
-    scope: req.auth?.payload.scope,
-    timestamp: new Date().toISOString(),
-  });
-}
+  '/api/private-permissions',
+  checkJwt,
+  requiredPermissions('read:messages'),
+  (req: Request, res: Response) => {
+    res.json({
+      message:
+        'Hello from a scoped endpoint! You have the required permission.',
+      user: req.auth?.payload.sub,
+      scope: req.auth?.payload.scope,
+      timestamp: new Date().toISOString(),
+    });
+  }
 );
-
-// Error handling middleware
-const errorHandler: ErrorRequestHandler = (
-  err: any,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-  ) => {
-  const status = err.status ?? 500;
-  const message = err.message ?? 'Internal Server Error';
-
-  res.status(status).json({
-    error: err.code ?? 'server_error',
-    message: status === 401 ? 'Authentication required' : message,
-  });
-};
-
-router.use(errorHandler);
 
 export default router;
