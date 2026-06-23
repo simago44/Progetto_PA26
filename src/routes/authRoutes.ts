@@ -1,8 +1,9 @@
 import { AuthenticationClient, ManagementClient } from "auth0";
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { checkJwt, requiredPermissions } from '../middlewares/authMiddleware.ts';
-import { createError, ErrorEnum, AppError, getHTTPStatus } from "../factory/errorFactory.ts";
+import { checkJwt, checkPermission } from '../middlewares/authMiddleware.ts';
+import { createError, ErrorEnum, AppError, getErrorHTTPStatus } from "../factory/errorFactory.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
+import { validateLogin, validateSignup } from "../middlewares/validationMiddleware.ts";
 
 const router = Router();
 
@@ -23,14 +24,16 @@ function parseAuth0Error(err: any): AppError {
   }
 
   if (err instanceof Error) {
-    const statusCode = (err as any)?.statusCode || getHTTPStatus(ErrorEnum.InternalServer);
+    const statusCode = (err as any)?.statusCode || getErrorHTTPStatus(ErrorEnum.InternalServer);
     return new AppError(statusCode, err.message, err.name);
   }
 
   return createError(ErrorEnum.InternalServer);
 }
 
-router.post('/signup', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/signup', 
+  validateSignup,
+  async (req: Request, res: Response, next: NextFunction) => {
   const client = new ManagementClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
@@ -66,7 +69,9 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
   }
 });
 
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/login',
+  validateLogin,
+  async (req: Request, res: Response, next: NextFunction) => {
   const auth0 = new AuthenticationClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
@@ -113,7 +118,7 @@ router.get('/api/private', checkJwt, (req: Request, res: Response) => {
 router.get(
   '/api/private-permissions',
   checkJwt,
-  requiredPermissions('read:messages'),
+  checkPermission('read:messages'),
   (req: Request, res: Response) => {
     res.json({
       message:

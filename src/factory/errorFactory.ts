@@ -50,6 +50,10 @@ export function createError(type: ErrorEnum): AppError {
     return err;
 }
 
-export function getHTTPStatus(type: ErrorEnum): number {
+export function getErrorHTTPStatus(type: ErrorEnum): number {
     return errorMap[type].status
+}
+
+export function getErrorName(type: ErrorEnum): string {
+    return errorMap[type].name
 }

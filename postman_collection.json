@@ -21,6 +21,25 @@
             "packages": {},
             "requests": {}
           }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set(",
+              "    \"USERNAME\",",
+              "    pm.variables.replaceIn(\"{{$randomUserName}}\")",
+              ");",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"PASSWORD\",",
+              "    pm.variables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
         }
       ],
       "request": {
@@ -192,6 +211,14 @@
   "variable": [
     {
       "key": "JWT_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "USERNAME",
+      "value": ""
+    },
+    {
+      "key": "PASSWORD",
       "value": ""
     }
   ]
