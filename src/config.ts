@@ -1,5 +1,22 @@
 import { z } from "zod"
 
+export const log_levels = {
+  crit: 0,
+  error: 1,
+  warn: 2,
+  info: 3,
+  debug: 4
+};
+
+const logLevel = z.enum(Object.keys(log_levels));
+
+const logFormat = z.string()
+  .refine(
+    v => ['%timestamp%', '%level%', '%message%'].every(p => v.includes(p)),
+    { message: 'LOG_FORMAT must contain %timestamp%, %level%, and %message%' }
+  )
+  .default('[%timestamp%] %level%: %message%');
+
 const configSchema = z.object({
   NODE_PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
@@ -9,8 +26,12 @@ const configSchema = z.object({
   AUTH0_CLIENT_ID: z.string(),
   AUTH0_CLIENT_SECRET: z.string(),
   AUTH0_REALM: z.string(),
-  ERRORFILENAME: z.string().default("logs/errors-%DATE%.log"),
-  LOGFILENAME: z.string().default("logs/log.log")
+  ENABLE_LOG_FILE: z.coerce.boolean().default(true),
+  LOG_DIR: z.string().default("./logs"),
+  LOG_FILENAME_PREFIX: z.string().default("express"),
+  CONSOLE_LOG_LEVEL: logLevel.default("debug"),
+  FILE_LOG_LEVEL: logLevel.default("info"),
+  LOG_FORMAT: logFormat
 })
 
 const result = configSchema.safeParse(process.env);
