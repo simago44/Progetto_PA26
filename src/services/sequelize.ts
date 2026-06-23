@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import logger from "../middlewares/logger.ts";
 import { env } from '../config.ts';
 
 /**
@@ -22,7 +23,7 @@ export class SequelizeConnection {
 
         // Test connection
         SequelizeConnection.instance.authenticate().then(() => {
-            console.log('Sequelize connected');
+            logger.info('Sequelize connected');
         });
     }
 
