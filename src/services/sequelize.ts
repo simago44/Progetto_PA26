@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import { env } from '../config.ts';
 
 /**
  * The Singleton class defines the `getInstance` method that lets clients access
@@ -14,7 +15,7 @@ export class SequelizeConnection {
      */
     private constructor() {
         // TODO: it's correct to use env variables here?
-        const DATABASE_URL = process.env.DATABASE_URL as string;
+        const DATABASE_URL = env.DATABASE_URL;
 
         // Initialize connection
         SequelizeConnection.instance = new Sequelize(DATABASE_URL);

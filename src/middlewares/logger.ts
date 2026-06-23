@@ -1,10 +1,10 @@
 // middleware/logger.ts
 import winston from "winston";
 import 'winston-daily-rotate-file';
+import { env } from '../config.ts';
 
-const errorFileName: string = process.env.ERRORFILENAME || "logs/errors-%DATE%.log"
-const logFileName: string = process.env.LOGFILENAME || "logs/log.log"
-
+const errorFileName = env.ERRORFILENAME
+const logFileName = env.LOGFILENAME
 const logger = winston.createLogger({
     level: "info",
     format: winston.format.combine(

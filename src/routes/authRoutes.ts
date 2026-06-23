@@ -4,14 +4,15 @@ import { checkJwt, checkPermission } from '../middlewares/authMiddleware.ts';
 import { createError, ErrorEnum, AppError, getErrorHTTPStatus } from "../factory/errorFactory.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
 import { validateLogin, validateSignup } from "../middlewares/validationMiddleware.ts";
+import { env } from '../config.ts';
 
 const router = Router();
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN as string;
-const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE as string;
-const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID as string;
-const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET as string;
-const AUTH0_REALM = process.env.AUTH0_REALM as string;
+const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
+const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
+const AUTH0_CLIENT_ID = env.AUTH0_CLIENT_ID;
+const AUTH0_CLIENT_SECRET = env.AUTH0_CLIENT_SECRET;
+const AUTH0_REALM = env.AUTH0_REALM;
 
 const Auth0_Roles = {
   admin: "admin",

@@ -2,10 +2,11 @@ import express, { type Request, type Response } from 'express';
 import authRoutes from "./routes/authRoutes.ts";
 import exampleRoutes from "./routes/exampleRoutes.ts";
 import { errorHandler } from './middlewares/errorHandler.ts';
+import { env } from './config.ts';
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.NODE_PORT || 3000;
+const PORT = env.NODE_PORT
 
 // Middleware for parsing json bodies
 app.use(express.json());

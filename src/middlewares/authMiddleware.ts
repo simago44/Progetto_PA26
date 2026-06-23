@@ -1,8 +1,9 @@
 import { auth } from 'express-oauth2-jwt-bearer';
 import { type Request, type Response } from 'express';
+import { env } from '../config.ts';
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN as string;
-const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE as string;
+const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
+const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
 
 export const checkPermission = (permission: string) => {
   return (req: Request, res: Response, next: Function) => {

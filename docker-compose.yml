@@ -41,6 +41,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./dist:/app/dist
+      - ./logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
