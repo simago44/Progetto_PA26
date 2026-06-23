@@ -17,15 +17,14 @@ const Auth0_Roles = {
   user: "user"
 } as const;
 
-function parseAuth0Error(err: unknown): AppError {
-  const e = err as any;
-
-  if (e?.statusCode && e?.body?.message) {
-    return new AppError(e.statusCode, e.body.message, e.constructor?.name);
+function parseAuth0Error(err: any): AppError {
+  if (err?.statusCode && err?.body?.message) {
+    return new AppError(err.statusCode, err.body.message, err.constructor?.name);
   }
 
   if (err instanceof Error) {
-    return new AppError(getHTTPStatus(ErrorEnum.InternalServer), err.message, err.name);
+    const statusCode = (err as any)?.statusCode || getHTTPStatus(ErrorEnum.InternalServer);
+    return new AppError(statusCode, err.message, err.name);
   }
 
   return createError(ErrorEnum.InternalServer);
