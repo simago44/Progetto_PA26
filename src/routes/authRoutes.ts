@@ -1,7 +1,7 @@
 import { AuthenticationClient, ManagementClient } from "auth0";
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { checkJwt, requiredPermissions } from '../middlewares/authMiddleware.ts';
-import { createError, ErrorEnum, AppError } from "../factory/errorFactory.ts";
+import { createError, ErrorEnum, AppError, getHTTPStatus } from "../factory/errorFactory.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
 
 const router = Router();
@@ -25,7 +25,7 @@ function parseAuth0Error(err: unknown): AppError {
   }
 
   if (err instanceof Error) {
-    return new AppError(ErrorEnum.InternalServer, err.message, err.name);
+    return new AppError(getHTTPStatus(ErrorEnum.InternalServer), err.message, err.name);
   }
 
   return createError(ErrorEnum.InternalServer);

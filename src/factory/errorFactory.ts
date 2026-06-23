@@ -49,3 +49,7 @@ export function createError(type: ErrorEnum): AppError {
     const err = new AppError(status, msg, name);
     return err;
 }
+
+export function getHTTPStatus(type: ErrorEnum): number {
+    return errorMap[type].status
+}
