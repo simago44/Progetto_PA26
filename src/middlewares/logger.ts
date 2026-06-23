@@ -1,8 +1,9 @@
 // middleware/logger.ts
 import winston from "winston";
+import 'winston-daily-rotate-file';
 
-const errorFileName: string = process.env.ERRORFILENAME || "logs/log.log"
-const logFileName: string = process.env.LOGFILENAME || "logs/problems.log"
+const errorFileName: string = process.env.ERRORFILENAME || "logs/errors-%DATE%.log"
+const logFileName: string = process.env.LOGFILENAME || "logs/log.log"
 
 const logger = winston.createLogger({
     level: "info",
@@ -16,11 +17,14 @@ const logger = winston.createLogger({
     transports: [
         new winston.transports.Console({
         format: winston.format.combine(
-            winston.format.colorize()
+            winston.format.colorize(),
+            winston.format.printf(({ level, message, timestamp, stack }) => {
+                return `[${timestamp}] ${level}: ${stack || message}`;
+            })
         )
         }),
-        new winston.transports.File({ filename: errorFileName, level: "warn" }),
-        new winston.transports.File({ filename: logFileName })
+        new winston.transports.DailyRotateFile({ filename: errorFileName, level: "warn" }),
+        new winston.transports.DailyRotateFile({ filename: logFileName })
     ]
 });
 
