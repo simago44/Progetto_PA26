@@ -59,8 +59,8 @@ function validateCredentials(zodObject: z.ZodObject) {
       const errorString = `Validation error: ${errorMessages.join("; ")}`;
 
       return next(new AppError(
-        getErrorHTTPStatus(ErrorEnum.MalformedPayload), 
-        errorString, 
+        getErrorHTTPStatus(ErrorEnum.MalformedPayload),
+        errorString,
         getErrorName(ErrorEnum.MalformedPayload)
       ));
     }

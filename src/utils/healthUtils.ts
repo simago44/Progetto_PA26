@@ -40,7 +40,7 @@ const checkDB = async () => {
  * @returns 200 if all services are operational
  * @returns 503 if one or more services are degraded
  */
-export async function healthCheck (_: Request, res: Response, next: NextFunction) : Promise<void> {
+export async function healthCheck(_: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const [auth0, db] = await Promise.allSettled([
       checkAuth0(),

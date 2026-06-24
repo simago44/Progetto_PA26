@@ -44,43 +44,43 @@ function parseAuth0Error(err: any): AppError {
  * @route POST /signup
  * @middleware validateSignup - Validates and sanitizes the request body
  */
-router.post('/signup', 
+router.post('/signup',
   validateSignup,
   async (req: Request, res: Response, next: NextFunction) => {
-  const client = new ManagementClient({
+    const client = new ManagementClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
       clientSecret: AUTH0_CLIENT_SECRET
+    });
+
+    const username = req.body.username as string;
+    const password = req.body.password as string;
+
+    try {
+      // TODO: fetch roles id and assign it to Auth0_Roles
+      const roles = await client.roles.list({
+        name_filter: Auth0_Roles.user
+      });
+      const user_role = roles.data.find(r => r.name === Auth0_Roles.user);
+      const user_role_id = user_role?.id as string;
+
+      const user = await client.users.create({
+        connection: AUTH0_REALM,
+        username: username,
+        password: password
+      })
+
+      const user_id = user.user_id as string;
+
+      await client.users.roles.assign(user_id, {
+        roles: [user_role_id]
+      });
+
+      res.json({ message: userCreatedSuccessfully_message });
+    } catch (err) {
+      next(parseAuth0Error(err))
+    }
   });
-
-  const username = req.body.username as string;
-  const password = req.body.password as string;
-
-  try {
-    // TODO: fetch roles id and assign it to Auth0_Roles
-    const roles = await client.roles.list({
-      name_filter: Auth0_Roles.user
-    });
-    const user_role = roles.data.find(r => r.name === Auth0_Roles.user);
-    const user_role_id = user_role?.id as string;
-
-    const user = await client.users.create({
-      connection: AUTH0_REALM,
-      username: username,
-      password: password
-    })
-
-    const user_id = user.user_id as string;
-
-    await client.users.roles.assign(user_id, {
-      roles: [user_role_id]
-    });
-
-    res.json({message: userCreatedSuccessfully_message});
-  } catch (err) {
-    next(parseAuth0Error(err))
-  }
-});
 
 /**
  * Authenticates a user via Auth0 Resource Owner Password Grant.
@@ -92,28 +92,28 @@ router.post('/signup',
 router.post('/login',
   validateLogin,
   async (req: Request, res: Response, next: NextFunction) => {
-  const auth0 = new AuthenticationClient({
+    const auth0 = new AuthenticationClient({
       domain: AUTH0_DOMAIN,
       clientId: AUTH0_CLIENT_ID,
       clientSecret: AUTH0_CLIENT_SECRET
-  });
-
-  const username = req.body.username as string;
-  const password = req.body.password as string;
-
-  try {
-    const user = await auth0.oauth.passwordGrant({
-      realm: AUTH0_REALM,
-      audience: AUTH0_AUDIENCE,
-      username: username,
-      password: password
     });
 
-    res.json({access_token: user.data.access_token});
-  } catch (err) {
-    next(parseAuth0Error(err))
-  }
-});
+    const username = req.body.username as string;
+    const password = req.body.password as string;
+
+    try {
+      const user = await auth0.oauth.passwordGrant({
+        realm: AUTH0_REALM,
+        audience: AUTH0_AUDIENCE,
+        username: username,
+        password: password
+      });
+
+      res.json({ access_token: user.data.access_token });
+    } catch (err) {
+      next(parseAuth0Error(err))
+    }
+  });
 
 // Public route - no authentication required
 router.get('/api/public', (_req: Request, res: Response) => {

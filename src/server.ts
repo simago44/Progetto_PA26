@@ -3,13 +3,16 @@
  * Registers middleware, routes, and starts the HTTP server.
  */
 
-import express, { type NextFunction, type Request, type Response } from 'express';
+import express from 'express';
 import authRoutes from "./routes/authRoutes.ts";
 import exampleRoutes from "./routes/exampleRoutes.ts";
 import { errorHandler } from './middlewares/errorHandler.ts';
 import logger from './middlewares/logger.ts';
 import { env } from './config.ts';
 import { healthCheck } from './utils/healthUtils.ts';
+import { initDb } from './services/initDb.ts';
+
+await initDb();
 
 // Initialize Express app
 const app = express();

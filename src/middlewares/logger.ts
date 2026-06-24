@@ -53,7 +53,7 @@ if (ENABLE_LOG_FILE) {
     new DailyRotateFile({
       format: buildFormat(),
       dirname: LOG_DIR,
-      filename: LOG_FILENAME_PREFIX+"-%DATE%.log",
+      filename: LOG_FILENAME_PREFIX + "-%DATE%.log",
       datePattern: 'YYYY-MM-DD',
       level: FILE_LOG_LEVEL
     }),
