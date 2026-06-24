@@ -19,11 +19,8 @@ export class SequelizeConnection {
         const DATABASE_URL = env.DATABASE_URL;
 
         // Initialize connection
-        SequelizeConnection.instance = new Sequelize(DATABASE_URL);
-
-        // Test connection
-        SequelizeConnection.instance.authenticate().then(() => {
-            logger.info('Sequelize connected');
+        SequelizeConnection.instance = new Sequelize(DATABASE_URL, {
+            logging: false
         });
     }
 

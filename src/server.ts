@@ -5,6 +5,7 @@ import { errorHandler } from './middlewares/errorHandler.ts';
 import logger from './middlewares/logger.ts';
 import { createError, ErrorEnum } from './factory/errorFactory.ts';
 import { env } from './config.ts';
+import { healthCheck } from './utils/healthUtils.ts';
 
 // Initialize Express app
 const app = express();
@@ -13,9 +14,7 @@ const PORT = env.NODE_PORT
 // Middleware for parsing json bodies
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-  next(createError(ErrorEnum.MissingToken))
-});
+app.get('/health', healthCheck);
 
 // Start server
 app.listen(PORT, () => {
