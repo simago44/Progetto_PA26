@@ -5,6 +5,13 @@ import { env } from '../config.ts';
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
 const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
 
+/**
+ * Middleware that checks if the authenticated user has a specific permission.
+ * Reads permissions from the JWT payload set by `checkJwt`.
+ * 
+ * @param permission - The required permission (e.g. `read:users`)
+ * @throws {AppError} 403 Forbidden if the permission is missing
+ */
 export const checkPermission = (permission: string) => {
   return (req: Request, res: Response, next: Function) => {
     const permissions = (req.auth?.payload.permissions as string[]) || [];
@@ -17,7 +24,10 @@ export const checkPermission = (permission: string) => {
   };
 };
 
-// Configure JWT validation middleware
+/**
+ * Middleware that validates the JWT token in the Authorization header.
+ * Uses Auth0 as the issuer and validates against the configured audience.
+ */
 export const checkJwt = auth({
   issuerBaseURL: `https://${AUTH0_DOMAIN}`,
   audience: AUTH0_AUDIENCE,

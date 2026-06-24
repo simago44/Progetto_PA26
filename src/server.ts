@@ -1,3 +1,8 @@
+/**
+ * Entry point of the Express application.
+ * Registers middleware, routes, and starts the HTTP server.
+ */
+
 import express, { type NextFunction, type Request, type Response } from 'express';
 import authRoutes from "./routes/authRoutes.ts";
 import exampleRoutes from "./routes/exampleRoutes.ts";

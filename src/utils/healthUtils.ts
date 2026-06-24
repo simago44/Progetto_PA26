@@ -9,6 +9,12 @@ const authClient = new AuthenticationClient({
   clientSecret: env.AUTH0_CLIENT_SECRET,
 });
 
+/**
+ * Verifies Auth0 connectivity and credential validity
+ * by performing a client credentials grant.
+ * 
+ * @throws {Error} If Auth0 is unreachable or credentials are invalid
+ */
 const checkAuth0 = async () => {
   await authClient.oauth.clientCredentialsGrant({
     audience: env.AUTH0_AUDIENCE,
@@ -16,12 +22,24 @@ const checkAuth0 = async () => {
   return 'ok';
 };
 
+/**
+ * Verifies the database connectivity by running a test query.
+ * 
+ * @throws {Error} If the database is unreachable or misconfigured
+ */
 const checkDB = async () => {
   const sequelize = SequelizeConnection.getInstance();
   await sequelize.authenticate();
   return 'ok';
 };
 
+/**
+ * Health check endpoint that verifies the status of all critical services.
+ * 
+ * @route GET /health
+ * @returns 200 if all services are operational
+ * @returns 503 if one or more services are degraded
+ */
 export async function healthCheck (_: Request, res: Response, next: NextFunction) : Promise<void> {
   try {
     const [auth0, db] = await Promise.allSettled([

@@ -19,6 +19,12 @@ const Auth0_Roles = {
   user: "user"
 } as const;
 
+/**
+ * Parses an Auth0 error into an `AppError` with the appropriate HTTP status.
+ * Falls back to a 500 InternalServer error if the error is unrecognized.
+ * 
+ * @param err - The error thrown by the Auth0 SDK
+ */
 function parseAuth0Error(err: any): AppError {
   if (err?.statusCode && err?.body?.message) {
     return new AppError(err.statusCode, err.body.message, err.constructor?.name);
@@ -32,6 +38,12 @@ function parseAuth0Error(err: any): AppError {
   return createError(ErrorEnum.InternalServer);
 }
 
+/**
+ * Registers a new user on Auth0 and assigns the default user role.
+ * 
+ * @route POST /signup
+ * @middleware validateSignup - Validates and sanitizes the request body
+ */
 router.post('/signup', 
   validateSignup,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -70,6 +82,13 @@ router.post('/signup',
   }
 });
 
+/**
+ * Authenticates a user via Auth0 Resource Owner Password Grant.
+ * Returns an access token on success.
+ * 
+ * @route POST /login
+ * @middleware validateLogin - Validates and sanitizes the request body
+ */
 router.post('/login',
   validateLogin,
   async (req: Request, res: Response, next: NextFunction) => {

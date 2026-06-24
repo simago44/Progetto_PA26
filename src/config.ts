@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+/** Custom log levels for winston, ordered by severity. */
 export const log_levels = {
   crit: 0,
   error: 1,
@@ -41,4 +42,5 @@ if (!result.success) {
   process.exit(1);
 }
 
+/** Parsed and validated environment configuration. Exits the process if validation fails. */
 export const env = result.data;

@@ -3,16 +3,18 @@ import logger from "../middlewares/logger.ts";
 import { env } from '../config.ts';
 
 /**
- * The Singleton class defines the `getInstance` method that lets clients access
- * the unique singleton instance.
+ * Manages a single shared Sequelize connection for the application.
+ * Use `getInstance()` to access the connection.
+ * 
+ * @see getInstance
  */
 export class SequelizeConnection {
-    // Connection instance
+    /** The shared Sequelize instance */
     private static instance: Sequelize;
 
-    /**
-     * The Singleton's constructor should always be private to prevent direct
-     * construction calls with the `new` operator.
+     /**
+     * Private constructor — use `getInstance()` instead.
+     * Initializes the Sequelize connection using the `DATABASE_URL` environment variable.
      */
     private constructor() {
         // TODO: it's correct to use env variables here?
@@ -25,8 +27,7 @@ export class SequelizeConnection {
     }
 
     /**
-     * The static method that controls the access to the singleton instance.
-     *
+     * Returns the shared Sequelize instance, creating it if it doesn't exist yet.
      */
     public static getInstance(): Sequelize {
         if (!SequelizeConnection.instance) {

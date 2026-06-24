@@ -1,6 +1,12 @@
 // factory/errorFactory.ts
 import * as Message from "./messageStrings.ts";
 
+/**
+ * Base error class for all application errors.
+ * Extends the native Error with an HTTP status code.
+ * 
+ * @property status - The HTTP status code associated with the error
+ */
 export class AppError extends Error {
     status: number;
 
@@ -11,6 +17,10 @@ export class AppError extends Error {
     }
 }
 
+/**
+ * Enum of all possible application errors.
+ * Use with `createError()` to generate the corresponding `AppError`.
+ */
 export const ErrorEnum = {
     MissingToken: 0,
     InvalidToken: 1,
@@ -44,16 +54,29 @@ const errorMap: Record<ErrorEnum, { status: number; msg: string; name: string }>
     [ErrorEnum.ServiceUnavailable]: { status: 503, msg: Message.serviceUnavailable_message, name: "ServiceUnavailableError" },
 };
 
+/**
+ * Creates an `AppError` from the given error type.
+ * @param type - The error type from `ErrorEnum`
+ * @returns An `AppError` with the corresponding status, message and name
+ */
 export function createError(type: ErrorEnum): AppError {
     const { status, msg, name } = errorMap[type];
     const err = new AppError(status, msg, name);
     return err;
 }
 
+/**
+ * Returns the HTTP status code for the given error type.
+ * @param type - The error type from `ErrorEnum`
+ */
 export function getErrorHTTPStatus(type: ErrorEnum): number {
     return errorMap[type].status
 }
 
+/**
+ * Returns the error name for the given error type.
+ * @param type - The error type from `ErrorEnum`
+ */
 export function getErrorName(type: ErrorEnum): string {
     return errorMap[type].name
 }

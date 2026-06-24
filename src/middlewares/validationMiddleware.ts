@@ -2,6 +2,7 @@ import { type NextFunction, type Request, type Response } from 'express';
 import { AppError, createError, ErrorEnum, getErrorHTTPStatus, getErrorName } from '../factory/errorFactory.ts';
 import { z } from "zod";
 
+/** Zod schema for validating signup request body. */
 export const signupSchema = z.object({
   username: z
     .string()
@@ -23,6 +24,7 @@ export const signupSchema = z.object({
     .regex(/[!@#$%^&*]/, "Password must contain a special character (!@#$%^&*)")
 });
 
+/** Zod schema for validating login request body. */
 export const loginSchema = z.object({
   username: z
     .string()
@@ -37,6 +39,13 @@ export const loginSchema = z.object({
     .max(1000, "Invalid username or password")
 });
 
+/**
+ * Creates a validation middleware for the given Zod schema.
+ * On success, overwrites `req.body` with the sanitized and transformed data.
+ * On failure, passes a `MalformedPayload` AppError to `next()`.
+ * 
+ * @param zodObject - The Zod schema to validate against
+ */
 function validateCredentials(zodObject: z.ZodObject) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = zodObject.safeParse(req.body);
@@ -63,5 +72,8 @@ function validateCredentials(zodObject: z.ZodObject) {
   };
 }
 
+/** Middleware that validates and sanitizes the signup request body. */
 export const validateSignup = validateCredentials(signupSchema);
+
+/** Middleware that validates and sanitizes the login request body. */
 export const validateLogin = validateCredentials(loginSchema);

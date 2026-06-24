@@ -9,6 +9,14 @@ const LOG_FILENAME_PREFIX = env.LOG_FILENAME_PREFIX;
 const CONSOLE_LOG_LEVEL = env.CONSOLE_LOG_LEVEL;
 const FILE_LOG_LEVEL = env.FILE_LOG_LEVEL;
 
+/**
+ * Builds a winston printf format from a template string.
+ * Supports the placeholders: `%timestamp%`, `%level%`, `%message%`.
+ * If the log entry has a stack trace, it is appended below the message.
+ * 
+ * @param template - The format template string from config
+ * @returns A winston printf format which follows the @param template
+ */
 function buildPrintfTemplate(template: string): winston.Logform.Format {
   return winston.format.printf(({ level, message, timestamp, stack }) => {
     const body = stack ? `${message}\n${stack}` : message;
@@ -19,6 +27,9 @@ function buildPrintfTemplate(template: string): winston.Logform.Format {
   });
 }
 
+/**
+ * Builds the base winston log format combining timestamp, error stack, and printf template.
+ */
 function buildFormat() {
   return winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
