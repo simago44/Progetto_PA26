@@ -1,6 +1,7 @@
 import { auth } from 'express-oauth2-jwt-bearer';
-import { type Request, type Response } from 'express';
+import { type NextFunction, type Request, type Response } from 'express';
 import { env } from '../config.ts';
+import { createError, ErrorEnum } from '../factory/errorFactory.ts';
 
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
 const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
@@ -13,11 +14,11 @@ const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
  * @throws {AppError} 403 Forbidden if the permission is missing
  */
 export const checkPermission = (permission: string) => {
-  return (req: Request, res: Response, next: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const permissions = (req.auth?.payload.permissions as string[]) || [];
 
     if (!permissions.includes(permission)) {
-      return res.status(403).json({ error: "Forbidden" });
+      next(createError(ErrorEnum.Forbidden))
     }
 
     next();
