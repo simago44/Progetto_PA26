@@ -8,7 +8,6 @@ import authRoutes from "./routes/authRoutes.ts";
 import exampleRoutes from "./routes/exampleRoutes.ts";
 import { errorHandler } from './middlewares/errorHandler.ts';
 import logger from './middlewares/logger.ts';
-import { createError, ErrorEnum } from './factory/errorFactory.ts';
 import { env } from './config.ts';
 import { healthCheck } from './utils/healthUtils.ts';
 
@@ -30,3 +29,5 @@ app.use("/auth", authRoutes)
 app.use("/", exampleRoutes)
 
 app.use(errorHandler)
+
+export { app };
