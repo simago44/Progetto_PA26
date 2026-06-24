@@ -4,6 +4,5 @@ import { AppError } from "../factory/errorFactory.ts";
 import logger from "./logger.ts";
 
 export function errorHandler(err: AppError, req: Request, res: Response, next: NextFunction): void {
-    logger.http(`${err.name}: ${err.message}`)
     res.status(err.status).json({ error: err.message });
 }

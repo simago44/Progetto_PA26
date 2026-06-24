@@ -30,7 +30,10 @@ function buildFormat() {
 const transports: winston.transport[] = [];
 
 transports.push(new winston.transports.Console({
-  format: buildFormat(),
+  format: winston.format.combine(
+    winston.format.colorize(),
+    buildFormat(),
+  ),
   level: CONSOLE_LOG_LEVEL
 }));
 
