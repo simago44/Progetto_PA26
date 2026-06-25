@@ -10,6 +10,7 @@ import { DataTypes, Model } from 'sequelize';
 import { SequelizeConnection } from '../services/sequelize.ts';
 import type { User } from './User.ts';
 import type { Bid } from './Bid.ts';
+import { AuctionStatus, AuctionType, getAuctionStatus } from './AuctionUtils.ts';
 
 const sequelize = SequelizeConnection.getInstance();
 
@@ -22,7 +23,7 @@ export class Auction extends Model<
   declare startAt: Date;
   declare endAt: CreationOptional<Date>;
   declare startPrice: number;
-  declare type: string;
+  declare type: AuctionType;
   declare minimumIncrement: CreationOptional<number>;
   declare decrementPrice: CreationOptional<number>;
   declare decrementTime: CreationOptional<number>;
@@ -33,6 +34,8 @@ export class Auction extends Model<
   declare static associations: {
     bids: Association<Auction, Bid>;
   };
+
+  get status(): NonAttribute<AuctionStatus> { return getAuctionStatus(this) }
 }
 
 Auction.init(
