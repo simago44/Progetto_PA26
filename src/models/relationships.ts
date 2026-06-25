@@ -42,5 +42,15 @@ Auction.belongsTo(User, {
     name: 'winnerId'
   }
 });
+User.belongsToMany(Auction, { 
+  through: Bid, 
+  foreignKey: 'userId', 
+  otherKey: 'auctionId' 
+});
+Auction.belongsToMany(User, { 
+  through: Bid,
+  foreignKey: 'auctionId',
+  otherKey: 'userId'
+});
 
 export { User, Bid, Auction };

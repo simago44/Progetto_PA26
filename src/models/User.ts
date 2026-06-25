@@ -8,22 +8,27 @@ import type {
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize.ts';
 import type { Bid } from './Bid.ts'
+import type { Auction } from './Auction.ts';
 
 const newUserTokens = 100;
 
 export class User extends Model<
-  InferAttributes<User, { omit: 'bids' }>,
-  InferCreationAttributes<User, { omit: 'bids' }>
+  InferAttributes<User, { omit: 'bids' | 'auctions' }>,
+  InferCreationAttributes<User, { omit: 'bids' | 'auctions' }>
+  
 > {
   declare id: string;
   declare tokens: CreationOptional<number>;
   declare username: string;
 
-  declare bids?: NonAttribute<Bid[]>;
+  declare bids: NonAttribute<Bid[]>;
+  declare auctions: NonAttribute<Auction[]>;
 
   declare static associations: {
     bids: Association<User, Bid>;
+    auctions: Association<User, Auction>;
   };
+
 }
 
 User.init(
