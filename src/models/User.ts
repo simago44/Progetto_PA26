@@ -21,8 +21,8 @@ export class User extends Model<
   declare tokens: CreationOptional<number>;
   declare username: string;
 
-  declare bids: NonAttribute<Bid[]>;
-  declare auctions: NonAttribute<Auction[]>;
+  declare bids?: NonAttribute<Bid[]>;
+  declare auctions?: NonAttribute<Auction[]>;
 
   declare static associations: {
     bids: Association<User, Bid>;

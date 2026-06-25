@@ -4,13 +4,16 @@ import type {
   CreationOptional,
   NonAttribute,
   Association,
-  ForeignKey
+  ForeignKey,
+  HasManyGetAssociationsMixin,
+  HasManyAddAssociationMixin,
+  HasManyCreateAssociationMixin
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize.ts';
 import type { User } from './User.ts';
 import type { Bid } from './Bid.ts';
-import { AuctionStatus, AuctionType, getAuctionStatus } from './AuctionUtils.ts';
+import { AuctionStatus, AuctionType, getAuctionStatus, getMsToEnd } from './AuctionUtils.ts';
 
 const defaultDelayBeforeEnding = 5;
 
@@ -33,13 +36,18 @@ export class Auction extends Model<
   declare winnerId: CreationOptional<ForeignKey<User['id']>>;
   declare finalPrice: CreationOptional<number>;
 
+  declare getBids: HasManyGetAssociationsMixin<Bid>;
+  declare addBid: HasManyAddAssociationMixin<Bid, number>;
+  declare createBid: HasManyCreateAssociationMixin<Bid>;
+
   declare bids?: NonAttribute<Bid[]>;
 
   declare static associations: {
     bids: Association<Auction, Bid>;
   };
 
-  get status(): NonAttribute<AuctionStatus> { return getAuctionStatus(this) }
+  get status(): NonAttribute<AuctionStatus> { return getAuctionStatus(this); }
+  //get msToEnd(): NonAttribute<number> { return getMsToEnd(this); }
 }
 
 Auction.init(
