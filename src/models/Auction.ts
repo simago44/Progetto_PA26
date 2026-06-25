@@ -26,6 +26,7 @@ export class Auction extends Model<
   declare decrementPrice: CreationOptional<number>;
   declare decrementTime: CreationOptional<number>;
   declare minimumPrice: CreationOptional<number>;
+  declare hasEnded: CreationOptional<boolean>;
   declare winnerId: CreationOptional<ForeignKey<User['id']>>;
   declare finalPrice: CreationOptional<number>;
 
@@ -106,6 +107,11 @@ Auction.init(
       validate: {
         min: 0
       }
+    },
+    hasEnded: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     },
     finalPrice: {
       type: DataTypes.INTEGER,
