@@ -3,6 +3,7 @@ import sequelize from "../services/sequelize.ts";
 import { Auction } from "./Auction.ts";
 import { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
+import { col, Op, where } from "sequelize";
 
 export const AuctionType = {
   English: 'english',
@@ -49,10 +50,10 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       return { hasEnded: false, nextCheck: finishTime };
 
     case AuctionType.Dutch:
-      if(auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if(auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
-      if(auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
-      
+      if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
+      if (auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
+      if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
+
       if (bids.length > 0) return hasEndedObj;
 
       //Calculate the finish time
@@ -63,8 +64,8 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
       //If the auction has not started yet, it cannot be ended
-      if(getAuctionStatus(auction) === AuctionStatus.NotStarted)
-        return { hasEnded: false, nextCheck: finishTime}
+      if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
+        return { hasEnded: false, nextCheck: finishTime }
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
@@ -106,10 +107,10 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       return finishTime.getTime() - now.getTime(); // negative if past
 
     case AuctionType.Dutch:
-      if(auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if(auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
-      if(auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
-      
+      if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
+      if (auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
+      if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
+
       if (bids.length > 0) return -1;
 
       //Calculate the finish time
@@ -120,7 +121,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
       //If the auction has not started yet, it cannot be ended
-      if(getAuctionStatus(auction) === AuctionStatus.NotStarted) return finishTime.getTime() - now.getTime();
+      if (getAuctionStatus(auction) === AuctionStatus.NotStarted) return finishTime.getTime() - now.getTime();
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
@@ -142,17 +143,13 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
 
 export async function getWinningBid(auction: Auction): Promise<{ bid: Bid, finalPrice: number } | null> {
   // get only bids from user with enought tokens
-  const bids = await auction.getBids();
-
-  bids.filter(async (bid) => {
-    const user = await User.findOne({ where: { id: bid.userId } });
-    if (!user) return false;
-    return user.tokens >= bid.bidPrice;
-  });
-  
   // descending order based on bidPrice
-  bids.sort((a, b) => {
-    return b.bidPrice - a.bidPrice;
+  const bids = await auction.getBids({
+    include: [{ model: User, required: true, },],
+    where: where(col("User.tokens"), {
+      [Op.gte]: col("bidPrice"),
+    }),
+    order: [["bidPrice", "DESC"]],
   });
 
   const higherBid = bids[0];
@@ -163,7 +160,7 @@ export async function getWinningBid(auction: Auction): Promise<{ bid: Bid, final
   switch (auction.type) {
     case AuctionType.English:
     case AuctionType.Dutch:
-    case AuctionType.FirstPrice: 
+    case AuctionType.FirstPrice:
       return { bid: higherBid, finalPrice: higherBid.bidPrice };
 
     case AuctionType.SecondPrice:

@@ -10,14 +10,11 @@ export async function initDb() {
   await sequelize.sync({ force: true });
   //await sequelize.sync();
 
-  /*
   await User.create({
     id: "id",
     username: "username"
   })
-    */ 
 
-  /*
   const newAuction = await Auction.create({
     startAt: new Date(Date.now()+50),
     endAt: new Date(Date.now()+5000),
@@ -35,5 +32,4 @@ export async function initDb() {
     auctionId: newAuction.id,
     bidPrice: 100
   })
-    */
 }
