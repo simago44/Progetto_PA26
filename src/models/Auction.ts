@@ -12,6 +12,8 @@ import type { User } from './User.ts';
 import type { Bid } from './Bid.ts';
 import { AuctionStatus, AuctionType, getAuctionStatus } from './AuctionUtils.ts';
 
+const defaultDelayBeforeEnding = 5;
+
 export class Auction extends Model<
   InferAttributes<Auction, { omit: 'bids' }>,
   InferCreationAttributes<Auction, { omit: 'bids' }>
@@ -26,6 +28,7 @@ export class Auction extends Model<
   declare decrementPrice: CreationOptional<number>;
   declare decrementTime: CreationOptional<number>;
   declare minimumPrice: CreationOptional<number>;
+  declare delayBeforeEnding: CreationOptional<number>;
   declare hasEnded: CreationOptional<boolean>;
   declare winnerId: CreationOptional<ForeignKey<User['id']>>;
   declare finalPrice: CreationOptional<number>;
@@ -104,6 +107,13 @@ Auction.init(
     },
     minimumPrice: {
       type: DataTypes.INTEGER,
+      validate: {
+        min: 0
+      }
+    },
+    delayBeforeEnding: {
+      type: DataTypes.INTEGER,
+      defaultValue: defaultDelayBeforeEnding,
       validate: {
         min: 0
       }

@@ -7,7 +7,7 @@ export const log_levels = {
   warn: 2,
   info: 3,
   debug: 4
-};
+} as const;
 
 const logLevel = z.enum(Object.keys(log_levels));
 
