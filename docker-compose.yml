@@ -45,6 +45,7 @@ services:
       - ./src:/app/src
       - ./dist:/app/dist
       - ./logs:/app/logs
+      - ./tests:/app/tests
     depends_on:
       db:
         condition: service_healthy

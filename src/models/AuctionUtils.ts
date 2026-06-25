@@ -1,3 +1,4 @@
+import logger from "../middlewares/logger.ts";
 import { Auction } from "./Auction.ts";
 
 export const AuctionType = {
@@ -17,7 +18,7 @@ export type AuctionStatus = typeof AuctionStatus[keyof typeof AuctionStatus];
 
 export function getAuctionStatus(auction: Auction): AuctionStatus {
   if (auction.hasEnded) return AuctionStatus.Ended;
-  return (auction.startAt >= new Date()) ? AuctionStatus.InProgress : AuctionStatus.NotStarted;
+  return (auction.startAt <= new Date()) ? AuctionStatus.InProgress : AuctionStatus.NotStarted;
 }
 
 export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nextCheck: Date | null; } {
@@ -45,21 +46,32 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       return { hasEnded: false, nextCheck: finishTime };
 
     case AuctionType.Dutch:
+      if(auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
+      if(auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
+      if(auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
+      
       if (bids.length > 0) return hasEndedObj;
 
-      // Prezzo corrente
-      const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementTime! * 60 * 1000));
-      const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
-
-      // Se il prezzo ha raggiunto o superato il minimo, invenduto
-      if (currentPrice <= auction.minimumPrice!) return hasEndedObj;
-
+      //Calculate the finish time
       const priceRange = auction.startPrice - auction.minimumPrice!;
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
       const decrementIntervalMs = auction.decrementTime! * 60 * 1000;
       const durationMs = decrementsNeeded * decrementIntervalMs;
       finishTime = new Date(auction.startAt.getTime() + durationMs);
+
+      //If the auction has not started yet, it cannot be ended
+      if(getAuctionStatus(auction) === AuctionStatus.NotStarted)
+        return { hasEnded: false, nextCheck: finishTime}
+
+      // Current price
+      const elapsed = now.getTime() - auction.startAt.getTime();
+      const decrements = Math.floor(elapsed / (auction.decrementTime! * 60 * 1000));
+      const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
+
+      /** If the current price is less than minimumPrice,
+       * The auction is ended in not selled case
+       * */
+      if (currentPrice <= auction.minimumPrice!) return hasEndedObj;
 
       return { hasEnded: false, nextCheck: finishTime };
     
@@ -69,43 +81,3 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       return hasEndedObj;
   }
 }
-
-/*export function getAuctionStatus(auction: Auction): AuctionStatus {
-  const now = new Date();
-  const bids = auction.bids ?? [];
-  if (now < auction.startAt) return AuctionStatus.NotStarted;
-
-  switch (auction.type) {
-    case AuctionType.FirstPrice:
-    case AuctionType.SecondPrice:
-      if (now < auction.endAt) return AuctionStatus.InProgress;
-      return AuctionStatus.Ended;
-    case AuctionType.English:
-      if (now < auction.endAt) return AuctionStatus.InProgress;
-      if (bids.length === 0) return AuctionStatus.Ended;
-
-      const lastBid = bids.reduce((latest, bid) =>
-        bid.createdAt > latest.createdAt ? bid : latest
-      );
-      const fiveMinutes = 5 * 60 * 1000;
-      const timeSinceLastBid = now.getTime() - lastBid.createdAt.getTime();
-
-      if (timeSinceLastBid < fiveMinutes) return AuctionStatus.InProgress;
-      return AuctionStatus.Ended;
-    case AuctionType.Dutch:
-      //se c'è un'offerta, qualcuno ha accettato il prezzo
-      if (bids.length > 0) return AuctionStatus.Ended;
-
-      // Prezzo corrente
-      const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementTime! * 60 * 1000));
-      const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
-
-      // Se il prezzo ha raggiunto o superato il minimo, invenduto
-      if (currentPrice <= auction.minimumPrice!) return AuctionStatus.Ended;
-
-      return AuctionStatus.InProgress;
-
-  }
-  return AuctionStatus.Ended
-} */
