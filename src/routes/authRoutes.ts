@@ -4,7 +4,7 @@ import { checkJwt, checkPermission } from '../middlewares/authMiddleware.ts';
 import { createError, ErrorEnum, AppError, getErrorHTTPStatus } from "../factory/errorFactory.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
 import { validateLogin, validateSignup } from "../middlewares/validationMiddleware.ts";
-import { env } from '../config.ts';
+import env from '../config.ts';
 
 const router = Router();
 

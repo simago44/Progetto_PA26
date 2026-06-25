@@ -7,12 +7,10 @@ import type {
   ForeignKey
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import { SequelizeConnection } from '../services/sequelize.ts';
+import sequelize from '../services/sequelize.ts';
 import type { User } from './User.ts';
 import type { Bid } from './Bid.ts';
 import { AuctionStatus, AuctionType, getAuctionStatus } from './AuctionUtils.ts';
-
-const sequelize = SequelizeConnection.getInstance();
 
 export class Auction extends Model<
   InferAttributes<Auction, { omit: 'bids' }>,
@@ -28,6 +26,8 @@ export class Auction extends Model<
   declare decrementPrice: CreationOptional<number>;
   declare decrementTime: CreationOptional<number>;
   declare minimumPrice: CreationOptional<number>;
+  declare winnerId: CreationOptional<ForeignKey<User['id']>>;
+  declare finalPrice: CreationOptional<number>;
 
   declare bids?: NonAttribute<Bid[]>;
 
@@ -41,30 +41,77 @@ export class Auction extends Model<
 Auction.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true
     },
-    startAt: DataTypes.DATE,
-    endAt: DataTypes.DATE,
+    startAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isAfterNow(startAt: Date) {
+          if (startAt <= new Date()) {
+            throw new Error('startAt must be in the future');
+          }
+        },
+        isBeforeEndAt(startAt: Date) {
+          if (startAt >= this.endAt) {
+            throw new Error('startAt must be before endAt');
+          }
+        },
+      }
+    },
+    endAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isAfterStartAt(endAt: Date) {
+          if (endAt <= this.startAt) {
+            throw new Error('endAt must be after startAt');
+          }
+        },
+      }
+    },
     startPrice: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1
+      }
     },
     type: {
-      type: DataTypes.STRING(64),
+      type: DataTypes.ENUM(...Object.values(AuctionType)),
       allowNull: false
     },
     minimumIncrement: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 1
+      }
     },
     decrementPrice: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 1
+      }
     },
     decrementTime: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 60*1000 // 60 secondi
+      }
     },
     minimumPrice: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 0
+      }
+    },
+    finalPrice: {
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 1
+      }
     }
   },
   {

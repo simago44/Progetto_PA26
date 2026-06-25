@@ -5,11 +5,9 @@ import type {
   ForeignKey,
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import { SequelizeConnection } from '../services/sequelize.ts';
+import sequelize from '../services/sequelize.ts';
 import type { User } from './User.ts';
 import type { Auction } from './Auction.ts';
-
-const sequelize = SequelizeConnection.getInstance();
 
 export class Bid extends Model<InferAttributes<Bid>, InferCreationAttributes<Bid>> {
   declare id: CreationOptional<number>;
@@ -24,13 +22,20 @@ export class Bid extends Model<InferAttributes<Bid>, InferCreationAttributes<Bid
 Bid.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true
     },
-    createdAt: DataTypes.DATE,
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
     bidPrice: {
-      type: DataTypes.INTEGER.UNSIGNED
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
     }
   },
   {

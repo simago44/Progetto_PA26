@@ -21,7 +21,7 @@ const logFormat = z.string()
 const configSchema = z.object({
   NODE_PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
-  REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_URL: z.string(),
   AUTH0_DOMAIN: z.string(),
   AUTH0_AUDIENCE: z.string(),
   AUTH0_CLIENT_ID: z.string(),
@@ -43,4 +43,5 @@ if (!result.success) {
 }
 
 /** Parsed and validated environment configuration. Exits the process if validation fails. */
-export const env = result.data;
+const env = result.data;
+export default env;

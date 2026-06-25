@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import { SequelizeConnection } from "../services/sequelize.ts";
-import { env } from "../config.ts";
+import sequelize from '../services/sequelize.ts';
+import env from "../config.ts";
 import { AuthenticationClient } from "auth0";
 
 const authClient = new AuthenticationClient({
@@ -28,7 +28,6 @@ const checkAuth0 = async () => {
  * @throws {Error} If the database is unreachable or misconfigured
  */
 const checkDB = async () => {
-  const sequelize = SequelizeConnection.getInstance();
   await sequelize.authenticate();
   return 'ok';
 };

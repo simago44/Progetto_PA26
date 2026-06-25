@@ -6,10 +6,8 @@ import type {
   NonAttribute,
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import { SequelizeConnection } from '../services/sequelize.ts'
+import sequelize from '../services/sequelize.ts';
 import type { Bid } from './Bid.ts'
-
-const sequelize = SequelizeConnection.getInstance();
 
 const newUserTokens = 100;
 
@@ -19,6 +17,7 @@ export class User extends Model<
 > {
   declare id: string;
   declare tokens: CreationOptional<number>;
+  declare username: string;
 
   declare bids?: NonAttribute<Bid[]>;
 
@@ -34,8 +33,12 @@ User.init(
       primaryKey: true
     },
     tokens: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       defaultValue: newUserTokens
+    },
+    username: {
+      type: DataTypes.STRING(64),
+      allowNull: false
     }
   },
   {

@@ -1,6 +1,6 @@
 import { auth } from 'express-oauth2-jwt-bearer';
 import { type NextFunction, type Request, type Response } from 'express';
-import { env } from '../config.ts';
+import env from '../config.ts';
 import { createError, ErrorEnum } from '../factory/errorFactory.ts';
 
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;

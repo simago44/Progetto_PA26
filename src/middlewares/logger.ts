@@ -1,6 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { env, log_levels } from '../config.ts';
+import env, { log_levels } from '../config.ts';
 
 const LOG_FORMAT = env.LOG_FORMAT;
 const ENABLE_LOG_FILE = env.ENABLE_LOG_FILE;
