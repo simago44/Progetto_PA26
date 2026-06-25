@@ -55,7 +55,7 @@ Auction.init(
             throw new Error('startAt must be in the future');
           }
         },
-        isBeforeEndAt(startAt: Date) {
+        isBeforeEndAt(this: Auction, startAt: Date) {
           if (startAt >= this.endAt) {
             throw new Error('startAt must be before endAt');
           }
@@ -66,7 +66,7 @@ Auction.init(
       type: DataTypes.DATE,
       allowNull: false,
       validate: {
-        isAfterStartAt(endAt: Date) {
+        isAfterStartAt(this: Auction, endAt: Date) {
           if (endAt <= this.startAt) {
             throw new Error('endAt must be after startAt');
           }
