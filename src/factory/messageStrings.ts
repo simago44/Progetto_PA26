@@ -18,6 +18,7 @@ export const badRequest_message: string = "ERROR - Bad request";
 export const duplicateDatetimes_message: string = "Bad Request - Duplicate datetimes";
 export const userNotFound_message: string = "Not Found - User not found";
 export const validationError_message: string = "ERROR - Validation Error";
+export const databaseError_message: string = "ERROR - Database Error";
 
 // Success
 export const userCreatedSuccessfully_message: string = "User created successfully";

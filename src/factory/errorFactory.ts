@@ -38,6 +38,7 @@ export const ErrorEnum = {
   InternalServer: 11,
   ServiceUnavailable: 12,
   ValidationError: 13,
+  DatabaseError: 14,
 } as const;
 export type ErrorEnum = typeof ErrorEnum[keyof typeof ErrorEnum];
 
@@ -56,6 +57,7 @@ const errorMap: Record<ErrorEnum, { status: number; msg: string; name: string }>
   [ErrorEnum.InternalServer]: { status: 500, msg: Message.internalServerError_message, name: "InternalServerError" },
   [ErrorEnum.ServiceUnavailable]: { status: 503, msg: Message.serviceUnavailable_message, name: "ServiceUnavailableError" },
   [ErrorEnum.ValidationError]: { status: 422, msg: Message.validationError_message, name: "ValidationError" },
+  [ErrorEnum.DatabaseError]: { status: 500, msg: Message.databaseError_message, name: "DatabaseError" },
 };
 
 /**

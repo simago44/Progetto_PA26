@@ -2,6 +2,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError, createError, ErrorEnum } from "../factory/errorFactory.ts";
 import logger from "./logger.ts";
+import { UnauthorizedError } from "express-oauth2-jwt-bearer";
 
 /**
  * Global Express error handler middleware.
@@ -17,7 +18,8 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
   const responseObject: { name: string, error: string, detail?: string } = {
     name: error.name,
     error: error.message
-  }
+  };
+  
   if ( error.detail) responseObject.detail = error.detail;
 
   res.status(error.status).json(responseObject)
