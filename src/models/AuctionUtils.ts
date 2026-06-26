@@ -36,7 +36,7 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
 
     case AuctionType.Dutch:
       if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if (auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
+      if (auction.decrementInterval == null) throw new TypeError("Null attribute decrementInterval");
       if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
 
       if (bids.length > 0) return hasEndedObj;
@@ -44,7 +44,7 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       //Calculate the finish time
       const priceRange = auction.startPrice - auction.minimumPrice!;
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
-      const decrementIntervalMs = auction.decrementTime! * 60 * 1000;
+      const decrementIntervalMs = auction.decrementInterval * 60 * 1000;
       const durationMs = decrementsNeeded * decrementIntervalMs;
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
@@ -54,7 +54,7 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementTime! * 60 * 1000));
+      const decrements = Math.floor(elapsed / (auction.decrementInterval! * 60 * 1000));
       const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
 
       /** If the current price is less than minimumPrice,
@@ -93,7 +93,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
 
     case AuctionType.Dutch:
       if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if (auction.decrementTime == null) throw new TypeError("Null attribute decrementTime");
+      if (auction.decrementInterval == null) throw new TypeError("Null attribute decrementTime");
       if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
 
       if (bids.length > 0) return -1;
@@ -101,7 +101,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       //Calculate the finish time
       const priceRange = auction.startPrice - auction.minimumPrice!;
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
-      const decrementIntervalMs = auction.decrementTime! * 60 * 1000;
+      const decrementIntervalMs = auction.decrementInterval! * 60 * 1000;
       const durationMs = decrementsNeeded * decrementIntervalMs;
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
@@ -110,7 +110,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementTime! * 60 * 1000));
+      const decrements = Math.floor(elapsed / (auction.decrementInterval! * 60 * 1000));
       const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
 
       /** If the current price is less than minimumPrice,

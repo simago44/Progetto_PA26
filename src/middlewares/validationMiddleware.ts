@@ -1,5 +1,5 @@
 import { type NextFunction, type Request, type Response } from 'express';
-import { AppError, createError, ErrorEnum, getErrorHTTPStatus, getErrorName } from '../factory/errorFactory.ts';
+import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from '../factory/errorFactory.ts';
 import { z } from "zod";
 
 /** Zod schema for validating signup request body. */

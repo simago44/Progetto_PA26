@@ -1,9 +1,8 @@
 import { Queue, Worker, createNodeRedisClient } from 'bullmq';
 import redis from './redis.ts'
 import { Auction } from '../models/Auction.ts';
-import { checkAuctionHasEnded, closeAuction, getMsToEnd } from '../models/AuctionUtils.ts';
+import { closeAuction, getMsToEnd } from '../models/AuctionUtils.ts';
 import logger from '../middlewares/logger.ts';
-import { Bid } from '../models/Bid.ts';
 
 export const connection = createNodeRedisClient(redis);
 
@@ -14,7 +13,6 @@ const auctionQueue = new Queue(queueName, { connection });
 
 const myWorker = new Worker(queueName, async job => {
   logger.debug("processing job", job.name, job.id);
-  logger.error(await auctionQueue.getJobs())
   switch (job.name) {
     case closeAuctionJobName:
       // TODO
@@ -40,6 +38,8 @@ export async function createCloseAuctionJob(auction: Auction) {
     delay: await getMsToEnd(auction),
     attempts: 3,
     backoff: { type: 'exponential', delay: 2000 },
+    removeOnComplete: true,
+    removeOnFail: true
   });
 }
 

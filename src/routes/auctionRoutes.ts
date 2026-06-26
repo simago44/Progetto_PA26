@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AuctionController } from "../controllers/AuctionController.ts";
+import { AuctionController } from "../controllers/auctionController.ts";
 import { createAuctionMiddlewares } from "../middlewares/middlewareChains.ts";
 
 
