@@ -90,7 +90,6 @@ Auction.init(
     },
     endAt: {
       type: DataTypes.DATE,
-      allowNull: false,
       validate: {
         isAfterStartAt(this: Auction, endAt: Date) {
           if (endAt <= this.startAt) {
