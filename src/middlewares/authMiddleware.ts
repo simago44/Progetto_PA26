@@ -1,7 +1,8 @@
-import { auth } from 'express-oauth2-jwt-bearer';
-import { type NextFunction, type Request, type Response } from 'express';
+import { auth, UnauthorizedError } from 'express-oauth2-jwt-bearer';
+import type { Request, Response, NextFunction } from 'express';
 import env from '../config.ts';
 import { createError, ErrorEnum } from '../factory/errorFactory.ts';
+import logger from './logger.ts';
 
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
 const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
@@ -29,7 +30,14 @@ export const checkPermission = (permission: string) => {
  * Middleware that validates the JWT token in the Authorization header.
  * Uses Auth0 as the issuer and validates against the configured audience.
  */
-export const checkJwt = auth({
-  issuerBaseURL: `https://${AUTH0_DOMAIN}`,
-  audience: AUTH0_AUDIENCE,
-});
+export function checkJwt(req: Request, res: Response, next: NextFunction) {
+  auth({
+    issuerBaseURL: `https://${AUTH0_DOMAIN}`,
+    audience: AUTH0_AUDIENCE,
+  })(req, res, (err) => {
+    if (!err) return next();
+    if (err instanceof UnauthorizedError)
+      return next(createError(ErrorEnum.Unauthorized, err.message));
+    next(err);
+  });
+}
