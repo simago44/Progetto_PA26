@@ -17,6 +17,7 @@ export const serviceUnavailable_message: string = "ERROR - Service unavailable";
 export const badRequest_message: string = "ERROR - Bad request";
 export const duplicateDatetimes_message: string = "Bad Request - Duplicate datetimes";
 export const userNotFound_message: string = "Not Found - User not found";
+export const validationError_message: string = "ERROR - Validation Error";
 
 // Success
 export const userCreatedSuccessfully_message: string = "User created successfully";

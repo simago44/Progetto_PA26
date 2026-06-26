@@ -9,11 +9,13 @@ import * as Message from "./messageStrings.ts";
  */
 export class AppError extends Error {
   status: number;
+  detail: string | null;
 
-  constructor(status: number, msg: string, name: string) {
+  constructor(status: number, msg: string, name: string, detail: string | null = null) {
     super(msg);
-    this.name = name
-    this.status = status
+    this.name = name;
+    this.status = status;
+    this.detail = detail;
   }
 }
 
@@ -34,7 +36,8 @@ export const ErrorEnum = {
   Forbidden: 9,
   NotFound: 10,
   InternalServer: 11,
-  ServiceUnavailable: 12
+  ServiceUnavailable: 12,
+  ValidationError: 13,
 } as const;
 export type ErrorEnum = typeof ErrorEnum[keyof typeof ErrorEnum];
 
@@ -52,6 +55,7 @@ const errorMap: Record<ErrorEnum, { status: number; msg: string; name: string }>
   [ErrorEnum.NotFound]: { status: 404, msg: Message.notFound_message, name: "NotFoundError" },
   [ErrorEnum.InternalServer]: { status: 500, msg: Message.internalServerError_message, name: "InternalServerError" },
   [ErrorEnum.ServiceUnavailable]: { status: 503, msg: Message.serviceUnavailable_message, name: "ServiceUnavailableError" },
+  [ErrorEnum.ValidationError]: { status: 422, msg: Message.validationError_message, name: "ValidationError" },
 };
 
 /**
@@ -59,9 +63,9 @@ const errorMap: Record<ErrorEnum, { status: number; msg: string; name: string }>
  * @param type - The error type from `ErrorEnum`
  * @returns An `AppError` with the corresponding status, message and name
  */
-export function createError(type: ErrorEnum): AppError {
+export function createError(type: ErrorEnum, detail?: string): AppError {
   const { status, msg, name } = errorMap[type];
-  const err = new AppError(status, msg, name);
+  const err = new AppError(status, msg, name, detail);
   return err;
 }
 

@@ -9,5 +9,11 @@ import { AppError } from "../factory/errorFactory.ts";
  * @see AppError
  */
 export function errorHandler(err: AppError, req: Request, res: Response, next: NextFunction): void {
-  res.status(err.status).json({ error: err.message });
+  const responseObject: {name: string, error: string, detail?: string} = {
+    name: err.name,
+    error: err.message
+  }
+  if(err.detail) responseObject.detail = err.detail;
+  
+  res.status(err.status).json(responseObject)
 }
