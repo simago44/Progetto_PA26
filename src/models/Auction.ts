@@ -13,7 +13,22 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize.ts';
 import type { User } from './User.ts';
 import type { Bid } from './Bid.ts';
-import { AuctionStatus, AuctionType, getAuctionStatus, getMsToEnd } from './AuctionUtils.ts';
+import { getAuctionStatus, getMsToEnd } from './AuctionUtils.ts';
+
+export const AuctionType = {
+  English: 'english',
+  Dutch: 'dutch',
+  FirstPrice: 'first-price',
+  SecondPrice: 'second-price'
+} as const;
+export type AuctionType = typeof AuctionType[keyof typeof AuctionType];
+
+export const AuctionStatus = {
+  NotStarted: 0,
+  InProgress: 1,
+  Ended: 2
+} as const;
+export type AuctionStatus = typeof AuctionStatus[keyof typeof AuctionStatus];
 
 const defaultDelayBeforeEnding = 5;
 
@@ -29,7 +44,7 @@ export class Auction extends Model<
   declare type: AuctionType;
   declare minimumIncrement: CreationOptional<number>;
   declare decrementPrice: CreationOptional<number>;
-  declare decrementTime: CreationOptional<number>;
+  declare decrementInterval: CreationOptional<number>;
   declare minimumPrice: CreationOptional<number>;
   declare delayBeforeEnding: CreationOptional<number>;
   declare hasEnded: CreationOptional<boolean>;
@@ -107,7 +122,7 @@ Auction.init(
         min: 1
       }
     },
-    decrementTime: {
+    decrementInterval: {
       type: DataTypes.INTEGER,
       validate: {
         min: 60*1000 // 60 secondi

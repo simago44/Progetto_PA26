@@ -1,24 +1,9 @@
 import logger from "../middlewares/logger.ts";
 import sequelize from "../services/sequelize.ts";
-import { Auction } from "./Auction.ts";
+import { Auction, AuctionStatus, AuctionType } from "./Auction.ts";
 import { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
 import { col, Op, where } from "sequelize";
-
-export const AuctionType = {
-  English: 'english',
-  Dutch: 'dutch',
-  FirstPrice: 'first-price',
-  SecondPrice: 'second-price'
-} as const;
-export type AuctionType = typeof AuctionType[keyof typeof AuctionType];
-
-export const AuctionStatus = {
-  NotStarted: 0,
-  InProgress: 1,
-  Ended: 2
-} as const;
-export type AuctionStatus = typeof AuctionStatus[keyof typeof AuctionStatus];
 
 export function getAuctionStatus(auction: Auction): AuctionStatus {
   if (auction.hasEnded) return AuctionStatus.Ended;
