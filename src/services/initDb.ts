@@ -2,9 +2,8 @@ import sequelize from './sequelize.ts';
 
 import '../models/relationships.ts';
 import { Auction, Bid, User } from '../models/relationships.ts';
-import { AuctionType } from '../models/AuctionUtils.ts';
+import { AuctionType } from '../models/Auction.ts';
 import { createCloseAuctionJob } from './BullMQ.ts';
-import logger from '../middlewares/logger.ts';
 
 export async function initDb() {
   await sequelize.sync({ force: true });
