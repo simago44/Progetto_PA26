@@ -1,7 +1,7 @@
 export interface Repository<T> { 
-  save(t: T): T;
-  loadByPk(id: string): T;
-  loadAll(): T[];
-  update(t: T): T;
-  delete(t: T): T;
+  save(t: T): Promise<T>;
+  loadByPk(id: string): Promise<T>;
+  loadAll(): Promise<T[]>;
+  update(t: T): Promise<T>;
+  delete(t: T): Promise<void>;
 }
