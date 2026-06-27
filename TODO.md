@@ -28,16 +28,19 @@
 - [ ] Implementare logica **Second Price Sealed Bid / Vickrey** (busta chiusa, paga il secondo prezzo)
 
 ## Rotte API
-- [ ] `POST /auctions` – Crea nuova asta (ruolo: bid-creator)
-- [ ] `GET /auctions` – Lista aste con filtro per stato (pubblica, non autenticata)
+# NOTA: per le rotte users, si può usare self per riferirsi all'id presente nel token JWT
+- [x] `POST /signup` – Crea un nuovo utente
+- [x] `POST /login` – Accedi ad un account utente
+- [ ] `GET /users/:id/wallet` – Verifica credito residuo (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
+- [ ] `PUT /users/:id/wallet` – Ricarica wallet utente (ruolo: admin)
+- [ ] `GET /users/:id/auctions-report` – Storico aste a cui si è partecipato, con esito aggiudicazione (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
+- [ ] `GET /users/:id/wallet-report` – Spesa in un periodo per aggiudicazioni (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin) uri parameters: start=data end=data
+- [x] `POST /auctions` – Crea nuova asta (ruolo: bid-creator)
+- [x] `GET /auctions` – Lista aste con filtro per stato (pubblica, non autenticata)
 - [ ] `POST /auctions/:id/bids` – Crea offerta per un'asta (ruolo: bid-participant)
-- [ ] `POST /auctions/:id/options` – Crea opzione/valore per acquirenti (ruolo: bid-creator)
+- [ ] `PUT /auctions/:id/price` – Aggiorna prezzo asta olandese se di tipo manuale (ruolo: bid-creator)
 - [ ] `GET /auctions/:id/bids` – Lista rilanci aste aperte (pubblica)
-- [ ] `GET /wallet` – Verifica credito residuo (ruolo: bid-participant)
-- [ ] `POST /admin/wallet/recharge` – Ricarica wallet utente (ruolo: admin)
-- [ ] `GET /auctions/history` – Storico aste con filtro temporale e stato aggiudicazione (ruolo: bid-participant)
-- [ ] `GET /auctions/spending` – Spesa in un periodo per aggiudicazioni (ruolo: bid-participant)
-- [ ] `GET /admin/stats` – Statistiche per tipologia di asta in intervallo temporale (ruolo: admin)
+- [ ] `GET /auctions/:type/stats` – Statistiche per tipologia di asta: numero aste, media/minimo/massimo partecipanti (ruolo: admin)
 
 ## Logica di business
 - [ ] Verifica capienza wallet prima di ogni offerta (rifiuto con 401 se insufficiente)

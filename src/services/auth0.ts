@@ -9,12 +9,12 @@ const AUTH0_REALM = env.AUTH0_REALM;
 
 export const Auth0Permission = {
   createAuction: "create:auction",
-  createBid: "create:bid",
   updateAuction: "update:auction",
+  createBid: "create:bid",
   readWallet: "read:wallet",
   updateWallet: "update:wallet",
-  readBidsReport: "read:bids-report",
-  readUserAuctions: "read:user-auctions",
+  readAuctionReport: "read:auction-report",
+  readWalletReport: "read:wallet-report",
   readAuctionStats: "read:auction-stats"
 } as const;
 export type Auth0Permission = (typeof Auth0Permission)[keyof typeof Auth0Permission];

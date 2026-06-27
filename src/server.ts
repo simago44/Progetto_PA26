@@ -32,7 +32,7 @@ app.listen(PORT, () => {
   logger.info(`Server is running on http://localhost:${PORT}`);
 });
 
-app.use("/auth", authRoutes);
+app.use("/", authRoutes);
 app.use("/auctions", auctionRoutes);
 
 app.use(errorHandler);
