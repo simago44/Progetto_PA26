@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "54afdfd4-fb82-4965-8026-c3ac24acec5d",
+    "_postman_id": "b52af0e5-7426-4e73-832f-08cdcba8a8cf",
     "name": "PA-Agnostinelli-Vagnarelli",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "33317774"
+    "_exporter_id": "53270120"
   },
   "item": [
     {
@@ -202,6 +202,60 @@
             "auth",
             "api",
             "private-permissions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Auction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.environment.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.environment.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions"
           ]
         }
       },
