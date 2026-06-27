@@ -3,31 +3,36 @@ import sequelize from "./sequelize.ts";
 import "../models/relationships.ts";
 import { Auction, Bid, User } from "../models/relationships.ts";
 import { AuctionType } from "../models/Auction.ts";
-import { createCloseAuctionJob } from "./BullMQ.ts";
+import { deleteStaleUsers } from "./auth0.ts";
+import env, { NodeEnv } from "../config.ts";
 
 export async function initDb() {
-  await sequelize.sync({ force: true });
-  //await sequelize.sync();
+  if (env.NODE_ENV != NodeEnv.Development) {
+    await sequelize.sync();
+    return;
+  }
 
-  await User.create({
-    id: "auth0|6a3ebbbdb8c407b90132c603",
+  await sequelize.sync({ force: true });
+
+  const admin = await User.create({
+    id: "auth0|6a3fd812dbd594d590a92367",
     username: "admin",
   });
 
-  await User.create({
-    id: "auth0|6a3ebb7f62ab40a31fbd9546",
+  const bidCreator = await User.create({
+    id: "auth0|6a3fd835b4e640e31f20bbc4",
     username: "bid-creator",
   });
 
-  await User.create({
-    id: "auth0|6a3ebbd4d8fdb3551fb57f8f",
+  const bidParticipant = await User.create({
+    id: "auth0|6a3fd852b4e640e31f20bbd2",
     username: "bid-participant",
   });
 
   const NotStarted = await Auction.create({
     startAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
     endAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
-    creatorId: "auth0|6a3ebb7f62ab40a31fbd9546",
+    creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.English,
     delayBeforeEnding: 10000,
@@ -36,7 +41,7 @@ export async function initDb() {
   const InProgress = await Auction.create({
     startAt: new Date(Date.now() + 1000), // parte subito
     endAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
-    creatorId: "auth0|6a3ebb7f62ab40a31fbd9546",
+    creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.English,
     delayBeforeEnding: 10000,
@@ -45,17 +50,11 @@ export async function initDb() {
   const Ended = await Auction.create({
     startAt: new Date(Date.now() + 1000), // 1 secondo
     endAt: new Date(Date.now() + 2000), //2 secondi
-    creatorId: "auth0|6a3ebb7f62ab40a31fbd9546",
+    creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.English,
     delayBeforeEnding: 10000,
   });
   
-  /*
-  await Bid.create({
-    userId: "id",
-    auctionId: newAuction.id,
-    bidPrice: 100
-  })
-  */
+  await deleteStaleUsers();
 }

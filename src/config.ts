@@ -9,6 +9,12 @@ export const log_levels = {
   debug: 4
 } as const;
 
+export const NodeEnv = {
+  Development: "development",
+  Production: "production",
+  Test: "test",
+} as const;
+
 const logLevel = z.enum(Object.keys(log_levels));
 
 const logFormat = z.string()
@@ -26,13 +32,14 @@ const configSchema = z.object({
   AUTH0_AUDIENCE: z.string(),
   AUTH0_CLIENT_ID: z.string(),
   AUTH0_CLIENT_SECRET: z.string(),
-  AUTH0_REALM: z.string(),
+  AUTH0_CONNECTION: z.string(),
   ENABLE_LOG_FILE: z.coerce.boolean().default(true),
   LOG_DIR: z.string().default("./logs"),
   LOG_FILENAME_PREFIX: z.string().default("express"),
   CONSOLE_LOG_LEVEL: logLevel.default("debug"),
   FILE_LOG_LEVEL: logLevel.default("info"),
-  LOG_FORMAT: logFormat
+  LOG_FORMAT: logFormat,
+  NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development)
 })
 
 const result = configSchema.safeParse(process.env);

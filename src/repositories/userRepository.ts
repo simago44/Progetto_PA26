@@ -3,8 +3,6 @@ import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient, RoleName } from "../services/auth0.ts";
 import { createError, ErrorEnum } from "../factory/errorFactory.ts";
 
-const AUTH0_REALM = env.AUTH0_REALM;
-
 class UserRepository {
   public async save(username: string, password: string, role: RoleName): Promise<User> {
     // TODO: validation
@@ -12,7 +10,7 @@ class UserRepository {
     //throw new ValidationError("a", []);
 
     const user = await managementClient.users.create({
-      connection: AUTH0_REALM,
+      connection: env.AUTH0_CONNECTION,
       username: username,
       password: password
     })
@@ -42,6 +40,10 @@ class UserRepository {
 
   public async loadAll(): Promise<User[]> {
     return await User.findAll();
+  }
+
+  public async loadAllIds(): Promise<User[]> {
+    return await User.findAll({ attributes: ['id'] });
   }
 
   public async update(user: User): Promise<User> {

@@ -1,11 +1,7 @@
 import { AuthenticationClient, ManagementClient } from "auth0";
 import env from "../config.ts";
-
-const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
-const AUTH0_CLIENT_ID = env.AUTH0_CLIENT_ID;
-const AUTH0_CLIENT_SECRET = env.AUTH0_CLIENT_SECRET;
-const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
-const AUTH0_REALM = env.AUTH0_REALM;
+import userRepository from "../repositories/userRepository.ts";
+import logger from "../middlewares/logger.ts";
 
 export const Auth0Permission = {
   createAuction: "create:auction",
@@ -32,15 +28,15 @@ type Role = {
 };
 
 export const managementClient = new ManagementClient({
-  domain: AUTH0_DOMAIN,
-  clientId: AUTH0_CLIENT_ID,
-  clientSecret: AUTH0_CLIENT_SECRET,
+  domain: env.AUTH0_DOMAIN,
+  clientId: env.AUTH0_CLIENT_ID,
+  clientSecret: env.AUTH0_CLIENT_SECRET,
 });
 
 export const authenticationClient = new AuthenticationClient({
-  domain: AUTH0_DOMAIN,
-  clientId: AUTH0_CLIENT_ID,
-  clientSecret: AUTH0_CLIENT_SECRET,
+  domain: env.AUTH0_DOMAIN,
+  clientId: env.AUTH0_CLIENT_ID,
+  clientSecret: env.AUTH0_CLIENT_SECRET,
 });
 
 async function fetchRoles(): Promise<Record<RoleName, Role>> {
@@ -58,11 +54,30 @@ export const Auth0Roles = await fetchRoles();
 
 export async function getAuthenticationToken(username: string, password: string): Promise<string> {
   const user = await authenticationClient.oauth.passwordGrant({
-    realm: AUTH0_REALM,
-    audience: AUTH0_AUDIENCE,
+    realm: env.AUTH0_CONNECTION,
+    audience: env.AUTH0_AUDIENCE,
     username,
     password
   });
 
   return user.data.access_token;
+}
+
+export async function deleteStaleUsers() {
+  const auth0Users = (await managementClient.users.list()).data;
+  const dbUsers = await userRepository.loadAllIds();
+
+  const dbUserIds = new Set(dbUsers.map(user => user.id));
+
+  for (const user of auth0Users) {
+    if (!user.user_id) continue;
+
+    // If the user doesn't belong to the app auth0 db connection
+    if (!user.identities?.some(i => i.connection === env.AUTH0_CONNECTION)) continue;
+    // If the user is actually present in the db
+    if (dbUserIds.has(user.user_id)) continue;
+
+    logger.info(`Deleting: ${user.user_id}`);
+    managementClient.users.delete(user.user_id);
+  }
 }
