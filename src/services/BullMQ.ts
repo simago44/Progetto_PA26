@@ -13,7 +13,6 @@ const closeAuctionJobName = "close-auction";
 const auctionQueue = new Queue(queueName, { connection });
 
 const myWorker = new Worker(queueName, async job => {
-  logger.debug("processing job", job.name, job.id);
   switch (job.name) {
     case closeAuctionJobName:
       // TODO
@@ -35,6 +34,7 @@ const myWorker = new Worker(queueName, async job => {
 }, { connection });
 
 export async function createCloseAuctionJob(auction: Auction) {
+  await auctionQueue.remove(`close-auction-${auction.id}`);
   await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
     delay: await getMsToEnd(auction),
     attempts: 3,
@@ -48,7 +48,6 @@ export async function createCloseAuctionJob(auction: Auction) {
 export async function initBullMQ() {
   const auctions = await auctionRepository.loadAll();
   auctions.forEach(async (auction) => {
-    await auctionQueue.remove(`close-auction-${auction.id}`);
     if (auction.hasEnded) return;
 
     createCloseAuctionJob(auction);

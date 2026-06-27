@@ -55,7 +55,7 @@ export class AuctionController {
 
       await auctionRepository.save(auction);
 
-      res.status(StatusCodes.CREATED).json(auction);
+      res.status(StatusCodes.CREATED).json({ id: auction.id });
     } catch (err) {
       logger.debug(typeof err);
       if (err instanceof ValidationError) {

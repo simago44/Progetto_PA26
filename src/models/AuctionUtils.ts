@@ -186,6 +186,8 @@ export async function closeAuction(auction: Auction) {
   // if it was already closed or is not ended yet, we return
   if (auction.hasEnded || !checkAuctionHasEnded(auction).hasEnded) return;
 
+  logger.debug(`Closing auction: ${auction.id}`)
+
   await sequelize.transaction(async (t) => {
     const winningBid = await getWinningBid(auction);
 

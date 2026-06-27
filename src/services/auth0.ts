@@ -7,12 +7,23 @@ const AUTH0_CLIENT_SECRET = env.AUTH0_CLIENT_SECRET;
 const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
 const AUTH0_REALM = env.AUTH0_REALM;
 
+export const Auth0Permission = {
+  createAuction: "create:auction",
+  createBid: "create:bid",
+  updateAuction: "update:auction",
+  readWallet: "read:wallet",
+  updateWallet: "update:wallet",
+  readBidsReport: "read:bids-report",
+  readUserAuctions: "read:user-auctions",
+  readAuctionStats: "read:auction-stats"
+} as const;
+export type Auth0Permission = (typeof Auth0Permission)[keyof typeof Auth0Permission];
+
 export const RoleName = {
   Admin: "admin",
   BidCreator: "bid-creator",
   BidParticipant: "bid-participant",
 } as const;
-
 export type RoleName = (typeof RoleName)[keyof typeof RoleName];
 
 type Role = {

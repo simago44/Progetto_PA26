@@ -50,19 +50,12 @@ export async function initDb() {
     type: AuctionType.English,
     delayBeforeEnding: 10000,
   });
-
-  await createCloseAuctionJob(NotStarted);
-  await createCloseAuctionJob(InProgress);
-  await createCloseAuctionJob(Ended);
-
+  
   /*
-  
-  
-
   await Bid.create({
     userId: "id",
     auctionId: newAuction.id,
     bidPrice: 100
   })
-    */
+  */
 }
