@@ -2,10 +2,9 @@ import { Router } from "express";
 import { AuctionController } from "../controllers/auctionController.ts";
 import { createAuctionMiddlewares } from "../middlewares/middlewareChains.ts";
 
+const controller = new AuctionController();
+const router = Router();
 
-const controller = new AuctionController()
-const router = Router()
+router.post("/", createAuctionMiddlewares, controller.createAuction);
 
-router.post("/", createAuctionMiddlewares, controller.createAuction)
-
-export default router
+export default router;

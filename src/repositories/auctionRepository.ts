@@ -10,6 +10,6 @@ class AuctionRepository {
   }
 }
 
-const auctionRepository = new AuctionRepository()
+const auctionRepository = new AuctionRepository();
 
 export default auctionRepository;

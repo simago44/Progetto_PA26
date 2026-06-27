@@ -7,16 +7,21 @@ import { col, Op, where } from "sequelize";
 
 export function getAuctionStatus(auction: Auction): AuctionStatus {
   if (auction.hasEnded) return AuctionStatus.Ended;
-  return (auction.startAt <= new Date()) ? AuctionStatus.InProgress : AuctionStatus.NotStarted;
+  return auction.startAt <= new Date()
+    ? AuctionStatus.InProgress
+    : AuctionStatus.NotStarted;
 }
 
-export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nextCheck: Date | null; } {
+export function checkAuctionHasEnded(auction: Auction): {
+  hasEnded: boolean;
+  nextCheck: Date | null;
+} {
   const now = new Date();
   const bids = auction.bids ?? [];
   let finishTime: Date = new Date();
   const hasEndedObj = {
     hasEnded: true,
-    nextCheck: null
+    nextCheck: null,
   };
 
   if (auction.hasEnded) return hasEndedObj;
@@ -26,18 +31,24 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
       if (bids.length === 0) finishTime = auction.endAt;
       else {
         const lastBid = bids.reduce((latest, bid) =>
-          bid.createdAt > latest.createdAt ? bid : latest
+          bid.createdAt > latest.createdAt ? bid : latest,
         );
-        const lastBidDeadline = new Date(lastBid.createdAt.getTime() + auction.delayBeforeEnding);
-        finishTime = lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt
+        const lastBidDeadline = new Date(
+          lastBid.createdAt.getTime() + auction.delayBeforeEnding,
+        );
+        finishTime =
+          lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt;
       }
       if (finishTime < now) return hasEndedObj;
       return { hasEnded: false, nextCheck: finishTime };
 
     case AuctionType.Dutch:
-      if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if (auction.decrementInterval == null) throw new TypeError("Null attribute decrementInterval");
-      if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
+      if (auction.decrementPrice == null)
+        throw new TypeError("Null attribute decrementPrice");
+      if (auction.decrementInterval == null)
+        throw new TypeError("Null attribute decrementInterval");
+      if (auction.minimumPrice == null)
+        throw new TypeError("Null attribute minimumPrice");
 
       if (bids.length > 0) return hasEndedObj;
 
@@ -50,12 +61,15 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
 
       //If the auction has not started yet, it cannot be ended
       if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
-        return { hasEnded: false, nextCheck: finishTime }
+        return { hasEnded: false, nextCheck: finishTime };
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementInterval! * 60 * 1000));
-      const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
+      const decrements = Math.floor(
+        elapsed / (auction.decrementInterval! * 60 * 1000),
+      );
+      const currentPrice =
+        auction.startPrice - decrements * auction.decrementPrice!;
 
       /** If the current price is less than minimumPrice,
        * The auction is ended in not selled case
@@ -66,7 +80,8 @@ export function checkAuctionHasEnded(auction: Auction): { hasEnded: boolean; nex
 
     case AuctionType.FirstPrice:
     case AuctionType.SecondPrice:
-      if (now < auction.endAt) return { hasEnded: false, nextCheck: auction.endAt };
+      if (now < auction.endAt)
+        return { hasEnded: false, nextCheck: auction.endAt };
       return hasEndedObj;
   }
 }
@@ -82,19 +97,25 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       if (bids.length === 0) finishTime = auction.endAt;
       else {
         const lastBid = bids.reduce((latest, bid) =>
-          bid.createdAt > latest.createdAt ? bid : latest
+          bid.createdAt > latest.createdAt ? bid : latest,
         );
-        const lastBidDeadline = new Date(lastBid.createdAt.getTime() + auction.delayBeforeEnding);
-        finishTime = lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt
+        const lastBidDeadline = new Date(
+          lastBid.createdAt.getTime() + auction.delayBeforeEnding,
+        );
+        finishTime =
+          lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt;
       }
       logger.warn(finishTime.toString());
       logger.warn(now.toString());
       return finishTime.getTime() - now.getTime(); // negative if past
 
     case AuctionType.Dutch:
-      if (auction.decrementPrice == null) throw new TypeError("Null attribute decrementPrice");
-      if (auction.decrementInterval == null) throw new TypeError("Null attribute decrementTime");
-      if (auction.minimumPrice == null) throw new TypeError("Null attribute minimumPrice");
+      if (auction.decrementPrice == null)
+        throw new TypeError("Null attribute decrementPrice");
+      if (auction.decrementInterval == null)
+        throw new TypeError("Null attribute decrementTime");
+      if (auction.minimumPrice == null)
+        throw new TypeError("Null attribute minimumPrice");
 
       if (bids.length > 0) return -1;
 
@@ -106,12 +127,16 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
       //If the auction has not started yet, it cannot be ended
-      if (getAuctionStatus(auction) === AuctionStatus.NotStarted) return finishTime.getTime() - now.getTime();
+      if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
+        return finishTime.getTime() - now.getTime();
 
       // Current price
       const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(elapsed / (auction.decrementInterval! * 60 * 1000));
-      const currentPrice = auction.startPrice - (decrements * auction.decrementPrice!);
+      const decrements = Math.floor(
+        elapsed / (auction.decrementInterval! * 60 * 1000),
+      );
+      const currentPrice =
+        auction.startPrice - decrements * auction.decrementPrice!;
 
       /** If the current price is less than minimumPrice,
        * The auction is ended in not selled case
@@ -126,11 +151,13 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
   }
 }
 
-export async function getWinningBid(auction: Auction): Promise<{ bid: Bid, finalPrice: number } | null> {
+export async function getWinningBid(
+  auction: Auction,
+): Promise<{ bid: Bid; finalPrice: number } | null> {
   // get only bids from user with enought tokens
   // descending order based on bidPrice
   const bids = await auction.getBids({
-    include: [{ model: User, required: true, },],
+    include: [{ model: User, required: true }],
     where: where(col("User.tokens"), {
       [Op.gte]: col("bidPrice"),
     }),
@@ -149,13 +176,14 @@ export async function getWinningBid(auction: Auction): Promise<{ bid: Bid, final
       return { bid: higherBid, finalPrice: higherBid.bidPrice };
 
     case AuctionType.SecondPrice:
-      if (secondHigherBid == null) return { bid: higherBid, finalPrice: higherBid.bidPrice };
+      if (secondHigherBid == null)
+        return { bid: higherBid, finalPrice: higherBid.bidPrice };
       return { bid: higherBid, finalPrice: secondHigherBid.bidPrice };
   }
 }
 
 export async function closeAuction(auction: Auction) {
-  // if it was already closed or is not ended yet, we return 
+  // if it was already closed or is not ended yet, we return
   if (auction.hasEnded || !checkAuctionHasEnded(auction).hasEnded) return;
 
   await sequelize.transaction(async (t) => {
@@ -165,10 +193,20 @@ export async function closeAuction(auction: Auction) {
       const winnerId = winningBid.bid.userId;
       const finalPrice = winningBid.finalPrice;
 
-      await Auction.update({ hasEnded: true, winnerId, finalPrice }, { where: { id: auction.id }, transaction: t });
-      await User.decrement('tokens', { by: finalPrice, where: { id: winnerId }, transaction: t });
+      await Auction.update(
+        { hasEnded: true, winnerId, finalPrice },
+        { where: { id: auction.id }, transaction: t },
+      );
+      await User.decrement("tokens", {
+        by: finalPrice,
+        where: { id: winnerId },
+        transaction: t,
+      });
     } else {
-      await Auction.update({ hasEnded: true }, { where: { id: auction.id }, transaction: t });
+      await Auction.update(
+        { hasEnded: true },
+        { where: { id: auction.id }, transaction: t },
+      );
     }
   });
 }
