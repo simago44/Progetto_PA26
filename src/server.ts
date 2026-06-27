@@ -13,8 +13,10 @@ import { healthCheck } from "./utils/healthUtils.ts";
 import { initDb } from "./services/initDb.ts";
 
 import "./services/BullMQ.ts";
+import { initBullMQ } from "./services/BullMQ.ts";
 
 await initDb();
+await initBullMQ();
 
 // Initialize Express app
 const app = express();

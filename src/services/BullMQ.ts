@@ -3,6 +3,7 @@ import redis from './redis.ts'
 import { Auction } from '../models/Auction.ts';
 import { closeAuction, getMsToEnd } from '../models/AuctionUtils.ts';
 import logger from '../middlewares/logger.ts';
+import auctionRepository from '../repositories/auctionRepository.ts';
 
 export const connection = createNodeRedisClient(redis);
 
@@ -37,14 +38,19 @@ export async function createCloseAuctionJob(auction: Auction) {
   await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
     delay: await getMsToEnd(auction),
     attempts: 3,
+    jobId: `close-auction-${auction.id}`,
     backoff: { type: 'exponential', delay: 2000 },
     removeOnComplete: true,
     removeOnFail: true
   });
 }
 
-async function afterAuctionCreation(auction: Auction) {
-  if (auction.hasEnded) return;
+export async function initBullMQ() {
+  const auctions = await auctionRepository.loadAll();
+  auctions.forEach(async (auction) => {
+    await auctionQueue.remove(`close-auction-${auction.id}`);
+    if (auction.hasEnded) return;
 
-  createCloseAuctionJob(auction);
+    createCloseAuctionJob(auction);
+  });
 }
