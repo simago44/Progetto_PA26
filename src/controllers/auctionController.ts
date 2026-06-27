@@ -2,11 +2,46 @@ import type { NextFunction, Request, Response } from "express";
 import { validateAuction } from "../services/auctionValidationService.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import { BaseError, ValidationError } from "sequelize";
-import { AppError, createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { createError, ErrorEnum } from "../factory/errorFactory.ts";
 import logger from "../middlewares/logger.ts";
-import type { Auction } from "../models/Auction.ts";
+import { AuctionStatus, type Auction } from "../models/Auction.ts";
+import * as Messages from "../factory/messageStrings.ts";
+import { StatusCodes } from "http-status-codes";
 
 export class AuctionController {
+  /** Gets the auctions filtered by status
+   * If the status code is not present in query params it returns all the auctions
+   * Example URL: /auctions?status=0
+   */
+  public async getAuctions(req: Request, res: Response, next: NextFunction) {
+    const statusValue =
+      req.query.status !== undefined ? Number(req.query.status) : undefined;
+
+    if (
+      //invalid auction status
+      statusValue !== undefined &&
+      !Object.values(AuctionStatus).includes(statusValue as AuctionStatus)
+    ) {
+      next(
+        createError(
+          ErrorEnum.BadRequest,
+          Messages.invalidAuctionStatus_message,
+        ),
+      );
+      return;
+    }
+
+    const status = statusValue as AuctionStatus | undefined;
+
+    const options = {
+      ...(status !== undefined && { status }), //add status if status is not undefined
+    };
+
+    const auctions: Auction[] = await auctionRepository.getFiltered(options);
+
+    res.status(StatusCodes.OK).json({ auctions });
+  }
+
   /** Creates an auction and passes to the repository to save on db
    * @params req, res to be a route handler
    * @params next to pass the exceptions
@@ -20,7 +55,7 @@ export class AuctionController {
 
       await auctionRepository.save(auction);
 
-      res.status(201).json(auction);
+      res.status(StatusCodes.CREATED).json(auction);
     } catch (err) {
       logger.debug(typeof err);
       if (err instanceof ValidationError) {

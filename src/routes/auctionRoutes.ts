@@ -7,4 +7,6 @@ const router = Router();
 
 router.post("/", createAuctionMiddlewares, controller.createAuction);
 
+router.get("/", controller.getAuctions);
+
 export default router;
