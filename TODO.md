@@ -31,8 +31,8 @@
 # NOTA: per le rotte users, si può usare self per riferirsi all'id presente nel token JWT
 - [x] `POST /signup` – Crea un nuovo utente
 - [x] `POST /login` – Accedi ad un account utente
-- [ ] `GET /users/:id/wallet` – Verifica credito residuo (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
-- [ ] `PUT /users/:id/wallet` – Ricarica wallet utente (ruolo: admin)
+- [x] `GET /users/:id/wallet` – Verifica credito residuo (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
+- [x] `PUT /users/:id/wallet` – Ricarica wallet utente (ruolo: admin)
 - [ ] `GET /users/:id/auctions-report` – Storico aste a cui si è partecipato, con esito aggiudicazione (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
 - [ ] `GET /users/:id/wallet-report` – Spesa in un periodo per aggiudicazioni (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin) uri parameters: start=data end=data
 - [x] `POST /auctions` – Crea nuova asta (ruolo: bid-creator)

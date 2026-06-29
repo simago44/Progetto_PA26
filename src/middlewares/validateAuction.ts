@@ -1,22 +1,63 @@
-import type { NextFunction, Request, Response} from "express";
-import { Auction } from "../models/Auction.ts";
-import { ValidationError } from "sequelize";
-import logger from "./logger.ts";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
+import type { NextFunction, Request, Response } from "express";
+import { AuctionType } from "../models/Auction.ts";
+import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
+import { getZodErrorMessage } from "./validationMiddleware.ts";
+import z from 'zod';
+
+const BaseAuctionSchema = z.object({
+  creatorId: z.string(),
+  startAt: z.coerce.date().refine((date) => date > new Date(), {
+    message: "startAt must be in the future",
+  }),
+  startPrice: z.int().min(1),
+  type: z.enum(AuctionType),
+})
+
+const EnglishAuctionSchema = BaseAuctionSchema.extend({
+  type: z.literal(AuctionType.English),
+  endAt: z.coerce.date(),
+  minimumIncrement: z.int().min(1),
+  delayBeforeEnding: z.int().min(0)
+}).refine((data) => data.endAt > data.startAt, {
+  message: "endAt must be after startAt",
+  path: ["endAt"],
+});
+
+const DutchAuctionSchema = BaseAuctionSchema.extend({
+  type: z.literal(AuctionType.Dutch),
+  decrementPrice: z.int().min(1),
+  decrementInterval: z.int().min(60000),
+  minimumPrice: z.int().positive().min(0),
+})
+
+const SealedAuctionSchema = BaseAuctionSchema.extend({
+  type: z.enum([AuctionType.FirstPrice, AuctionType.SecondPrice]),
+  endAt: z.coerce.date(),
+}).refine((data) => data.endAt > data.startAt, {
+  message: "endAt must be after startAt",
+  path: ["endAt"],
+});
+
+const AuctionSchema = z.discriminatedUnion("type", [
+  EnglishAuctionSchema,
+  DutchAuctionSchema,
+  SealedAuctionSchema,
+]);
 
 export async function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
-  try{
-    logger.debug( `creatorId: ${req.auth?.payload.sub}` )
-    const auction = new Auction({ ...req.body, creatorId: req.auth?.payload.sub });
-    await auction.validate();
-    res.locals.auction = auction;
-    next();
-  } catch(err) {
-    if (err instanceof ValidationError) {
-      logger.info(err.message);
-      next(createError(ErrorEnum.ValidationError, err.errors.map(e => `${e.path}: ${e.message}`).join(", ")));
-      return;
-    }
-    next(err);
+  req.body.creatorId = req.auth?.payload.sub;
+  const result = AuctionSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return next(new AppError(
+      getErrorHTTPStatus(ErrorEnum.MalformedPayload),
+      getZodErrorMessage(result),
+      getErrorName(ErrorEnum.MalformedPayload)
+    ));
   }
+
+  // Overwrite req.body with the safely parsed/sanitized fields
+  req.body = result.data;
+
+  next();
 }

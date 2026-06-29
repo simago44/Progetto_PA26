@@ -159,6 +159,51 @@
       "response": []
     },
     {
+      "name": "login bid-creator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"bid-creator\",\n    \"password\": \"Password1@\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/login",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "login admin",
       "event": [
         {
@@ -204,7 +249,115 @@
       "response": []
     },
     {
-      "name": "Create Auction",
+      "name": "Create English Auction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.environment.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.environment.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Dutch Auction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.environment.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.environment.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create First Price Auction",
       "event": [
         {
           "listen": "prerequest",

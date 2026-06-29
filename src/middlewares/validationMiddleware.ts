@@ -39,6 +39,14 @@ export const loginSchema = z.object({
     .max(1000, "Invalid username or password")
 });
 
+export function getZodErrorMessage(zodResult: z.ZodSafeParseError<Record<string, unknown>>): string {
+  const errorMessages = Object.entries(z.treeifyError(zodResult.error).properties ?? {})
+    .map(([key, property]) => `${key}: ${property?.errors?.[0]}`)
+    .filter(Boolean);
+
+  return `${errorMessages.join("; ")}`;
+}
+
 /**
  * Creates a validation middleware for the given Zod schema.
  * On success, overwrites `req.body` with the sanitized and transformed data.
@@ -51,18 +59,13 @@ function validateCredentials(zodObject: z.ZodObject) {
     const result = zodObject.safeParse(req.body);
 
     if (!result.success) {
-      const errorMessages = Object.values(z.treeifyError(result.error).properties ?? {})
-        .map(property => property?.errors?.[0])
-        .filter(Boolean);
-
-      const errorString = `Validation error: ${errorMessages.join("; ")}`;
-
       return next(new AppError(
         getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-        errorString,
+        getZodErrorMessage(result),
         getErrorName(ErrorEnum.MalformedPayload)
       ));
     }
+
 
     // Overwrite req.body with the safely parsed/sanitized fields
     req.body = result.data;

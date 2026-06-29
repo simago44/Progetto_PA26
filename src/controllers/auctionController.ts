@@ -1,10 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import { validateAuction } from "../services/auctionValidationService.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import { BaseError, ValidationError } from "sequelize";
 import { createError, ErrorEnum } from "../factory/errorFactory.ts";
 import logger from "../middlewares/logger.ts";
-import { AuctionStatus, type Auction } from "../models/Auction.ts";
+import { Auction, AuctionStatus } from "../models/Auction.ts";
 import * as Messages from "../factory/messageStrings.ts";
 import { StatusCodes } from "http-status-codes";
 
@@ -49,15 +48,12 @@ export class AuctionController {
    */
   public async createAuction(req: Request, res: Response, next: NextFunction) {
     try {
-      const auction: Auction = res.locals.auction;
-
-      validateAuction(auction);
+      const auction = await Auction.create({...req.body});
 
       await auctionRepository.save(auction);
 
       res.status(StatusCodes.CREATED).json({ id: auction.id });
     } catch (err) {
-      logger.debug(typeof err);
       if (err instanceof ValidationError) {
         const errorString: string = `${err.message}: ${err.errors.map((e) => `${e.path}: ${e.message}`).join(`, `)}`;
 
@@ -68,7 +64,6 @@ export class AuctionController {
       if (err instanceof BaseError) {
         next(createError(ErrorEnum.DatabaseError, err.message));
       }
-      logger.error(err);
       next(err);
     }
   }
