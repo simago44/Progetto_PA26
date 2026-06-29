@@ -7,11 +7,14 @@ export const Auth0Permission = {
   createAuction: "create:auction",
   updateAuction: "update:auction",
   createBid: "create:bid",
-  readWallet: "read:wallet",
-  updateWallet: "update:wallet",
-  readAuctionReport: "read:auction-report",
-  readWalletReport: "read:wallet-report",
-  readAuctionStats: "read:auction-stats"
+  readCurrentUserWallet: "read:current_user_wallet",
+  readWallets: "read:wallets",
+  updateWallets: "update:wallets",
+  readAuctionReports: "read:auction_reports",
+  readCurrentUserAuctionReport: "read:current_user_auction_report",
+  readWalletReports: "read:wallet_reports",
+  readCurrentUserWalletReport: "read:current_user_wallet_report",
+  readAuctionStats: "read:auction_stats"
 } as const;
 export type Auth0Permission = (typeof Auth0Permission)[keyof typeof Auth0Permission];
 

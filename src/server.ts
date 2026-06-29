@@ -5,6 +5,7 @@
 
 import express from "express";
 import authRoutes from "./routes/authRoutes.ts";
+import userRoutes from "./routes/userRoutes.ts";
 import auctionRoutes from "./routes/auctionRoutes.ts";
 import { errorHandler } from "./middlewares/errorHandler.ts";
 import logger from "./middlewares/logger.ts";
@@ -33,6 +34,7 @@ app.listen(PORT, () => {
 });
 
 app.use("/", authRoutes);
+app.use("/users", userRoutes);
 app.use("/auctions", auctionRoutes);
 
 app.use(errorHandler);
