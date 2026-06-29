@@ -26,9 +26,9 @@ export const validationError_message: string = "ERROR - Validation Error";
 export const databaseError_message: string = "ERROR - Database Error";
 export const invalidAuctionStatus_message: string =
   "ERROR - Invalid auction status";
+export const wrongUsernameOrPassword_message: string =
+  "Wrong username or password";
 
 // Success
 export const userCreatedSuccessfully_message: string =
   "User created successfully";
-export const wrongUsernameOrPassword_message: string =
-  "Wrong username or password";
