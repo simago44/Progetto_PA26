@@ -29,15 +29,13 @@ export function checkPermission(permission: string) {
   };
 }
 
-export function checkPermissionForSelf(selfPermission: string, otherPermission: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+export function checkPermissionForSelf(selfPermission: string, allPermission: string) {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const permissions = (req.auth?.payload.permissions as string[]) ?? [];
+    if (permissions.includes(allPermission)) return next();
+
     const isSelf = req.params.id === req.auth?.payload.sub;
-
-    const required = isSelf ? selfPermission : otherPermission;
-
-    if (permissions.includes(required)) return next();
-    next(createError(ErrorEnum.Forbidden));
+    if (!permissions.includes(selfPermission) || !isSelf) return next(createError(ErrorEnum.Forbidden));
   };
 }
 

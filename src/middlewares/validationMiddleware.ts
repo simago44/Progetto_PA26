@@ -51,7 +51,6 @@ function validateCredentials(zodObject: z.ZodObject) {
     const result = zodObject.safeParse(req.body);
 
     if (!result.success) {
-      // YOUR EXACT ERROR LOGIC UNCHANGED
       const errorMessages = Object.values(z.treeifyError(result.error).properties ?? {})
         .map(property => property?.errors?.[0])
         .filter(Boolean);

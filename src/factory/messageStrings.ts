@@ -32,3 +32,5 @@ export const wrongUsernameOrPassword_message: string =
 // Success
 export const userCreatedSuccessfully_message: string =
   "User created successfully";
+export const walletUpdatedSuccessfully_message: string =
+  "Wallet updated successfully";
