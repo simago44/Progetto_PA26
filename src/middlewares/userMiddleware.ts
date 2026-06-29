@@ -3,10 +3,10 @@ import { AppError, createError, ErrorEnum, getErrorHTTPStatus, getErrorName } fr
 import z from 'zod';
 
 export function resolveUserIdParam(req: Request, _res: Response, next: NextFunction) {
-  if (!req.params.id) return next(createError(ErrorEnum.MalformedPayload));
+  if (!req.params.userId) return next(createError(ErrorEnum.MalformedPayload));
   // Should not be necessary, because auth should always be checked before that!
   if (!req.auth?.payload.sub) return next(createError(ErrorEnum.Unauthorized));
-  if (req.params.id == "self") req.params.id = req.auth.payload.sub;
+  if (req.params.userId == "self") req.params.userId = req.auth.payload.sub;
 
   next();
 };

@@ -44,14 +44,14 @@ const AuctionSchema = z.discriminatedUnion("type", [
   SealedAuctionSchema,
 ]);
 
-export async function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function validateAuctionMiddleware(req: Request, _res: Response, next: NextFunction) {
   req.body.creatorId = req.auth?.payload.sub;
   const result = AuctionSchema.safeParse(req.body);
 
   if (!result.success) {
     return next(new AppError(
       getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-      getZodErrorMessage(result),
+      "Malformed auction: " + getZodErrorMessage(result),
       getErrorName(ErrorEnum.MalformedPayload)
     ));
   }

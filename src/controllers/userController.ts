@@ -6,7 +6,7 @@ import { walletUpdatedSuccessfully_message } from "../factory/messageStrings.ts"
 
 export class UserController {
   public async getWallet(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id as string;
+    const id = req.params.userId as string;
     try {
       const user = await userRepository.loadByPk(id);
       const tokens = user.tokens;
@@ -18,7 +18,7 @@ export class UserController {
   }
 
   public async topUpWallet(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id as string;
+    const id = req.params.userId as string;
     const tokens = req.body.tokens as number;
 
     try {

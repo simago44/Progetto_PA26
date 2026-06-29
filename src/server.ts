@@ -37,7 +37,7 @@ app.listen(PORT, () => {
 app.use("/", authRoutes);
 app.use("/users", userRoutes);
 app.use("/auctions", auctionRoutes);
-app.use("/auctions/:auctionId/bids", bidRoutes);
+app.use("/auctions", bidRoutes);
 
 app.use(errorHandler);
 

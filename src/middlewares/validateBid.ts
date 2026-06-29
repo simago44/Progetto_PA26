@@ -1,35 +1,31 @@
 import type { Request, Response, NextFunction } from "express";
-import logger from "./logger.ts";
-import { Bid } from "../models/Bid.ts";
-import { ValidationError } from "sequelize";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
+import z from "zod";
+import { getZodErrorMessage } from "./validationMiddleware.ts";
+
+const BidSchema = z.object({
+  userId: z.string(),
+  auctionId: z.string(),
+  bidPrice: z.int().min(1)
+})
 
 /** Middleware which validates the bid in the request body */
-export async function validateBidMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const bid = new Bid({
-      ...req.body,
-      userId: req.auth?.payload.sub,
-      createdAt: new Date(),
-    });
-    await bid.validate();
-    res.locals.bid = bid;
-    next();
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      logger.info(err.message);
-      next(
-        createError(
-          ErrorEnum.ValidationError,
-          err.errors.map((e) => `${e.path}: ${e.message}`).join(", "),
-        ),
-      );
-      return;
-    }
-    next(err);
+export async function validateBidMiddleware(req: Request, res: Response, next: NextFunction) {
+  req.body.userId = req.auth?.payload.sub;
+  req.body.auctionId = req.params.auctionId;
+  
+  const result = BidSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return next(new AppError(
+      getErrorHTTPStatus(ErrorEnum.MalformedPayload),
+      "Malformed bid: " + getZodErrorMessage(result),
+      getErrorName(ErrorEnum.MalformedPayload)
+    ));
   }
+
+  // Overwrite req.body with the safely parsed/sanitized fields
+  req.body = result.data;
+
+  next();
 }

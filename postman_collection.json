@@ -411,6 +411,62 @@
       "response": []
     },
     {
+      "name": "Create Bid",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.environment.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.environment.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"bidPrice\": 100\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions/2/bids",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions",
+            "2",
+            "bids"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Get Current User Wallet",
       "request": {
         "auth": {

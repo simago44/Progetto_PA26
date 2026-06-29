@@ -3,13 +3,16 @@ import { StatusCodes } from "http-status-codes";
 import bidRepository from "../repositories/bidRepository.ts";
 import { Bid } from "../models/Bid.ts";
 import { BaseError, ValidationError } from "sequelize";
-import { AppError, createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { createError, ErrorEnum } from "../factory/errorFactory.ts";
 
 export class BidController {
-  public async createBid(_req: Request, res: Response, next: NextFunction) {
+  public async createBid(req: Request, res: Response, next: NextFunction) {
     try {
-      const bid: Bid = res.locals.bid;
+      // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
+      const bid: Bid = new Bid({...req.body});
+
       const saved = await bidRepository.save(bid);
+
       res.status(StatusCodes.OK).json({ id: saved.id });
     } catch (err) {
       if (err instanceof ValidationError) {

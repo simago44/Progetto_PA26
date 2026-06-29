@@ -34,8 +34,9 @@ export function checkPermissionForSelf(selfPermission: string, allPermission: st
     const permissions = (req.auth?.payload.permissions as string[]) ?? [];
     if (permissions.includes(allPermission)) return next();
 
-    const isSelf = req.params.id === req.auth?.payload.sub;
+    const isSelf = req.params.userId === req.auth?.payload.sub;
     if (!permissions.includes(selfPermission) || !isSelf) return next(createError(ErrorEnum.Forbidden));
+    next();
   };
 }
 
