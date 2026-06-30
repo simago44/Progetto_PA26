@@ -40,7 +40,8 @@ export const ErrorEnum = {
   ServiceUnavailable: 12,
   ValidationError: 13,
   DatabaseError: 14,
-  WrongCredentials: 15
+  WrongCredentials: 15,
+  AuctionNotFound: 16
 } as const;
 export type ErrorEnum = typeof ErrorEnum[keyof typeof ErrorEnum];
 
@@ -61,6 +62,7 @@ const errorMap: Record<ErrorEnum, { status: number; msg: string; name: string }>
   [ErrorEnum.ValidationError]: { status: StatusCodes.UNPROCESSABLE_ENTITY, msg: Message.validationError_message, name: "ValidationError" },
   [ErrorEnum.DatabaseError]: { status: StatusCodes.INTERNAL_SERVER_ERROR, msg: Message.databaseError_message, name: "DatabaseError" },
   [ErrorEnum.WrongCredentials]: { status: StatusCodes.UNAUTHORIZED, msg: Message.wrongUsernameOrPassword_message, name: "WrongCredentials" },
+  [ErrorEnum.AuctionNotFound]: { status: StatusCodes.NOT_FOUND, msg: Message.auctionNotFound_message, name: "AuctionNotFound" },
 };
 
 /**

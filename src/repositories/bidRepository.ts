@@ -31,6 +31,16 @@ class BidRepository {
 
     return bid != null;
   }
+  
+  public async getAuctionBids(auctionId: number): Promise<Bid[]> {
+    const bids = await Bid.findAll({
+      where: {
+        auctionId: auctionId
+      }
+    });
+
+    return bids;
+  }
 }
 
 const bidRepository = new BidRepository();

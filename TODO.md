@@ -37,9 +37,8 @@
 - [ ] `GET /users/:id/wallet-report` – Spesa in un periodo per aggiudicazioni (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin) uri parameters: start=data end=data
 - [x] `POST /auctions` – Crea nuova asta (ruolo: bid-creator)
 - [x] `GET /auctions` – Lista aste con filtro per stato (pubblica, non autenticata)
-- [ ] `POST /auctions/:id/bids` – Crea offerta per un'asta (ruolo: bid-participant)
-- [ ] `PUT /auctions/:id/price` – Aggiorna prezzo asta olandese se di tipo manuale (ruolo: bid-creator)
-- [ ] `GET /auctions/:id/bids` – Lista rilanci aste aperte (pubblica)
+- [x] `POST /auctions/:id/bids` – Crea offerta per un'asta (ruolo: bid-participant)
+- [x] `GET /auctions/:id/bids` – Lista rilanci aste aperte (pubblica)
 - [ ] `GET /auctions/:type/stats` – Statistiche per tipologia di asta: numero aste, media/minimo/massimo partecipanti (ruolo: admin)
 
 ## Logica di business

@@ -567,6 +567,37 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "Get Auction Bids",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions/3/bids",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions",
+            "3",
+            "bids"
+          ]
+        }
+      },
+      "response": []
     }
   ],
   "variable": [

@@ -1,12 +1,13 @@
 import sequelize from "./sequelize.ts";
 import { fakerIT as faker } from "@faker-js/faker";
 import "../models/relationships.ts";
-import { User } from "../models/relationships.ts";
+import { Auction, Bid, User } from "../models/relationships.ts";
 import env, { NodeEnv } from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import { deleteStaleUsers, RoleName } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
 import { Sequelize } from "sequelize";
+import { AuctionType } from "../models/Auction.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -49,9 +50,6 @@ async function generateUsersArray(
   return users;
 }
 
-  return auctions;
-}
-
 export async function initDb() {
   if (env.NODE_ENV != NodeEnv.Development) {
     await sequelize.sync();
@@ -81,11 +79,54 @@ export async function initDb() {
     const bidCreators = await generateUsersArray(bidCreatorsLength, "bid creators", logger.info);
     const admins = await generateUsersArray(adminsLength, "bid participants", logger.info);
 
-    const auctions = await generateAuctionsArray(auctionsPerTypeAndStatus);
   } catch (err) {
     deleteStaleUsers();
     if (err instanceof Error)
       logger.error(`user creations crashed: ${err.message}`);
   }
+
+  await deleteStaleUsers();
+   const NotStarted = await Auction.create({
+    startAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
+    endAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
+    creatorId: bidCreator.id,
+    startPrice: 100,
+    type: AuctionType.English,
+    delayBeforeEnding: 10000,
+  });
+  
+  const InProgress = await Auction.create({
+    startAt: new Date(Date.now() + 1000), // parte subito
+    endAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
+    creatorId: bidCreator.id,
+    startPrice: 100,
+    type: AuctionType.FirstPrice,
+    delayBeforeEnding: 10000,
+  });
+
+  const Ended = await Auction.create({
+    startAt: new Date(Date.now() + 1000), // 1 secondo
+    endAt: new Date(Date.now() + 2000), //2 secondi
+    creatorId: bidCreator.id,
+    startPrice: 100,
+    type: AuctionType.English,
+    delayBeforeEnding: 10000,
+    minimumIncrement: 50
+  });
+
+  const BidEnded1 = await Bid.create({
+    auctionId: Ended.id,
+    userId: bidParticipant.id,
+    bidPrice: 200
+  })
+
+  const BidEnded2 = await Bid.create({
+    auctionId: Ended.id,
+    userId: bidParticipant.id,
+    bidPrice: 300
+  })
+  
+  await deleteStaleUsers();
+  
   await deleteStaleUsers();
 }

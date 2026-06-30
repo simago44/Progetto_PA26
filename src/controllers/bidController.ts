@@ -72,11 +72,39 @@ export class BidController {
       next(createError(ErrorEnum.InternalServer));
     }
   }
-  public async getAuctionBids(
-    _req: Request,
-    _res: Response,
-    _next: NextFunction,
-  ) {
-    throw createError(ErrorEnum.RouteNotFound);
+  public async getAuctionBids(req: Request, res: Response, next: NextFunction) {
+    const auctionId = req.params.auctionId as string;
+
+    try {
+      const auction = await auctionRepository.loadByPk(auctionId);
+
+      if (auction.type != AuctionType.English && auction.type != AuctionType.Dutch) {
+        return next(createError(ErrorEnum.ValidationError, `Can't get bids for auction of type ${auction.type}`));
+      }
+
+      const bids = await bidRepository.getAuctionBids(auction.id);
+
+      res.status(StatusCodes.OK).json({ bids });
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        next(
+          createError(
+            ErrorEnum.ValidationError,
+            `${err.message}: ${err.errors.map((e) => `${e.path}: ${e.message}`).join(`, `)}`,
+          ),
+        );
+        return;
+      }
+      if (err instanceof BaseError) {
+        next(createError(ErrorEnum.DatabaseError, err.message));
+        return;
+      }
+      if (err instanceof Error) {
+        next(createError(ErrorEnum.InternalServer, err.message));
+        return;
+      }
+      next(createError(ErrorEnum.InternalServer));
+    }
+
   }
 }

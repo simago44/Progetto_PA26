@@ -5,8 +5,7 @@ import { createBidMiddlewares } from "../middlewares/middlewareChains.ts";
 const controller = new BidController();
 const router = Router();
 
+router.get("/:auctionId/bids", controller.getAuctionBids);
 router.post("/:auctionId/bids", createBidMiddlewares, controller.createBid);
-
-router.get("/", controller.getAuctionBids);
 
 export default router;
