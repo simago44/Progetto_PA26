@@ -1,10 +1,33 @@
 import sequelize from "./sequelize.ts";
-
+import { fakerIT as faker } from "@faker-js/faker";
 import "../models/relationships.ts";
-import { Auction, Bid, User } from "../models/relationships.ts";
-import { AuctionType } from "../models/Auction.ts";
-import { deleteStaleUsers } from "./auth0.ts";
+import { User } from "../models/relationships.ts";
 import env, { NodeEnv } from "../config.ts";
+import userRepository from "../repositories/userRepository.ts";
+import { deleteStaleUsers, RoleName } from "./auth0.ts";
+import logger from "../middlewares/logger.ts";
+
+const bidParticipantsLength = 10;
+const bidCreatorsLength = 5;
+const AdminsLength = 0;
+
+const auth0UsernameMinLength = 1;
+const auth0UsernameMaxLength = 15;
+
+const randomEndedAuctions = 5; //per ogni tipo di asta
+const randomInProgressAuctions = 5;
+const randomNotStartedAuctions = 5;
+
+function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
+  let username = faker.internet.username();
+  if (username.length < minLength) {
+    username += faker.string.alphanumeric(minLength - username.length);
+  }
+  if (username.length > maxLength) {
+    username = username.slice(0, maxLength);
+  }
+  return username;
+}
 
 export async function initDb() {
   if (env.NODE_ENV != NodeEnv.Development) {
@@ -29,32 +52,47 @@ export async function initDb() {
     username: "bid-participant",
   });
 
-  const NotStarted = await Auction.create({
-    startAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
-    endAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.English,
-    delayBeforeEnding: 10000,
-  });
+  try {
+    logger.info(`creating ${bidParticipantsLength} bid participants...`);
+    const randomBidParticipants: User[] = [];
+    for (let i = 0; i < bidParticipantsLength; i++) {
+      const user = await userRepository.save(
+        generateUsername(),
+        "Password1@",
+        RoleName.BidParticipant
+      );
+      randomBidParticipants.push(user);
+    }
+    logger.info("bid participants created successfully");
 
-  const InProgress = await Auction.create({
-    startAt: new Date(Date.now() + 1000), // parte subito
-    endAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.English,
-    delayBeforeEnding: 10000,
-  });
+    logger.info(`creating ${bidCreatorsLength} bid creators...`);
+    const randomBidCreators: User[] = [];
+    for (let i = 0; i < bidCreatorsLength; i++) {
+      const user = await userRepository.save(
+        generateUsername(),
+        "Password1@",
+        RoleName.BidParticipant
+      );
+      randomBidCreators.push(user);
+    }
+    logger.info("bid creators created successfully");
 
-  const Ended = await Auction.create({
-    startAt: new Date(Date.now() + 1000), // 1 secondo
-    endAt: new Date(Date.now() + 2000), //2 secondi
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.English,
-    delayBeforeEnding: 10000,
-  });
-  
-  await deleteStaleUsers();
+    logger.info(`creating ${AdminsLength} admins...`);
+    const randomAdmins: User[] = [];
+    for (let i = 0; i < AdminsLength; i++) {
+      const user = await userRepository.save(
+        generateUsername(),
+        "Password1@",
+        RoleName.BidParticipant
+      );
+      randomAdmins.push(user);
+    }
+    logger.info("admins created successfully");
+
+
+  } catch (err) {
+    await deleteStaleUsers();
+    if (err instanceof Error)
+      logger.error(`user creations crashed: ${err.message}`);
+  } finally { await deleteStaleUsers(); }
 }

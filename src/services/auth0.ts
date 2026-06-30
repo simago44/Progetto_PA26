@@ -2,6 +2,7 @@ import { AuthenticationClient, ManagementClient } from "auth0";
 import env from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import logger from "../middlewares/logger.ts";
+import { time } from "node:console";
 
 export const Auth0Permission = {
   createAuction: "create:auction",
@@ -81,6 +82,6 @@ export async function deleteStaleUsers() {
     if (dbUserIds.has(user.user_id)) continue;
 
     logger.info(`Deleting: ${user.user_id}`);
-    managementClient.users.delete(user.user_id);
+    await managementClient.users.delete(user.user_id);
   }
 }

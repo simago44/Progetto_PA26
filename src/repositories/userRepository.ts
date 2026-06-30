@@ -13,7 +13,7 @@ class UserRepository {
       connection: env.AUTH0_CONNECTION,
       username: username,
       password: password
-    })
+    });
 
     const user_id = user.user_id as string;
 
@@ -21,7 +21,7 @@ class UserRepository {
       roles: [Auth0Roles[role].id]
     });
 
-    return await User.build({ id: "", username: username }).save();
+    return await User.build({ id: user_id, username: username }).save();
   }
 
   public async loadByPk(userId: string): Promise<User> {
