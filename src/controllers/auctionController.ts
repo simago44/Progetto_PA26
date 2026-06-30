@@ -48,10 +48,9 @@ export class AuctionController {
    */
   public async createAuction(req: Request, res: Response, next: NextFunction) {
     try {
-      const auction = await Auction.create({...req.body});
+      const auction = Auction.build({ ...req.body });
 
       await auctionRepository.save(auction);
-
       res.status(StatusCodes.CREATED).json({ id: auction.id });
     } catch (err) {
       if (err instanceof ValidationError) {

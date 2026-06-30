@@ -22,7 +22,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
     case AuctionType.English:
       if (auction.endAt == null)
         throw new TypeError("Null attribute endAt");
-      
+
       if (bids.length === 0) finishTime = auction.endAt;
       else {
         const lastBid = bids.reduce((latest, bid) =>
@@ -34,8 +34,8 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
         finishTime =
           lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt;
       }
-      logger.warn(finishTime.toString());
-      logger.warn(now.toString());
+      logger.debug(`auction ${auction.id} ends at: ${finishTime.toString()}`);
+      logger.debug(now.toString());
       return finishTime.getTime() - now.getTime(); // negative if past
 
     case AuctionType.Dutch:
@@ -82,7 +82,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
 
 export async function getWinningBid(
   auction: Auction,
-): Promise<{ bid: Bid; finalPrice: number } | null> {
+): Promise<{ bid: Bid; finalPrice: number; } | null> {
   // get only bids from user with enought tokens
   // descending order based on bidPrice
   const bids = await auction.getBids({
@@ -115,7 +115,7 @@ export async function closeAuction(auction: Auction, msToEnd: number) {
   // if it was already closed or is not ended yet, we return
   if (auction.hasEnded || msToEnd > 0) return;
 
-  logger.debug(`Closing auction: ${auction.id}`)
+  logger.debug(`Closing auction: ${auction.id}`);
 
   await sequelize.transaction(async (t) => {
     const winningBid = await getWinningBid(auction);
@@ -140,4 +140,4 @@ export async function closeAuction(auction: Auction, msToEnd: number) {
       );
     }
   });
-}
+};

@@ -11,7 +11,7 @@ const BaseAuctionSchema = z.object({
   }),
   startPrice: z.int().min(1),
   type: z.enum(AuctionType),
-})
+});
 
 const EnglishAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.English),
@@ -28,7 +28,7 @@ const DutchAuctionSchema = BaseAuctionSchema.extend({
   decrementPrice: z.int().min(1),
   decrementInterval: z.int().min(60000),
   minimumPrice: z.int().positive().min(0),
-})
+});
 
 const SealedAuctionSchema = BaseAuctionSchema.extend({
   type: z.enum([AuctionType.FirstPrice, AuctionType.SecondPrice]),
