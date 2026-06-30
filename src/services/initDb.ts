@@ -6,18 +6,17 @@ import env, { NodeEnv } from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import { deleteStaleUsers, RoleName } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
+import { Sequelize } from "sequelize";
 
-const bidParticipantsLength = 10;
-const bidCreatorsLength = 5;
-const AdminsLength = 0;
+const bidParticipantsLength = 0;
+const bidCreatorsLength = 0;
+const adminsLength = 0;
 
 const auth0UsernameMinLength = 1;
 const auth0UsernameMaxLength = 15;
 
 const randomEndedAuctions = 5; //per ogni tipo di asta
 const randomInProgressAuctions = 5;
-const randomNotStartedAuctions = 5;
-
 function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
   let username = faker.internet.username();
   if (username.length < minLength) {
@@ -29,6 +28,30 @@ function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0U
   return username;
 }
 
+async function generateUsersArray(
+  length: number,
+  logString?: string,
+  loggerMethod?: (_: string) => {}
+): Promise<User[]> {
+  const users: User[] = [];
+  if (loggerMethod && logString) loggerMethod(`generating ${length} ${logString}...`);
+  for (let i = 0; i < length; i++) {
+    const username: string = generateUsername();
+    logger.debug(`creating user with username: ${username}`);
+    const user = await userRepository.save(
+      username,
+      "Password1@",
+      RoleName.BidParticipant
+    );
+    users.push(user);
+  }
+  if (loggerMethod && logString) loggerMethod(`${length} ${logString} created`);
+  return users;
+}
+
+  return auctions;
+}
+
 export async function initDb() {
   if (env.NODE_ENV != NodeEnv.Development) {
     await sequelize.sync();
@@ -37,6 +60,7 @@ export async function initDb() {
 
   await sequelize.sync({ force: true });
 
+  //User creation
   const admin = await User.create({
     id: "auth0|6a3fd812dbd594d590a92367",
     username: "admin",
@@ -53,46 +77,15 @@ export async function initDb() {
   });
 
   try {
-    logger.info(`creating ${bidParticipantsLength} bid participants...`);
-    const randomBidParticipants: User[] = [];
-    for (let i = 0; i < bidParticipantsLength; i++) {
-      const user = await userRepository.save(
-        generateUsername(),
-        "Password1@",
-        RoleName.BidParticipant
-      );
-      randomBidParticipants.push(user);
-    }
-    logger.info("bid participants created successfully");
+    const bidParticipants = await generateUsersArray(bidParticipantsLength, "bid participants", logger.info);
+    const bidCreators = await generateUsersArray(bidCreatorsLength, "bid creators", logger.info);
+    const admins = await generateUsersArray(adminsLength, "bid participants", logger.info);
 
-    logger.info(`creating ${bidCreatorsLength} bid creators...`);
-    const randomBidCreators: User[] = [];
-    for (let i = 0; i < bidCreatorsLength; i++) {
-      const user = await userRepository.save(
-        generateUsername(),
-        "Password1@",
-        RoleName.BidParticipant
-      );
-      randomBidCreators.push(user);
-    }
-    logger.info("bid creators created successfully");
-
-    logger.info(`creating ${AdminsLength} admins...`);
-    const randomAdmins: User[] = [];
-    for (let i = 0; i < AdminsLength; i++) {
-      const user = await userRepository.save(
-        generateUsername(),
-        "Password1@",
-        RoleName.BidParticipant
-      );
-      randomAdmins.push(user);
-    }
-    logger.info("admins created successfully");
-
-
+    const auctions = await generateAuctionsArray(auctionsPerTypeAndStatus);
   } catch (err) {
-    await deleteStaleUsers();
+    deleteStaleUsers();
     if (err instanceof Error)
       logger.error(`user creations crashed: ${err.message}`);
-  } finally { await deleteStaleUsers(); }
+  }
+  await deleteStaleUsers();
 }
