@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { Auction, AuctionStatus, type AuctionType } from "../models/Auction.ts";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { Errors } from "../factory/errorFactory.ts";
 
 class AuctionRepository {
   public async save(auction: Auction): Promise<Auction> {
@@ -9,7 +9,7 @@ class AuctionRepository {
 
   public async loadByPk(auctionId: string): Promise<Auction> {
     const auction = await Auction.findByPk(auctionId);
-    if (!auction) throw createError(ErrorEnum.AuctionNotFound);
+    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
     return auction;
   }

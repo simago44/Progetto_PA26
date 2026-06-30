@@ -1,39 +1,47 @@
 import env from "../config.ts";
 import { User } from "../models/User.ts";
-import { Auth0Roles, managementClient, RoleName } from "../services/auth0.ts";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { Auth0Roles, managementClient, parseAuth0Error, RoleName } from "../services/auth0.ts";
+import { Errors } from "../factory/errorFactory.ts";
+import { fromSequelizeError } from "../services/sequelize.ts";
 
 class UserRepository {
   public async save(username: string, password: string, role: RoleName): Promise<User> {
-    // TODO: validation
-    // TODO: auth0
-    //throw new ValidationError("a", []);
+    let user_id: string;
 
-    const user = await managementClient.users.create({
-      connection: env.AUTH0_CONNECTION,
-      username: username,
-      password: password
-    });
+    try {
+      const user = await managementClient.users.create({
+        connection: env.AUTH0_CONNECTION,
+        username,
+        password
+      });
+      user_id = user.user_id as string;
+      await managementClient.users.roles.assign(user_id, {
+        roles: [Auth0Roles[role].id]
+      });
+    } catch (err) {
+      throw parseAuth0Error(err);
+    }
 
-    const user_id = user.user_id as string;
-
-    await managementClient.users.roles.assign(user_id, {
-      roles: [Auth0Roles[role].id]
-    });
-
-    return await User.build({ id: user_id, username: username }).save();
+    try {
+      return await User.create({ id: user_id, username });
+    } catch (err) {
+      // Local save failed after the Auth0 user already exists — clean up
+      // to avoid an orphaned Auth0 account with no matching local record.
+      await managementClient.users.delete(user_id).catch(() => {});
+      throw fromSequelizeError(err);
+    }
   }
 
   public async loadByPk(userId: string): Promise<User> {
     const user = await User.findByPk(userId);
-    if (!user) throw new Error();
+    if (!user) throw new Errors.UserNotFoundError({ userId });
 
     return user;
   }
 
   public async loadByUsername(username: string): Promise<User> {
     const user = await User.findOne({ where: { username } });
-    if (!user) throw createError(ErrorEnum.WrongCredentials);
+    if (!user) throw new Errors.WrongCredentialsErrors;
 
     return user;
   }

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
+import { Errors, parseZodError } from "../factory/errorFactory.ts";
 import z from "zod";
 import { getZodErrorMessage } from "./authValidationMiddleware.ts";
 
@@ -17,11 +17,10 @@ export async function validateBidMiddleware(req: Request, res: Response, next: N
   const result = BidSchema.safeParse(req.body);
 
   if (!result.success) {
-    return next(new AppError(
-      getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-      "Malformed bid: " + getZodErrorMessage(result),
-      getErrorName(ErrorEnum.MalformedPayload)
-    ));
+    throw new Errors.ValidationError({
+      form: "validateBidMiddleware",
+      errors: parseZodError(result.error),
+    });
   }
 
   // Overwrite req.body with the safely parsed/sanitized fields

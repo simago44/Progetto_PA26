@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import { BaseError, ValidationError } from "sequelize";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
 import logger from "../middlewares/logger.ts";
 import { Auction, AuctionStatus } from "../models/Auction.ts";
 import * as Messages from "../factory/messageStrings.ts";
 import { StatusCodes } from "http-status-codes";
+import { Errors } from "../factory/errorFactory.ts";
 
 export class AuctionController {
   /** Gets the auctions filtered by status
@@ -13,21 +13,14 @@ export class AuctionController {
    * Example URL: /auctions?status=0
    */
   public async getAuctions(req: Request, res: Response, next: NextFunction) {
-    const statusValue =
-      req.query.status !== undefined ? Number(req.query.status) : undefined;
+    const statusValue = req.query.status !== undefined ? Number(req.query.status) : undefined;
 
     if (
       //invalid auction status
       statusValue !== undefined &&
       !Object.values(AuctionStatus).includes(statusValue as AuctionStatus)
     ) {
-      next(
-        createError(
-          ErrorEnum.BadRequest,
-          Messages.invalidAuctionStatus_message,
-        ),
-      );
-      return;
+      throw new Errors.InvalidAuctionStatusError({ status: statusValue });
     }
 
     const status = statusValue as AuctionStatus | undefined;
@@ -47,23 +40,9 @@ export class AuctionController {
    * @returns void
    */
   public async createAuction(req: Request, res: Response, next: NextFunction) {
-    try {
-      const auction = Auction.build({ ...req.body });
+    const auction = Auction.build({ ...req.body });
 
-      await auctionRepository.save(auction);
-      res.status(StatusCodes.CREATED).json({ id: auction.id });
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        const errorString: string = `${err.message}: ${err.errors.map((e) => `${e.path}: ${e.message}`).join(`, `)}`;
-
-        logger.info(errorString);
-        next(createError(ErrorEnum.ValidationError, errorString));
-        return;
-      }
-      if (err instanceof BaseError) {
-        next(createError(ErrorEnum.DatabaseError, err.message));
-      }
-      next(err);
-    }
+    await auctionRepository.save(auction);
+    res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
 }

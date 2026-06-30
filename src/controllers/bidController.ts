@@ -2,8 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import bidRepository from "../repositories/bidRepository.ts";
 import { Bid } from "../models/Bid.ts";
-import { BaseError, ValidationError } from "sequelize";
-import { createError, ErrorEnum } from "../factory/errorFactory.ts";
+import { Errors } from "../factory/errorFactory.ts";
 import { getMsToEnd, getWinningBid } from "../models/AuctionUtils.ts";
 import { Auction, AuctionType } from "../models/Auction.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
@@ -11,25 +10,27 @@ import userRepository from "../repositories/userRepository.ts";
 import type { User } from "../models/User.ts";
 
 
-async function isBidValid(bid: Bid, auction: Auction, user: User): Promise<string> {
+async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
   const auctionMsToEnd = await getMsToEnd(auction);
-  if (auctionMsToEnd <= 0) return "Auction has ended";
+  if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError;
 
   switch (auction.type) {
     case AuctionType.English:
       const winningBid = await getWinningBid(auction);
       if (!winningBid) return "";
-      if (bid.bidPrice < winningBid?.finalPrice + auction.minimumIncrement) return "Bid value too low";
-      return "";
+      if (bid.bidPrice < winningBid?.finalPrice + auction.minimumIncrement) {
+        throw new Errors.BidTooLowError({ minimumBid: winningBid.finalPrice + auction.minimumIncrement });
+      }
+      break;
 
     case AuctionType.Dutch:
-      return "";
+      break;
 
     case AuctionType.FirstPrice:
     case AuctionType.SecondPrice:
       const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id);
-      if (userHasBidsInAuction) return "Bid already placed";
-      return "";
+      if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError;
+      break;
   }
 }
 
@@ -38,73 +39,29 @@ export class BidController {
     const auctionId = req.body.auctionId as string;
     const userId = req.body.userId as string;
 
-    try {
-      const auction = await auctionRepository.loadByPk(auctionId);
-      const user = await userRepository.loadByPk(userId);
+    const auction = await auctionRepository.loadByPk(auctionId);
+    const user = await userRepository.loadByPk(userId);
 
-      // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
-      const bid: Bid = Bid.build({ ...req.body });
+    // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
+    const bid: Bid = Bid.build({ ...req.body });
 
-      const errMsg = await isBidValid(bid, auction, user);
-      if (errMsg != "") return next(createError(ErrorEnum.ValidationError, errMsg));
+    await checkIsBidValid(bid, auction, user);
 
-      const saved = await bidRepository.save(bid);
+    const saved = await bidRepository.save(bid);
 
-      res.status(StatusCodes.OK).json({ id: saved.id });
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        next(
-          createError(
-            ErrorEnum.ValidationError,
-            `${err.message}: ${err.errors.map((e) => `${e.path}: ${e.message}`).join(`, `)}`,
-          ),
-        );
-        return;
-      }
-      if (err instanceof BaseError) {
-        next(createError(ErrorEnum.DatabaseError, err.message));
-        return;
-      }
-      if (err instanceof Error) {
-        next(createError(ErrorEnum.InternalServer, err.message));
-        return;
-      }
-      next(createError(ErrorEnum.InternalServer));
-    }
+    res.status(StatusCodes.OK).json({ id: saved.id });
   }
   public async getAuctionBids(req: Request, res: Response, next: NextFunction) {
     const auctionId = req.params.auctionId as string;
 
-    try {
-      const auction = await auctionRepository.loadByPk(auctionId);
+    const auction = await auctionRepository.loadByPk(auctionId);
 
-      if (auction.type != AuctionType.English && auction.type != AuctionType.Dutch) {
-        return next(createError(ErrorEnum.ValidationError, `Can't get bids for auction of type ${auction.type}`));
-      }
-
-      const bids = await bidRepository.getAuctionBids(auction.id);
-
-      res.status(StatusCodes.OK).json({ bids });
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        next(
-          createError(
-            ErrorEnum.ValidationError,
-            `${err.message}: ${err.errors.map((e) => `${e.path}: ${e.message}`).join(`, `)}`,
-          ),
-        );
-        return;
-      }
-      if (err instanceof BaseError) {
-        next(createError(ErrorEnum.DatabaseError, err.message));
-        return;
-      }
-      if (err instanceof Error) {
-        next(createError(ErrorEnum.InternalServer, err.message));
-        return;
-      }
-      next(createError(ErrorEnum.InternalServer));
+    if (auction.type != AuctionType.English && auction.type != AuctionType.Dutch) {
+      throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
     }
 
+    const bids = await bidRepository.getAuctionBids(auction.id);
+
+    res.status(StatusCodes.OK).json({ bids });
   }
 }

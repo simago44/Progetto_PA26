@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { AuctionType } from "../models/Auction.ts";
-import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
-import { getZodErrorMessage } from "./authValidationMiddleware.ts";
+import { Errors, parseZodError } from "../factory/errorFactory.ts";
 import z from 'zod';
 
 const BaseAuctionSchema = z.object({
@@ -49,11 +48,10 @@ export async function validateAuctionMiddleware(req: Request, _res: Response, ne
   const result = AuctionSchema.safeParse(req.body);
 
   if (!result.success) {
-    return next(new AppError(
-      getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-      "Malformed auction: " + getZodErrorMessage(result),
-      getErrorName(ErrorEnum.MalformedPayload)
-    ));
+    throw new Errors.ValidationError({
+      form: "validateAuctionMiddleware",
+      errors: parseZodError(result.error),
+    });
   }
 
   // Overwrite req.body with the safely parsed/sanitized fields

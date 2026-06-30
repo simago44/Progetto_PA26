@@ -1,7 +1,7 @@
 import { auth, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import type { Request, Response, NextFunction } from 'express';
 import env from '../config.ts';
-import { createError, ErrorEnum } from '../factory/errorFactory.ts';
+import { Errors } from '../factory/errorFactory.ts';
 import logger from './logger.ts';
 
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
@@ -23,7 +23,7 @@ export function checkPermission(permission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const permissions = req.auth?.payload.permissions;
     if (!Array.isArray(permissions) || !permissions.includes(permission)) {
-      return next(createError(ErrorEnum.Forbidden));
+      throw new Errors.ForbiddenError;
     }
     next();
   };
@@ -35,7 +35,8 @@ export function checkPermissionForSelf(selfPermission: string, allPermission: st
     if (permissions.includes(allPermission)) return next();
 
     const isSelf = req.params.userId === req.auth?.payload.sub;
-    if (!permissions.includes(selfPermission) || !isSelf) return next(createError(ErrorEnum.Forbidden));
+    if (!permissions.includes(selfPermission) || !isSelf) throw new Errors.ForbiddenError;
+
     next();
   };
 }
@@ -47,7 +48,8 @@ export function checkPermissionForSelf(selfPermission: string, allPermission: st
 export function checkJwt(req: Request, res: Response, next: NextFunction) {
   jwtCheck(req, res, (err) => {
     if (!err) return next();
-    if (err instanceof UnauthorizedError) return next(createError(ErrorEnum.Unauthorized, err.message));
+    //if (err instanceof UnauthorizedError) return next(createError(ErrorEnum.Unauthorized, err.message));
+    if (err instanceof UnauthorizedError) throw new Errors.UnauthorizedError;
     next(err);
   });
 }

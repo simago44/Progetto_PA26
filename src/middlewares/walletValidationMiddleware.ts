@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
-import { AppError, createError, ErrorEnum, getErrorHTTPStatus, getErrorName } from '../factory/errorFactory.ts';
+import { Errors, parseZodError } from '../factory/errorFactory.ts';
 import z from 'zod';
 
 export function resolveUserIdParam(req: Request, _res: Response, next: NextFunction) {
-  if (!req.params.userId) return next(createError(ErrorEnum.MalformedPayload));
+  if (!req.params.userId) throw new Errors.MalformedPayloadError;
   // Should not be necessary, because auth should always be checked before that!
-  if (!req.auth?.payload.sub) return next(createError(ErrorEnum.Unauthorized));
+  if (!req.auth?.payload.sub) throw new Errors.UnauthorizedError;
   if (req.params.userId == "self") req.params.userId = req.auth.payload.sub;
 
   next();
@@ -26,11 +26,10 @@ export function validateTopUpWallet(req: Request, res: Response, next: NextFunct
 
     const errorString = `Validation error: ${errorMessages.join("; ")}`;
 
-    return next(new AppError(
-      getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-      errorString,
-      getErrorName(ErrorEnum.MalformedPayload)
-    ));
+    throw new Errors.ValidationError({
+      form: "validateTopUpWallet",
+      errors: parseZodError(result.error),
+    });
   }
 
   // Overwrite req.body with the safely parsed/sanitized fields

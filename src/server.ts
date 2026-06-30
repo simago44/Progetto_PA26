@@ -16,6 +16,7 @@ import { initDb } from "./services/initDb.ts";
 
 import "./services/BullMQ.ts";
 import { initBullMQ } from "./services/BullMQ.ts";
+import { Errors } from "./factory/errorFactory.ts";
 
 await initDb();
 await initBullMQ();

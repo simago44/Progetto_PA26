@@ -1,5 +1,5 @@
 import { type NextFunction, type Request, type Response } from 'express';
-import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from '../factory/errorFactory.ts';
+import { Errors, parseZodError } from '../factory/errorFactory.ts';
 import { z } from "zod";
 
 /** Zod schema for validating signup request body. */
@@ -54,18 +54,16 @@ export function getZodErrorMessage(zodResult: z.ZodSafeParseError<Record<string,
  * 
  * @param zodObject - The Zod schema to validate against
  */
-function validateCredentials(zodObject: z.ZodObject) {
+function validateCredentials(zodObject: z.ZodObject, form: string) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = zodObject.safeParse(req.body);
 
     if (!result.success) {
-      return next(new AppError(
-        getErrorHTTPStatus(ErrorEnum.MalformedPayload),
-        getZodErrorMessage(result),
-        getErrorName(ErrorEnum.MalformedPayload)
-      ));
+      throw new Errors.ValidationError({
+        form,
+        errors: parseZodError(result.error),
+      });
     }
-
 
     // Overwrite req.body with the safely parsed/sanitized fields
     req.body = result.data;
@@ -75,7 +73,7 @@ function validateCredentials(zodObject: z.ZodObject) {
 }
 
 /** Middleware that validates and sanitizes the signup request body. */
-export const validateSignup = validateCredentials(signupSchema);
+export const validateSignup = validateCredentials(signupSchema, "signup");
 
 /** Middleware that validates and sanitizes the login request body. */
-export const validateLogin = validateCredentials(loginSchema);
+export const validateLogin = validateCredentials(loginSchema, "login");
