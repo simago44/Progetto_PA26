@@ -6,6 +6,13 @@ class AuctionRepository {
     return await auction.save();
   }
 
+  public async loadByPk(auctionId: string): Promise<Auction> {
+    const auction = await Auction.findByPk(auctionId);
+    if (!auction) throw new Error();
+
+    return auction;
+  }
+
   public async loadAll(): Promise<Auction[]> {
     return await Auction.findAll();
   }

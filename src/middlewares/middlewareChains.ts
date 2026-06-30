@@ -1,9 +1,9 @@
 import { Auth0Permission } from "../services/auth0.ts";
 import { checkJwt, checkPermission, checkPermissionForSelf } from "./authMiddleware.ts";
-import { resolveUserIdParam, validateTopUpWallet } from "./userMiddleware.ts";
-import { validateAuctionMiddleware } from "./validateAuction.ts";
-import { validateBidMiddleware } from "./validateBid.ts";
-import { validateSignup } from "./validationMiddleware.ts";
+import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
+import { validateAuctionMiddleware } from "./auctionValidationMiddleware.ts";
+import { validateBidMiddleware } from "./bidValidationMiddleware.ts";
+import { validateSignup } from "./authValidationMiddleware.ts";
 
 export const authMiddlewares = [checkJwt];
 

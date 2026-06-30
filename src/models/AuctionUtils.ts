@@ -12,80 +12,6 @@ export function getAuctionStatus(auction: Auction): AuctionStatus {
     : AuctionStatus.NotStarted;
 }
 
-export function checkAuctionHasEnded(auction: Auction): {
-  hasEnded: boolean;
-  nextCheck: Date | null;
-} {
-  const now = new Date();
-  const bids = auction.bids ?? [];
-  let finishTime: Date = new Date();
-  const hasEndedObj = {
-    hasEnded: true,
-    nextCheck: null,
-  };
-
-  if (auction.hasEnded) return hasEndedObj;
-
-  switch (auction.type) {
-    case AuctionType.English:
-      if (bids.length === 0) finishTime = auction.endAt;
-      else {
-        const lastBid = bids.reduce((latest, bid) =>
-          bid.createdAt > latest.createdAt ? bid : latest,
-        );
-        const lastBidDeadline = new Date(
-          lastBid.createdAt.getTime() + auction.delayBeforeEnding,
-        );
-        finishTime =
-          lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt;
-      }
-      if (finishTime < now) return hasEndedObj;
-      return { hasEnded: false, nextCheck: finishTime };
-
-    case AuctionType.Dutch:
-      if (auction.decrementPrice == null)
-        throw new TypeError("Null attribute decrementPrice");
-      if (auction.decrementInterval == null)
-        throw new TypeError("Null attribute decrementInterval");
-      if (auction.minimumPrice == null)
-        throw new TypeError("Null attribute minimumPrice");
-
-      if (bids.length > 0) return hasEndedObj;
-
-      //Calculate the finish time
-      const priceRange = auction.startPrice - auction.minimumPrice!;
-      const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
-      const decrementIntervalMs = auction.decrementInterval * 60 * 1000;
-      const durationMs = decrementsNeeded * decrementIntervalMs;
-      finishTime = new Date(auction.startAt.getTime() + durationMs);
-
-      //If the auction has not started yet, it cannot be ended
-      if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
-        return { hasEnded: false, nextCheck: finishTime };
-
-      // Current price
-      const elapsed = now.getTime() - auction.startAt.getTime();
-      const decrements = Math.floor(
-        elapsed / (auction.decrementInterval! * 60 * 1000),
-      );
-      const currentPrice =
-        auction.startPrice - decrements * auction.decrementPrice!;
-
-      /** If the current price is less than minimumPrice,
-       * The auction is ended in not selled case
-       * */
-      if (currentPrice <= auction.minimumPrice!) return hasEndedObj;
-
-      return { hasEnded: false, nextCheck: finishTime };
-
-    case AuctionType.FirstPrice:
-    case AuctionType.SecondPrice:
-      if (now < auction.endAt)
-        return { hasEnded: false, nextCheck: auction.endAt };
-      return hasEndedObj;
-  }
-}
-
 export async function getMsToEnd(auction: Auction): Promise<number> {
   const now = new Date();
   const bids = await auction.getBids();
@@ -94,6 +20,9 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
   if (auction.hasEnded) return -1;
   switch (auction.type) {
     case AuctionType.English:
+      if (auction.endAt == null)
+        throw new TypeError("Null attribute endAt");
+      
       if (bids.length === 0) finishTime = auction.endAt;
       else {
         const lastBid = bids.reduce((latest, bid) =>
@@ -182,9 +111,9 @@ export async function getWinningBid(
   }
 }
 
-export async function closeAuction(auction: Auction) {
+export async function closeAuction(auction: Auction, msToEnd: number) {
   // if it was already closed or is not ended yet, we return
-  if (auction.hasEnded || !checkAuctionHasEnded(auction).hasEnded) return;
+  if (auction.hasEnded || msToEnd > 0) return;
 
   logger.debug(`Closing auction: ${auction.id}`)
 

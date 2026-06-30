@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { AuctionType } from "../models/Auction.ts";
 import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
-import { getZodErrorMessage } from "./validationMiddleware.ts";
+import { getZodErrorMessage } from "./authValidationMiddleware.ts";
 import z from 'zod';
 
 const BaseAuctionSchema = z.object({

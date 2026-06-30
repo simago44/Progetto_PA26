@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError, ErrorEnum, getErrorHTTPStatus, getErrorName } from "../factory/errorFactory.ts";
 import z from "zod";
-import { getZodErrorMessage } from "./validationMiddleware.ts";
+import { getZodErrorMessage } from "./authValidationMiddleware.ts";
 
 const BidSchema = z.object({
   userId: z.string(),

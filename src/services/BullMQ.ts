@@ -2,7 +2,6 @@ import { Queue, Worker, createNodeRedisClient } from 'bullmq';
 import redis from './redis.ts'
 import { Auction } from '../models/Auction.ts';
 import { closeAuction, getMsToEnd } from '../models/AuctionUtils.ts';
-import logger from '../middlewares/logger.ts';
 import auctionRepository from '../repositories/auctionRepository.ts';
 
 export const connection = createNodeRedisClient(redis);
@@ -24,19 +23,19 @@ const myWorker = new Worker(queueName, async job => {
       const msToEnd = await getMsToEnd(auction);
       if (auction.hasEnded) break;
       if (msToEnd > 0) {
-        createCloseAuctionJob(auction);
+        createCloseAuctionJob(auction, msToEnd);
         break;
       }
 
-      await closeAuction(auction);
+      await closeAuction(auction, msToEnd);
       break;
   }
 }, { connection });
 
-export async function createCloseAuctionJob(auction: Auction) {
+export async function createCloseAuctionJob(auction: Auction, msToEnd: number) {
   await auctionQueue.remove(`close-auction-${auction.id}`);
   await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
-    delay: await getMsToEnd(auction),
+    delay: msToEnd,
     attempts: 3,
     jobId: `close-auction-${auction.id}`,
     backoff: { type: 'exponential', delay: 2000 },
@@ -50,6 +49,7 @@ export async function initBullMQ() {
   auctions.forEach(async (auction) => {
     if (auction.hasEnded) return;
 
-    createCloseAuctionJob(auction);
+    const msToEnd = await getMsToEnd(auction);
+    createCloseAuctionJob(auction, msToEnd);
   });
 }
