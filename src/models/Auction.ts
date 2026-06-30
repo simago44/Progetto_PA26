@@ -33,8 +33,8 @@ export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];
 const defaultDelayBeforeEnding = 5;
 
 export class Auction extends Model<
-  InferAttributes<Auction, { omit: "bids" }>,
-  InferCreationAttributes<Auction, { omit: "bids" }>
+  InferAttributes<Auction, { omit: "bids"; }>,
+  InferCreationAttributes<Auction, { omit: "bids"; }>
 > {
   declare id: CreationOptional<number>;
   declare creatorId: ForeignKey<User["id"]>;

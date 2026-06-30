@@ -51,7 +51,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       //Calculate the finish time
       const priceRange = auction.startPrice - auction.minimumPrice!;
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
-      const decrementIntervalMs = auction.decrementInterval! * 60 * 1000;
+      const decrementIntervalMs = auction.decrementInterval!;
       const durationMs = decrementsNeeded * decrementIntervalMs;
       finishTime = new Date(auction.startAt.getTime() + durationMs);
 
