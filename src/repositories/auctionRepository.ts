@@ -1,5 +1,5 @@
 import { Auction, type AuctionType } from "../models/Auction.ts";
-import { Errors } from "../factory/errorFactory.ts";
+import { createSequelizeError, Errors } from "../factory/errorFactory.ts";
 import { Op, type CreationAttributes } from "sequelize";
 
 export interface AuctionFilters {
@@ -12,14 +12,15 @@ export interface AuctionFilters {
 
 class AuctionRepository {
   public async create(data: CreationAttributes<Auction>): Promise<Auction> {
+    try {
     return await Auction.create(data);
+    } catch (err) {
+      throw createSequelizeError(err, "createAuction");
+    }
   }
 
-  public async loadByPk(auctionId: string): Promise<Auction> {
-    const auction = await Auction.findByPk(auctionId);
-    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
-
-    return auction;
+  public async findByPk(auctionId: string): Promise<Auction|null> {
+    return await Auction.findByPk(auctionId);
   }
 
   public async loadAll(): Promise<Auction[]> {

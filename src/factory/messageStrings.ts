@@ -12,7 +12,11 @@ export const walletUpdatedSuccessfully_message: string =
 
 export const ErrorMessages = {
   MalformedPayload: "Bad Request - Malformed payload",
-  UserNotFound: ({ userId }: { userId: string; }) => `User with id '${userId}' not found`,
+  UserNotFound: ({ userId, username }: { userId?: string, username?: string; }) => {
+    if (userId) return `User with id '${userId}' not found`;
+    if (username) return `User with username '${username}' not found`;
+    return "User not found";
+  },
   Unauthorized: "Unauthorized",
   Forbidden: "Forbidden",
   InternalServer: "Internal server error",

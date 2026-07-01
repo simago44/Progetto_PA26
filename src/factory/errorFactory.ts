@@ -1,4 +1,3 @@
-// factory/errorFactory.ts
 import { StatusCodes } from "http-status-codes";
 import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
 import type { ZodError } from "zod";
@@ -88,26 +87,30 @@ export const Errors = buildErrors({
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound }
 });
 
-export function parseZodError(error: ZodError): Record<string, string[]> {
+export function createZodError(error: ZodError, form: string): AppError {
   const details: Record<string, string[]> = {};
   for (const issue of error.issues) {
     const path = issue.path.join("."); // necessary because path it's an array
     if (!details[path]) details[path] = [];
     details[path].push(issue.message);
   }
-  return details;
+
+  return new Errors.ValidationError({
+    form,
+    errors: details,
+  });
 }
 
-export function parseSequelizeError(err: unknown, form: string) {
-  if (err instanceof UniqueConstraintError) {
-    const field = err.errors[0]?.path ?? "field";
-    const value = err.errors[0]?.value ?? "value";
-    throw new Errors.FieldAlreadyUsedError({field, value});
+export function createSequelizeError(error: unknown, form: string): AppError {
+  if (error instanceof UniqueConstraintError) {
+    const field = error.errors[0]?.path ?? "field";
+    const value = error.errors[0]?.value ?? "value";
+    return new Errors.FieldAlreadyUsedError({field, value});
   }
 
-  if (err instanceof ValidationError) {
+  if (error instanceof ValidationError) {
     const details: Record<string, string[]> = {};
-    for (const issue of err.errors) {
+    for (const issue of error.errors) {
       const path = issue.path as string // necessary because path it's an array
       if (!details[path]) details[path] = [];
       details[path].push(issue.message);
@@ -116,24 +119,24 @@ export function parseSequelizeError(err: unknown, form: string) {
   }
 
   // Not a Sequelize error we recognize — let the caller decide what to do.
-  throw err;
+  return new Errors.InternalServerError();
 }
 
 /**
  * Parses an Auth0 error into an `AppError` with the appropriate HTTP status.
  * Falls back to a 500 InternalServer error if the error is unrecognized.
  * 
- * @param err - The error thrown by the Auth0 SDK
+ * @param error - The error thrown by the Auth0 SDK
  */
-export function parseAuth0Error(err: any): AppError {
-  if (err?.statusCode && err?.body?.message) {
-    return new AppError(err.statusCode, err.body.message, err.constructor?.name);
+export function createAuth0Error(error: any): AppError {
+  if (error?.statusCode && error?.body?.message) {
+    return new AppError(error.statusCode, error.body.message, error.constructor?.name);
   }
 
-  if (err instanceof Error) {
-    const statusCode = (err as any)?.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-    return new AppError(statusCode, err.message, err.name);
+  if (error instanceof Error) {
+    const statusCode = (error as any)?.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    return new AppError(statusCode, error.message, error.name);
   }
 
-  throw new Errors.InternalServerError();
+  return new Errors.InternalServerError();
 }

@@ -1,5 +1,5 @@
 import { type NextFunction, type Request, type Response } from 'express';
-import { Errors, parseZodError } from '../factory/errorFactory.ts';
+import { Errors, createZodError } from '../factory/errorFactory.ts';
 import { z } from "zod";
 
 /** Zod schema for validating signup request body. */
@@ -58,12 +58,7 @@ function validateCredentials(zodObject: z.ZodObject, form: string) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = zodObject.safeParse(req.body);
 
-    if (!result.success) {
-      throw new Errors.ValidationError({
-        form,
-        errors: parseZodError(result.error),
-      });
-    }
+    if (!result.success) throw createZodError(result.error, form);
 
     // Overwrite req.body with the safely parsed/sanitized fields
     req.body = result.data;

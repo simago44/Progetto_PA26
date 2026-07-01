@@ -1,13 +1,16 @@
-import type { Auction } from "../models/Auction.ts";
+import { createSequelizeError } from "../factory/errorFactory.ts";
 import { Bid } from "../models/Bid.ts";
-import type { User } from "../models/User.ts";
 
 class BidRepository {
-  public async save(bid: Bid): Promise<Bid> {
-    return await bid.save();
+  public async create(bid: Bid): Promise<Bid> {
+    try {
+      return await bid.save();
+    } catch (err) {
+      throw createSequelizeError(err, "createBid");
+    }
   }
 
-  public async loadAll(): Promise<Bid[]> {
+  public async findAll(): Promise<Bid[]> {
     return await Bid.findAll();
   }
 
@@ -32,7 +35,7 @@ class BidRepository {
     return bid != null;
   }
   
-  public async getAuctionBids(auctionId: number): Promise<Bid[]> {
+  public async findAuctionBids(auctionId: number): Promise<Bid[]> {
     const bids = await Bid.findAll({
       where: {
         auctionId: auctionId

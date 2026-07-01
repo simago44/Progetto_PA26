@@ -68,7 +68,7 @@ export async function getAuthenticationToken(username: string, password: string)
 
 export async function deleteStaleUsers() {
   const auth0Users = (await managementClient.users.list()).data;
-  const dbUsers = await userRepository.loadAllIds();
+  const dbUsers = await userRepository.findAllIds();
 
   const dbUserIds = new Set(dbUsers.map(user => user.id));
 

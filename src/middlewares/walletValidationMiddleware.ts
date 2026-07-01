@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { Errors, parseZodError } from '../factory/errorFactory.ts';
+import { Errors, createZodError } from '../factory/errorFactory.ts';
 import z from 'zod';
 
 export function resolveUserIdParam(req: Request, _res: Response, next: NextFunction) {
@@ -19,18 +19,7 @@ export const topUpWalletSchema = z.object({
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
   const result = topUpWalletSchema.safeParse(req.body);
 
-  if (!result.success) {
-    const errorMessages = Object.values(z.treeifyError(result.error).properties ?? {})
-      .map(property => property?.errors?.[0])
-      .filter(Boolean);
-
-    const errorString = `Validation error: ${errorMessages.join("; ")}`;
-
-    throw new Errors.ValidationError({
-      form: "validateTopUpWallet",
-      errors: parseZodError(result.error),
-    });
-  }
+  if (!result.success) throw createZodError(result.error, "validateTopUpWallet");
 
   // Overwrite req.body with the safely parsed/sanitized fields
   req.body = result.data;

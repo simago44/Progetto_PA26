@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import { Errors, parseZodError } from "../factory/errorFactory.ts";
+import { Errors, createZodError } from "../factory/errorFactory.ts";
 import z from "zod";
-import { getZodErrorMessage } from "./authValidationMiddleware.ts";
 
 const BidSchema = z.object({
   userId: z.string(),
@@ -16,12 +15,7 @@ export async function validateBidMiddleware(req: Request, res: Response, next: N
   
   const result = BidSchema.safeParse(req.body);
 
-  if (!result.success) {
-    throw new Errors.ValidationError({
-      form: "validateBidMiddleware",
-      errors: parseZodError(result.error),
-    });
-  }
+  if (!result.success) throw createZodError(result.error, "validateBidMiddleware");
 
   // Overwrite req.body with the safely parsed/sanitized fields
   req.body = result.data;

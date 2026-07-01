@@ -1,10 +1,10 @@
 import env from "../config.ts";
 import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient, RoleName } from "../integrations/auth0.ts";
-import { Errors, parseAuth0Error, parseSequelizeError } from "../factory/errorFactory.ts";
+import { Errors, createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";
 
 class UserRepository {
-  public async save(username: string, password: string, role: RoleName): Promise<User> {
+  public async create(username: string, password: string, role: RoleName): Promise<User> {
     let user_id: string;
 
     try {
@@ -18,7 +18,7 @@ class UserRepository {
         roles: [Auth0Roles[role].id]
       });
     } catch (err) {
-      throw parseAuth0Error(err);
+      throw createAuth0Error(err);
     }
 
     try {
@@ -27,42 +27,42 @@ class UserRepository {
       // Local save failed after the Auth0 user already exists — clean up
       // to avoid an orphaned Auth0 account with no matching local record.
       await managementClient.users.delete(user_id).catch(() => { });
-      throw parseSequelizeError(err, "createUser");
+      throw createSequelizeError(err, "createUser");
     }
   }
 
-  public async loadByPk(userId: string): Promise<User> {
-    const user = await User.findByPk(userId);
-    if (!user) throw new Errors.UserNotFoundError({ userId });
-
-    return user;
+  public async findByPk(userId: string): Promise<User|null> {
+    return await User.findByPk(userId);
   }
 
-  public async loadByUsername(username: string): Promise<User> {
-    const user = await User.findOne({ where: { username } });
-    if (!user) throw new Errors.WrongCredentialsErrors();
-
-    return user;
+  public async findByUsername(username: string): Promise<User|null> {
+    return await User.findOne({ where: { username } });
   }
 
-  public async loadAll(): Promise<User[]> {
+  public async findAll(): Promise<User[]> {
     return await User.findAll();
   }
 
-  public async loadAllIds(): Promise<User[]> {
+  public async findAllIds(): Promise<User[]> {
     return await User.findAll({ attributes: ['id'] });
   }
 
   public async update(user: User): Promise<User> {
-    // TODO: validation
     // TODO: prevent username change
 
-    return await user.save();
+    try {
+      return await user.save();
+    } catch (err) {
+      throw createSequelizeError(err, "updateUser");
+    }
   }
 
   public async delete(user: User): Promise<void> {
-    // TODO: delete from auth0
-    await user.destroy();
+    try {
+      await user.destroy();
+    } catch (err) {
+      throw createSequelizeError(err, "deleteUser");
+    }
   }
 }
 

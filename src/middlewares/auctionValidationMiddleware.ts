@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
-import { Errors, parseZodError } from "../factory/errorFactory.ts";
+import { createZodError, Errors } from "../factory/errorFactory.ts";
 import z from 'zod';
 
 const BaseAuctionSchema = z.object({
@@ -47,12 +47,7 @@ export async function validateAuctionMiddleware(req: Request, _res: Response, ne
   req.body.creatorId = req.auth?.payload.sub;
   const result = AuctionSchema.safeParse(req.body);
 
-  if (!result.success) {
-    throw new Errors.ValidationError({
-      form: "validateAuctionMiddleware",
-      errors: parseZodError(result.error),
-    });
-  }
+  if (!result.success) throw createZodError(result.error, "validateAuctionMiddleware");
 
   // Overwrite req.body with the safely parsed/sanitized fields
   req.body = result.data;

@@ -41,7 +41,7 @@ async function generateUsersArray(
   for (let i = 0; i < length; i++) {
     const username: string = generateUsername();
     logger.debug(`creating user with username: ${username}`);
-    const user = await userRepository.save(
+    const user = await userRepository.create(
       username,
       "Password1@",
       RoleName.BidParticipant
@@ -194,7 +194,7 @@ async function generateBidsArray(length: number = bidsNumber, auctions: Auction[
         bidPrice: faker.number.int({ min: 100, max: 400 }),
         auctionId: auction?.id,
       });
-      await bidRepository.save(bid);
+      await bidRepository.create(bid);
       bids.push(bid);
       if (auction!.type === AuctionType.Dutch) {
         array = array.filter(a => a.id !== auction!.id);

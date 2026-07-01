@@ -2,12 +2,11 @@ import { auth, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import type { Request, Response, NextFunction } from 'express';
 import env from '../config.ts';
 import { Errors } from '../factory/errorFactory.ts';
-import logger from './logger.ts';
 
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
 const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
 
-const jwtCheck = auth({
+const checkJwt = auth({
   issuerBaseURL: `https://${AUTH0_DOMAIN}`,
   audience: AUTH0_AUDIENCE,
 });
@@ -20,7 +19,7 @@ const jwtCheck = auth({
  * @throws {AppError} 403 Forbidden if the permission is missing
  */
 export function checkPermission(permission: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const permissions = req.auth?.payload.permissions;
     if (!Array.isArray(permissions) || !permissions.includes(permission)) {
       throw new Errors.ForbiddenError();
@@ -29,7 +28,7 @@ export function checkPermission(permission: string) {
   };
 }
 
-export function checkPermissionForSelf(selfPermission: string, allPermission: string) {
+export function checkSelfOrAllPermission(selfPermission: string, allPermission: string) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const permissions = (req.auth?.payload.permissions as string[]) ?? [];
     if (permissions.includes(allPermission)) return next();
@@ -45,11 +44,10 @@ export function checkPermissionForSelf(selfPermission: string, allPermission: st
  * Middleware that validates the JWT token in the Authorization header.
  * Uses Auth0 as the issuer and validates against the configured audience.
  */
-export function checkJwt(req: Request, res: Response, next: NextFunction) {
-  jwtCheck(req, res, (err) => {
+export function checkJwtAuthorization(req: Request, res: Response, next: NextFunction) {
+  checkJwt(req, res, (err) => {
     if (!err) return next();
-    //if (err instanceof UnauthorizedError) return next(createError(ErrorEnum.Unauthorized, err.message));
-    if (err instanceof UnauthorizedError) throw new Errors.UnauthorizedError();
+    if (err instanceof UnauthorizedError) return next(new Errors.UnauthorizedError());
     next(err);
   });
 }

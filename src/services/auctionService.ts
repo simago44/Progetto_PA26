@@ -1,5 +1,5 @@
 import { AuctionStatus, type AuctionType, Auction } from "../models/Auction.ts";
-import { Op, type CreationAttributes } from "sequelize";
+import type { CreationAttributes } from "sequelize";
 import auctionRepository, { type AuctionFilters } from "../repositories/auctionRepository.ts";
 
 class AuctionService {

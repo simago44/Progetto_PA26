@@ -13,7 +13,7 @@ import { DataTypes, Model } from "sequelize";
 import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
-import { getAuctionStatus, getMsToEnd } from "./AuctionUtils.ts";
+import { getAuctionStatus } from "./AuctionUtils.ts";
 
 export const AuctionType = {
   English: "english",
