@@ -3,9 +3,9 @@ import { Errors, parseZodError } from '../factory/errorFactory.ts';
 import z from 'zod';
 
 export function resolveUserIdParam(req: Request, _res: Response, next: NextFunction) {
-  if (!req.params.userId) throw new Errors.MalformedPayloadError;
+  if (!req.params.userId) throw new Errors.MalformedPayloadError();
   // Should not be necessary, because auth should always be checked before that!
-  if (!req.auth?.payload.sub) throw new Errors.UnauthorizedError;
+  if (!req.auth?.payload.sub) throw new Errors.UnauthorizedError();
   if (req.params.userId == "self") req.params.userId = req.auth.payload.sub;
 
   next();

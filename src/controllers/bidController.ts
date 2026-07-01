@@ -12,7 +12,7 @@ import type { User } from "../models/User.ts";
 
 async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
   const auctionMsToEnd = await getMsToEnd(auction);
-  if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError;
+  if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
 
   switch (auction.type) {
     case AuctionType.English:
@@ -29,7 +29,7 @@ async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
     case AuctionType.FirstPrice:
     case AuctionType.SecondPrice:
       const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id);
-      if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError;
+      if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
       break;
   }
 }

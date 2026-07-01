@@ -22,15 +22,6 @@ export class AppError extends Error {
   }
 }
 
-export function defineAppError<T = void>(
-  statusCode: number,
-  errorName: string,
-  message: string | MessageFn<T>
-) {
-  const messageFn = typeof message === "function" ? (message as MessageFn<T>) : () => message;
-  return (params: T) => new AppError(statusCode, messageFn(params), errorName, params);
-}
-
 type MessageFn<T> = (params: T) => string;
 
 // Args for constructors. Depends if the error needs params or not (fixed string, function without params)

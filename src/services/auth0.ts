@@ -23,7 +23,7 @@ export function parseAuth0Error(err: any): AppError {
     return new AppError(statusCode, err.message, err.name);
   }
 
-  throw new Errors.InternalServerError;
+  throw new Errors.InternalServerError();
 }
 
 export const Auth0Permission = {

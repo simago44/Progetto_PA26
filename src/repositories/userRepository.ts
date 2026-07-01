@@ -41,7 +41,7 @@ class UserRepository {
 
   public async loadByUsername(username: string): Promise<User> {
     const user = await User.findOne({ where: { username } });
-    if (!user) throw new Errors.WrongCredentialsErrors;
+    if (!user) throw new Errors.WrongCredentialsErrors();
 
     return user;
   }

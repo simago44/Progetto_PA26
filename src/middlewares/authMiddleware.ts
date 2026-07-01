@@ -23,7 +23,7 @@ export function checkPermission(permission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const permissions = req.auth?.payload.permissions;
     if (!Array.isArray(permissions) || !permissions.includes(permission)) {
-      throw new Errors.ForbiddenError;
+      throw new Errors.ForbiddenError();
     }
     next();
   };
@@ -35,7 +35,7 @@ export function checkPermissionForSelf(selfPermission: string, allPermission: st
     if (permissions.includes(allPermission)) return next();
 
     const isSelf = req.params.userId === req.auth?.payload.sub;
-    if (!permissions.includes(selfPermission) || !isSelf) throw new Errors.ForbiddenError;
+    if (!permissions.includes(selfPermission) || !isSelf) throw new Errors.ForbiddenError();
 
     next();
   };
@@ -49,7 +49,7 @@ export function checkJwt(req: Request, res: Response, next: NextFunction) {
   jwtCheck(req, res, (err) => {
     if (!err) return next();
     //if (err instanceof UnauthorizedError) return next(createError(ErrorEnum.Unauthorized, err.message));
-    if (err instanceof UnauthorizedError) throw new Errors.UnauthorizedError;
+    if (err instanceof UnauthorizedError) throw new Errors.UnauthorizedError();
     next(err);
   });
 }
