@@ -9,6 +9,8 @@ import logger from "../middlewares/logger.ts";
 import { Sequelize } from "sequelize";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import { getMsToEnd } from "../models/AuctionUtils.ts";
+import { Errors } from "../factory/errorFactory.ts";
+import bidRepository from "../repositories/bidRepository.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -17,7 +19,8 @@ const adminsLength = 0;
 const auth0UsernameMinLength = 1;
 const auth0UsernameMaxLength = 15;
 
-const auctionsPerTypeAndStatus = 1;
+const auctionsPerTypeAndStatus = 2;
+const bidsNumber = 30;
 
 function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
   let username = faker.internet.username();
@@ -154,7 +157,7 @@ const auctionBuilders: Record<AuctionType, (creatorId: string, status: AuctionSt
 
 async function generateAuctionsArray(creatorId: string, count: number): Promise<Auction[]> {
   const auctions: Auction[] = [];
-  const types = [AuctionType.Dutch]; //Object.values(AuctionType);
+  const types = Object.values(AuctionType);
   const statuses = Object.values(AuctionStatus);
 
   for (const type of types) {
@@ -175,6 +178,39 @@ async function generateAuctionsArray(creatorId: string, count: number): Promise<
   return auctions;
 }
 
+async function generateBidsArray(length: number = bidsNumber, auctions: Auction[]): Promise<Bid[]> {
+  const bids: Bid[] = [];
+  const msToEndResults = await Promise.all(
+    auctions.map(a => getMsToEnd(a))
+  );
+
+  let array: Auction[] = auctions.filter((a, i) =>
+    !(a.type === AuctionType.Dutch && msToEndResults[i]! < 0)
+  );
+  for (let i = 0; i < length; i++) {
+    if (auctions.length <= 0) { throw new Error("auction array is empty"); };
+    try {
+      const auction = array[Math.floor(Math.random() * array.length)];
+      const bid = Bid.build({
+        userId: "auth0|6a3fd852b4e640e31f20bbd2",
+        bidPrice: faker.number.int({ min: 100, max: 400 }),
+        auctionId: auction?.id,
+      });
+      await bidRepository.save(bid);
+      bids.push(bid);
+      if (auction!.type === AuctionType.Dutch) {
+        array = array.filter(a => a.id !== auction!.id);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        logger.error(err.message);
+        continue;
+      }
+    }
+  }
+  return bids;
+}
+
 export async function initDb() {
   if (env.NODE_ENV != NodeEnv.Development) {
     await sequelize.sync();
@@ -182,6 +218,8 @@ export async function initDb() {
   }
 
   await sequelize.sync({ force: true });
+
+  let auctions: Auction[] = [];
 
   //User creation
   const admin = await User.create({
@@ -212,7 +250,7 @@ export async function initDb() {
   }
 
   try {
-    const auctions = await generateAuctionsArray(bidCreator.id, auctionsPerTypeAndStatus);
+    auctions = await generateAuctionsArray(bidCreator.id, auctionsPerTypeAndStatus);
     logger.info(`${auctions.length} auctions created`);
   } catch (err) {
     if (err instanceof Error)
@@ -220,8 +258,16 @@ export async function initDb() {
     return;
   }
 
-  await deleteStaleUsers();
-  const NotStarted = await Auction.create({
+  try {
+    const bids = await generateBidsArray(bidsNumber, auctions);
+    logger.info(`${bids.length} bids created`);
+  } catch (err) {
+    if (err instanceof Error)
+      logger.error(`bid creations crashed: ${err.message}`);
+    return;
+  }
+
+  /*const NotStarted = await Auction.create({
     startAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
     endAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
     creatorId: bidCreator.id,
@@ -259,9 +305,7 @@ export async function initDb() {
     auctionId: Ended.id,
     userId: bidParticipant.id,
     bidPrice: 300
-  });
-
-  await deleteStaleUsers();
+  });*/
 
   await deleteStaleUsers();
 }
