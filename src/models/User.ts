@@ -6,16 +6,16 @@ import type {
   NonAttribute,
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../services/sequelize.ts';
-import type { Bid } from './Bid.ts'
+import sequelize from '../integrations/sequelize.ts';
+import type { Bid } from './Bid.ts';
 import type { Auction } from './Auction.ts';
 
 const newUserTokens = 100;
 
 export class User extends Model<
-  InferAttributes<User, { omit: 'bids' | 'auctions' }>,
-  InferCreationAttributes<User, { omit: 'bids' | 'auctions' }>
-  
+  InferAttributes<User, { omit: 'bids' | 'auctions'; }>,
+  InferCreationAttributes<User, { omit: 'bids' | 'auctions'; }>
+
 > {
   declare id: string;
   declare tokens: CreationOptional<number>;

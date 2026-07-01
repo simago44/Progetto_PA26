@@ -10,7 +10,7 @@ import type {
   HasManyCreateAssociationMixin,
 } from "sequelize";
 import { DataTypes, Model } from "sequelize";
-import sequelize from "../services/sequelize.ts";
+import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
 import { getAuctionStatus, getMsToEnd } from "./AuctionUtils.ts";

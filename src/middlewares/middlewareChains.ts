@@ -1,4 +1,4 @@
-import { Auth0Permission } from "../services/auth0.ts";
+import { Auth0Permission } from "../integrations/auth0.ts";
 import { checkJwt, checkPermission, checkPermissionForSelf } from "./authMiddleware.ts";
 import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
 import { validateAuctionMiddleware, validateAuctionStatusMiddleware } from "./auctionValidationMiddleware.ts";

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import sequelize from '../services/sequelize.ts';
+import sequelize from '../integrations/sequelize.ts';
 import env from "../config.ts";
 import { AuthenticationClient } from "auth0";
 
@@ -50,7 +50,7 @@ export async function healthCheck(_: Request, res: Response, next: NextFunction)
       node: 'ok',
       auth0: auth0.status === 'fulfilled' ? 'ok' : auth0.reason.message,
       db: db.status === 'fulfilled' ? 'ok' : db.reason.message
-    }
+    };
 
     const allOk = Object.values(result).every(v => v === 'ok');
     res.status(allOk ? 200 : 503).json({

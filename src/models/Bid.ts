@@ -5,7 +5,7 @@ import type {
   ForeignKey,
 } from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../services/sequelize.ts';
+import sequelize from '../integrations/sequelize.ts';
 import type { User } from './User.ts';
 import type { Auction } from './Auction.ts';
 

@@ -1,5 +1,5 @@
 import logger from "../middlewares/logger.ts";
-import sequelize from "../services/sequelize.ts";
+import sequelize from "../integrations/sequelize.ts";
 import { Auction, AuctionStatus, AuctionType } from "./Auction.ts";
 import { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";

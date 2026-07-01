@@ -6,10 +6,8 @@ import env, { NodeEnv } from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import { deleteStaleUsers, RoleName } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
-import { Sequelize } from "sequelize";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import { getMsToEnd } from "../models/AuctionUtils.ts";
-import { Errors } from "../factory/errorFactory.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 
 const bidParticipantsLength = 0;
@@ -184,8 +182,8 @@ async function generateBidsArray(length: number = bidsNumber, auctions: Auction[
     auctions.map(a => getMsToEnd(a))
   );
 
-  let array: Auction[] = auctions.filter((a, i) =>
-    !(a.type === AuctionType.Dutch && msToEndResults[i]! < 0)
+  let array: Auction[] = auctions.filter((auction, index) =>
+    !(auction.type === AuctionType.Dutch && msToEndResults[index]! < 0)
   );
   for (let i = 0; i < length; i++) {
     if (auctions.length <= 0) { throw new Error("auction array is empty"); };

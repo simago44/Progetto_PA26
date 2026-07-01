@@ -12,10 +12,10 @@ import { errorHandler } from "./middlewares/errorHandler.ts";
 import logger from "./middlewares/logger.ts";
 import env from "./config.ts";
 import { healthCheck } from "./utils/healthUtils.ts";
-import { initDb } from "./services/initDb.ts";
+import { initDb } from "./integrations/initDb.ts";
 
-import "./services/BullMQ.ts";
-import { initBullMQ } from "./services/BullMQ.ts";
+import "./integrations/BullMQ.ts";
+import { initBullMQ } from "./integrations/BullMQ.ts";
 import { Errors } from "./factory/errorFactory.ts";
 
 await initDb();
@@ -41,7 +41,7 @@ app.use("/auctions", auctionRoutes);
 app.use("/auctions", bidRoutes);
 
 app.use((req, res, next) => {
-  throw new Errors.RouteNotFoundError({ path: req.path});
+  throw new Errors.RouteNotFoundError({ path: req.path });
 });
 
 app.use(errorHandler);

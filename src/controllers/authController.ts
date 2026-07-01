@@ -1,6 +1,6 @@
-import type { NextFunction, Request, Response } from "express"
+import type { NextFunction, Request, Response } from "express";
 import userRepository from "../repositories/userRepository.ts";
-import { getAuthenticationToken, RoleName } from "../services/auth0.ts";
+import { getAuthenticationToken, RoleName } from "../integrations/auth0.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
 import { parseAuth0Error } from "../factory/errorFactory.ts";
 
@@ -24,7 +24,7 @@ export class AuthController {
 
       res.json({ access_token: authenticationToken });
     } catch (err) {
-      next(parseAuth0Error(err))
+      next(parseAuth0Error(err));
     }
   };
 }
