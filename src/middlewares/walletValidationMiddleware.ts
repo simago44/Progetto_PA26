@@ -2,11 +2,11 @@ import type { Request, Response, NextFunction } from 'express';
 import { Errors, createZodError } from '../factory/errorFactory.ts';
 import z from 'zod';
 
-export function resolveUserIdParam(req: Request, _res: Response, next: NextFunction) {
+export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
   if (!req.params.userId) throw new Errors.MalformedPayloadError();
-  // Should not be necessary, because auth should always be checked before that!
-  if (!req.auth?.payload.sub) throw new Errors.UnauthorizedError();
-  if (req.params.userId == "self") req.params.userId = req.auth.payload.sub;
+
+  const userId = req.params.userId == "self" ? res.locals.authId : req.params.userId;
+  res.locals.userId = userId;
 
   next();
 };
@@ -17,12 +17,14 @@ export const topUpWalletSchema = z.object({
 });
 
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
-  const result = topUpWalletSchema.safeParse(req.body);
+  res.locals.userId = req.params.userId;
+  const tokens = req.body.tokens
+
+  const result = topUpWalletSchema.safeParse({ tokens });
 
   if (!result.success) throw createZodError(result.error, "validateTopUpWallet");
 
-  // Overwrite req.body with the safely parsed/sanitized fields
-  req.body = result.data;
+  res.locals.tokens = result.data.tokens;
 
   next();
 }

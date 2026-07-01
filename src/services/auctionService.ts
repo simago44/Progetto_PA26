@@ -3,29 +3,7 @@ import type { CreationAttributes } from "sequelize";
 import auctionRepository, { type AuctionFilters } from "../repositories/auctionRepository.ts";
 
 class AuctionService {
-  public async getFiltered(options: {
-    creatorId?: string;
-    status?: AuctionStatus;
-    type?: AuctionType;
-  }) {
-    const now = new Date();
-    const filters: AuctionFilters = {};
-    if (options.creatorId) filters.creatorId = options.creatorId;
-    if (options.type) filters.type = options.type;
-
-    switch (options.status) {
-      case AuctionStatus.NotStarted:
-        filters.startsAfter = now;
-        break;
-      case AuctionStatus.InProgress:
-        filters.startsBefore = now;
-        filters.hasEnded = false;
-        break;
-      case AuctionStatus.Ended:
-        filters.hasEnded = true;
-        break;
-    }
-
+  public async getFiltered(filters: AuctionFilters) {
     return auctionRepository.getFiltered(filters);
   }
 

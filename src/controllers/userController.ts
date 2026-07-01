@@ -5,8 +5,8 @@ import { walletUpdatedSuccessfully_message } from "../factory/messageStrings.ts"
 import { Errors } from "../factory/errorFactory.ts";
 
 export class UserController {
-  public async getWallet(req: Request, res: Response, _next: NextFunction) {
-    const userId = req.params.userId as string;
+  public async getWallet(_req: Request, res: Response, _next: NextFunction) {
+    const userId = res.locals.userId as string;
 
     const user = await userRepository.findByPk(userId);
     if (!user) throw new Errors.UserNotFoundError({ userId });
@@ -16,9 +16,9 @@ export class UserController {
     res.status(StatusCodes.OK).json({ tokens });
   }
 
-  public async topUpWallet(req: Request, res: Response, next: NextFunction) {
-    const userId = req.params.userId as string;
-    const tokens = req.body.tokens as number;
+  public async topUpWallet(_req: Request, res: Response, next: NextFunction) {
+    const userId = res.locals.userId as string;
+    const tokens = res.locals.tokens as number;
 
     const user = await userRepository.findByPk(userId);
     if (!user) throw new Errors.UserNotFoundError({ userId });

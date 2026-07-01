@@ -21,7 +21,7 @@ export const ErrorMessages = {
   Forbidden: "Forbidden",
   InternalServer: "Internal server error",
   WrongCredentials: "Wrong username or password",
-  AuctionNotFound: ({ auctionId }: { auctionId: string; }) => `Auction with id '${auctionId}' not found`,
+  AuctionNotFound: ({ auctionId }: { auctionId: string | number; }) => `Auction with id '${auctionId}' not found`,
   InvalidAuctionStatus: ({ status }: { status: string | number; }) => `Auction status '${status}' not found`,
   FieldAlreadyUsed: ({ field, value }: { field: string, value: string; }) => `Field '${field}' with value '${value}' already used`,
   Validation: ({ form }: { form: string; }) => `Validation failed on ${form}`,

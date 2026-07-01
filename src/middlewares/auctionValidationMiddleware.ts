@@ -43,35 +43,37 @@ const AuctionSchema = z.discriminatedUnion("type", [
   SealedAuctionSchema,
 ]);
 
-export async function validateAuctionMiddleware(req: Request, _res: Response, next: NextFunction) {
-  req.body.creatorId = req.auth?.payload.sub;
-  const result = AuctionSchema.safeParse(req.body);
+export async function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
+  const auction = req.body;
+  auction.creatorId = res.locals.authId;
+
+  const result = AuctionSchema.safeParse(auction);
 
   if (!result.success) throw createZodError(result.error, "validateAuctionMiddleware");
 
-  // Overwrite req.body with the safely parsed/sanitized fields
-  req.body = result.data;
+  res.locals.auction = result.data;
 
   next();
 }
 
 const auctionStatusQuerySchema = z.object({
-  status: z
-    .coerce
-    .number()
-    .optional()
-    .transform((val) => (val !== undefined ? Number(val) : undefined))
-    .refine(
-      (val) => val === undefined || Object.values(AuctionStatus).includes(val as AuctionStatus)
-    ),
+  creatorIds: z.array(z.string()).optional(),
+  statuses: z.array(z.enum(AuctionStatus)).optional(),
+  types: z.array(z.enum(AuctionType)).optional()
 });
 
 export function validateAuctionStatusMiddleware(req: Request, res: Response, next: NextFunction) {
-  const result = auctionStatusQuerySchema.safeParse(req.query);
+  let creatorIds = req.query.creatorIds;
+  let statuses = req.query.statuses;
+  let types = req.query.types;
+  if (typeof creatorIds === "string") creatorIds = creatorIds.split(',');
+  if (typeof statuses === "string") statuses = statuses.split(',');
+  if (typeof types === "string") types = types.split(',');
 
-  if (!result.success) {
-    return next(new Errors.InvalidAuctionStatusError({ status: String(req.query.status) }));
-  }
+  const result = auctionStatusQuerySchema.safeParse({ creatorIds, statuses, types });
 
+  if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
+
+  res.locals = result.data;
   next();
 }

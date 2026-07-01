@@ -19,7 +19,9 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   const error = err instanceof AppError ? err : new Errors.InternalServerError();
 
   if (!(err instanceof AppError)) {
-    logger.error(`[${error.name}] ${error.message}`); // logga l'errore originale
+    logger.error(`${err.stack}`); // log original error stack
+  } else {
+    logger.debug(`[${error.name}(${error.status})] ${error.message}`);
   }
   
   const responseObject: { name: string, error: string, details?: unknown } = {
@@ -28,8 +30,6 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   };
   
   if (error.details) responseObject.details = error.details;
-
-  logger.debug(`[${error.name}(${error.status})] ${error.message}`);
 
   res.status(error.status).json(responseObject)
 }

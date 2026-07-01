@@ -55,13 +55,13 @@ export function getZodErrorMessage(zodResult: z.ZodSafeParseError<Record<string,
  * @param zodObject - The Zod schema to validate against
  */
 function validateCredentials(zodObject: z.ZodObject, form: string) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const result = zodObject.safeParse(req.body);
 
     if (!result.success) throw createZodError(result.error, form);
 
     // Overwrite req.body with the safely parsed/sanitized fields
-    req.body = result.data;
+    res.locals = result.data;
 
     next();
   };

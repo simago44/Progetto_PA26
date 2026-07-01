@@ -8,12 +8,11 @@ export class AuctionController {
    * If the status code is not present in query params it returns all the auctions
    * Example URL: /auctions?status=0
    */
-  public async getAuctions(req: Request, res: Response, next: NextFunction) {
-    const statusValue = req.query.status !== undefined ? Number(req.query.status) : undefined;
-    const status = statusValue as AuctionStatus | undefined;
-
+  public async getAuctions(_req: Request, res: Response, _next: NextFunction) {
     const options = {
-      ...(status !== undefined && { status }), //add status if status is not undefined
+      creatorIds: res.locals.creatorIds,
+      statuses: res.locals.statuses,
+      types: res.locals.types
     };
 
     const auctions: Auction[] = await auctionService.getFiltered(options);
@@ -26,8 +25,8 @@ export class AuctionController {
    * @params next to pass the exceptions
    * @returns void
    */
-  public async createAuction(req: Request, res: Response, next: NextFunction) {
-    const auction = await auctionService.createAuction(req.body);
+  public async createAuction(_req: Request, res: Response, _next: NextFunction) {
+    const auction = await auctionService.createAuction(res.locals.auction);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
 }

@@ -2,7 +2,7 @@ import { Auth0Permission } from "../integrations/auth0.ts";
 import { checkJwtAuthorization, checkPermission, checkSelfOrAllPermission } from "./authMiddleware.ts";
 import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
 import { validateAuctionMiddleware, validateAuctionStatusMiddleware } from "./auctionValidationMiddleware.ts";
-import { validateBidMiddleware } from "./bidValidationMiddleware.ts";
+import { validateBidMiddleware, validateGetAuctionBids } from "./bidValidationMiddleware.ts";
 import { validateSignup } from "./authValidationMiddleware.ts";
 
 export const createAuctionMiddlewares = [
@@ -34,3 +34,7 @@ export const createBidMiddlewares = [
   checkPermission(Auth0Permission.createBid),
   validateBidMiddleware,
 ];
+
+export const getAuctionBidsMiddlewares = [
+  validateGetAuctionBids
+]

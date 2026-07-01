@@ -24,9 +24,9 @@ export const AuctionType = {
 export type AuctionType = (typeof AuctionType)[keyof typeof AuctionType];
 
 export const AuctionStatus = {
-  NotStarted: 0,
-  InProgress: 1,
-  Ended: 2,
+  NotStarted: "not-started",
+  InProgress: "in-progress",
+  Ended: "ended",
 } as const;
 export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];
 

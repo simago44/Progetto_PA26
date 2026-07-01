@@ -10,15 +10,24 @@ const BidSchema = z.object({
 
 /** Middleware which validates the bid in the request body */
 export async function validateBidMiddleware(req: Request, res: Response, next: NextFunction) {
-  req.body.userId = req.auth?.payload.sub;
-  req.body.auctionId = req.params.auctionId;
-  
-  const result = BidSchema.safeParse(req.body);
+  const bid = {
+    userId: res.locals.authId,
+    auctionId: req.params.auctionId,
+    bidPrice: req.body.bidPrice
+  }
+
+  const result = BidSchema.safeParse(bid);
 
   if (!result.success) throw createZodError(result.error, "validateBidMiddleware");
 
   // Overwrite req.body with the safely parsed/sanitized fields
-  req.body = result.data;
+  res.locals.bid = result.data;
+
+  next();
+}
+
+export async function validateGetAuctionBids(req: Request, res: Response, next: NextFunction) {
+  res.locals.auctionId = req.params.auctionId;
 
   next();
 }

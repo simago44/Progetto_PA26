@@ -8,6 +8,7 @@ import { Auction, AuctionType } from "../models/Auction.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import type { User } from "../models/User.ts";
+import type { CreationAttributes } from "sequelize";
 
 
 async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
@@ -35,9 +36,9 @@ async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
 }
 
 export class BidController {
-  public async createBid(req: Request, res: Response, _next: NextFunction) {
-    const auctionId = req.body.auctionId as string;
-    const userId = req.body.userId as string;
+  public async createBid(_req: Request, res: Response, _next: NextFunction) {
+    const auctionId = res.locals.bid.auctionId as number;
+    const userId = res.locals.bid.userId as string;
 
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
@@ -47,7 +48,7 @@ export class BidController {
     if (!user) throw new Errors.UnauthorizedError(); // should not happen because we validated
 
     // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
-    const bid: Bid = Bid.build({ ...req.body });
+    const bid: Bid = Bid.build(res.locals.bid);
 
     await checkIsBidValid(bid, auction, user);
 
@@ -55,8 +56,8 @@ export class BidController {
 
     res.status(StatusCodes.OK).json({ id: createdBid.id });
   }
-  public async getAuctionBids(req: Request, res: Response, _next: NextFunction) {
-    const auctionId = req.params.auctionId as string;
+  public async getAuctionBids(_req: Request, res: Response, _next: NextFunction) {
+    const auctionId = res.locals.auctionId as number;
 
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
