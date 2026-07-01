@@ -5,10 +5,11 @@ import { Errors } from "../factory/errorFactory.ts";
 
 const DATABASE_URL = env.DATABASE_URL;
 
-export function fromSequelizeError(err: unknown) {
+export function parseSequelizeError(err: unknown) {
   if (err instanceof UniqueConstraintError) {
     const field = err.errors[0]?.path ?? "field";
-    throw new Errors.FieldAlreadyUsedError({field, value:""});
+    const value = err.errors[0]?.value ?? "value";
+    throw new Errors.FieldAlreadyUsedError({field, value});
   }
 
   /*

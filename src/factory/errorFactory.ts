@@ -1,7 +1,7 @@
 // factory/errorFactory.ts
 import { StatusCodes } from "http-status-codes";
-import { ErrorMessages } from "./messageStrings.ts";
-import type { ZodError } from "zod";
+import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
+import { unknown, type ZodError } from "zod";
 import type { AuctionType } from "../models/Auction.ts";
 
 /**
@@ -23,6 +23,8 @@ export class AppError extends Error {
 }
 
 type MessageFn<T> = (params: T) => string;
+type DetailsFn<T> = (params: T) => unknown;
+type Details<T> = unknown | DetailsFn<T>;
 
 // Args for constructors. Depends if the error needs params or not (fixed string, function without params)
 type CtorArgs<T> = T extends void ? [] : [T];
@@ -31,16 +33,20 @@ function defineAppErrorClass<T = void>(
   statusCode: number,
   errorName: string,
   message: string | MessageFn<T>,
-  detailsFn: (params: T) => unknown = (p) => p as unknown
+  details?: Details<T>
 ) {
   // If we pass a plain string as a message, we create an anomymous function that returns the message
   // Otherwise, we use the provided function
   const messageFn = typeof message === "function" ? (message as MessageFn<T>) : () => message;
+  // if we have an object in details, we create a function that returns it. Otherwise we use the
+  // provided function
+  const detailsFn = typeof details === "function" ? (details as DetailsFn<T>) : () => details;
 
   return class extends AppError {
     constructor(...args: CtorArgs<T>) {
       // here params is either void (CtorArgs = []) or an object T (CtorArgs = [T])
       const params = args[0] as T;
+
       super(statusCode, messageFn(params), errorName, detailsFn(params));
     }
   };
@@ -49,7 +55,7 @@ function defineAppErrorClass<T = void>(
 type ErrorSpec<T> = {
   status: number;
   message: string | MessageFn<T>;
-  detailsFn?: (params: T) => unknown;
+  details?: Details<T>;
 };
 type ParamsOf<S> = S extends ErrorSpec<infer T> ? (unknown extends T ? void : T) : never;
 type AppErrorClass<T> = new (...args: CtorArgs<T>) => AppError;
@@ -57,8 +63,8 @@ type AppErrorClass<T> = new (...args: CtorArgs<T>) => AppError;
 function buildErrors<M extends Record<string, ErrorSpec<any>>>(specs: M) {
   const result = {} as { [K in keyof M]: AppErrorClass<ParamsOf<M[K]>> };
   (Object.keys(specs) as (keyof M)[]).forEach((key) => {
-    const { status, message, detailsFn } = specs[key]!;
-    result[key] = defineAppErrorClass(status, key as string, message, detailsFn) as any;
+    const { status, message, details } = specs[key]!;
+    result[key] = defineAppErrorClass(status, key as string, message, details) as any;
   });
   return result;
 }
@@ -73,24 +79,12 @@ export const Errors = buildErrors({
   InvalidAuctionStatusError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InvalidAuctionStatus },
   FieldAlreadyUsedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.FieldAlreadyUsed },
   WrongCredentialsErrors: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.WrongCredentials },
-  ValidationError: {
-    status: StatusCodes.BAD_REQUEST,
-    message: ErrorMessages.ZodValidation,
-    detailsFn: ({ errors } : { errors: Record<string, string[]>}) => errors
-  },
-  AuctionEndedError: { status: StatusCodes.CONFLICT, message: "This auction has already ended" },
-  BidTooLowError: {
-    status: StatusCodes.BAD_REQUEST,
-    message: ({ minimumBid }: { minimumBid: number }) =>
-      `Bid must be at least ${minimumBid}`,
-    detailsFn: ({ minimumBid }: { minimumBid: number }) => ({ minimumBid }),
-  },
-  BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: "You have already placed a bid in this auction" },
-  AuctionTypeNotSupportedError: {
-    status: StatusCodes.BAD_REQUEST,
-    message: ({ type }: { type: AuctionType }) => `This operation is not supported for ${type} auctions`,
-    detailsFn: ({ type }: { type: AuctionType }) => ({ type }),
-  },
+  ValidationError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.Validation, details: ErrorDetails.Validation },
+  AuctionEndedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionEnded },
+  BidTooLowError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
+  BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
+  AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported, details: ErrorDetails.AuctionTypeNotSupported },
+  RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound }
 });
 
 export function parseZodError(error: ZodError): Record<string, string[]> {

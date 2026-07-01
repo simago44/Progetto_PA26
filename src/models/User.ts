@@ -43,7 +43,8 @@ User.init(
     },
     username: {
       type: DataTypes.STRING(64),
-      allowNull: false
+      allowNull: false,
+      unique: true
     }
   },
   {
