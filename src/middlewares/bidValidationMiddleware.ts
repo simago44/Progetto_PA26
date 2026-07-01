@@ -20,7 +20,6 @@ export async function validateBidMiddleware(req: Request, res: Response, next: N
 
   if (!result.success) throw createZodError(result.error, "validateBidMiddleware");
 
-  // Overwrite req.body with the safely parsed/sanitized fields
   res.locals.bid = result.data;
 
   next();

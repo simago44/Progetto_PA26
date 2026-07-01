@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import userRepository from "../repositories/userRepository.ts";
 import { walletUpdatedSuccessfully_message } from "../factory/messageStrings.ts";
 import { Errors } from "../factory/errorFactory.ts";
+import { getRealUserTokens } from "./bidController.ts";
 
 export class UserController {
   public async getWallet(_req: Request, res: Response, _next: NextFunction) {
@@ -11,7 +12,7 @@ export class UserController {
     const user = await userRepository.findByPk(userId);
     if (!user) throw new Errors.UserNotFoundError({ userId });
 
-    const tokens = user.tokens;
+    const tokens = await getRealUserTokens(user);
 
     res.status(StatusCodes.OK).json({ tokens });
   }

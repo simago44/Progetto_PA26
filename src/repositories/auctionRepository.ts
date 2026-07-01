@@ -20,13 +20,13 @@ class AuctionRepository {
     switch (status) {
       case AuctionStatus.NotStarted:
         return {
-          startAt: { [Op.gt]: now },
+          startsAt: { [Op.gt]: now },
           hasEnded: false
         };
 
       case AuctionStatus.InProgress:
         return {
-          startAt: { [Op.lte]: now },
+          startsAt: { [Op.lte]: now },
           hasEnded: false,
         };
 

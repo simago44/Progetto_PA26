@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import auctionService from "../services/auctionService.ts";
-import { Auction, AuctionStatus } from "../models/Auction.ts";
+import { Auction } from "../models/Auction.ts";
 import { StatusCodes } from "http-status-codes";
 
 export class AuctionController {
@@ -17,7 +17,7 @@ export class AuctionController {
 
     const auctions: Auction[] = await auctionService.getFiltered(options);
 
-    res.status(StatusCodes.OK).json({ count: auctions.length, auctions: auctions });
+    res.status(StatusCodes.OK).json({ count: auctions.length, auctions: await auctionService.formatAuctions(auctions) });
   }
 
   /** Creates an auction and passes to the repository to save on db

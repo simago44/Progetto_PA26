@@ -281,7 +281,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0\r\n}",
+          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -335,7 +335,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150\r\n}",
+          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -389,7 +389,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500\r\n}",
+          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -411,7 +411,61 @@
       "response": []
     },
     {
-      "name": "Create Bid",
+      "name": "Create Second Price Auction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.environment.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.environment.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create bid",
       "event": [
         {
           "listen": "prerequest",
@@ -451,7 +505,7 @@
           }
         },
         "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions/2/bids",
+          "raw": "http://{{HOST}}:{{PORT}}/auctions/10/bids",
           "protocol": "http",
           "host": [
             "{{HOST}}"
@@ -459,7 +513,7 @@
           "port": "{{PORT}}",
           "path": [
             "auctions",
-            "2",
+            "10",
             "bids"
           ]
         }
@@ -584,7 +638,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions/3/bids",
+          "raw": "http://{{HOST}}:{{PORT}}/auctions/9/bids",
           "protocol": "http",
           "host": [
             "{{HOST}}"
@@ -592,8 +646,43 @@
           "port": "{{PORT}}",
           "path": [
             "auctions",
-            "3",
+            "9",
             "bids"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Filtered Auctions",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/auctions?types=dutch",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "auctions"
+          ],
+          "query": [
+            {
+              "key": "types",
+              "value": "dutch"
+            }
           ]
         }
       },

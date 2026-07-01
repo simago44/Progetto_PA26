@@ -1,25 +1,26 @@
 import type { NextFunction, Request, Response } from "express";
-import { AuctionStatus, AuctionType } from "../models/Auction.ts";
+import { AuctionStatus, AuctionType, descriptionMaxLenght, descriptionMinLenght } from "../models/Auction.ts";
 import { createZodError, Errors } from "../factory/errorFactory.ts";
 import z from 'zod';
 
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
-  startAt: z.coerce.date().refine((date) => date > new Date(), {
-    message: "startAt must be in the future",
+  startsAt: z.coerce.date().refine((date) => date > new Date(), {
+    message: "startsAt must be in the future",
   }),
   startPrice: z.int().min(1),
   type: z.enum(AuctionType),
+  description: z.string().trim().min(descriptionMinLenght).max(descriptionMaxLenght)
 });
 
 const EnglishAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.English),
-  endAt: z.coerce.date(),
+  endsAt: z.coerce.date(),
   minimumIncrement: z.int().min(1),
   delayBeforeEnding: z.int().min(0)
-}).refine((data) => data.endAt > data.startAt, {
-  message: "endAt must be after startAt",
-  path: ["endAt"],
+}).refine((data) => data.endsAt > data.startsAt, {
+  message: "endsAt must be after startsAt",
+  path: ["endsAt"],
 });
 
 const DutchAuctionSchema = BaseAuctionSchema.extend({
@@ -31,10 +32,10 @@ const DutchAuctionSchema = BaseAuctionSchema.extend({
 
 const SealedAuctionSchema = BaseAuctionSchema.extend({
   type: z.enum([AuctionType.FirstPrice, AuctionType.SecondPrice]),
-  endAt: z.coerce.date(),
-}).refine((data) => data.endAt > data.startAt, {
-  message: "endAt must be after startAt",
-  path: ["endAt"],
+  endsAt: z.coerce.date(),
+}).refine((data) => data.endsAt > data.startsAt, {
+  message: "endsAt must be after startsAt",
+  path: ["endsAt"],
 });
 
 const AuctionSchema = z.discriminatedUnion("type", [

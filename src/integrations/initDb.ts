@@ -52,30 +52,30 @@ async function generateUsersArray(
   return users;
 }
 
-function buildDatesForStatus(status: AuctionStatus): { startAt: Date; endAt: Date; } {
+function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: Date; } {
   const now = Date.now();
 
   switch (status) {
     case AuctionStatus.NotStarted:
       return {
-        startAt: new Date(now + 24 * 60 * 60 * 1000), // +1 giorno
-        endAt: new Date(now + 27 * 60 * 60 * 1000),   // +1 giorno e 3 ore
+        startsAt: new Date(now + 24 * 60 * 60 * 1000), // +1 giorno
+        endsAt: new Date(now + 27 * 60 * 60 * 1000),   // +1 giorno e 3 ore
       };
     case AuctionStatus.InProgress:
       return {
-        startAt: new Date(now + 1000),                // parte subito
-        endAt: new Date(now + 24 * 60 * 60 * 1000),    // finisce tra 1 giorno
+        startsAt: new Date(now + 1000),                // parte subito
+        endsAt: new Date(now + 24 * 60 * 60 * 1000),    // finisce tra 1 giorno
       };
     case AuctionStatus.Ended:
       return {
-        startAt: new Date(now + 1000),  // +1 secondo
-        endAt: new Date(now + 61_000),    // +61 secondi
+        startsAt: new Date(now + 1000),  // +1 secondo
+        endsAt: new Date(now + 61_000),    // +61 secondi
       };
   }
 }
 
-function buildDutchParams(startAt: Date, endAt: Date, startPrice: number) {
-  const durationMs = endAt.getTime() - startAt.getTime();
+function buildDutchParams(startsAt: Date, endsAt: Date, startPrice: number) {
+  const durationMs = endsAt.getTime() - startsAt.getTime();
 
   const minimumPrice = faker.number.int({ min: 0, max: startPrice - 10 });
 
@@ -91,58 +91,62 @@ function buildDutchParams(startAt: Date, endAt: Date, startPrice: number) {
 }
 
 function buildEnglishAuction(creatorId: string, status: AuctionStatus) {
-  const { startAt, endAt } = buildDatesForStatus(status);
+  const { startsAt, endsAt } = buildDatesForStatus(status);
   return {
     creatorId,
-    startAt,
-    endAt,
+    startsAt,
+    endsAt,
     type: AuctionType.English,
     startPrice: 100,
     minimumIncrement: 50,
     delayBeforeEnding: 10000,
+    description: faker.commerce.productDescription()
   };
 }
 
 function buildDutchAuction(creatorId: string, status: AuctionStatus) {
-  const { startAt, endAt } = buildDatesForStatus(status);
+  const { startsAt, endsAt } = buildDatesForStatus(status);
   const startPrice = 100;
   const { decrementPrice, decrementInterval, minimumPrice } = buildDutchParams(
-    startAt,
-    endAt,
+    startsAt,
+    endsAt,
     startPrice
   );
-  logger.debug(`auction ends at: ${endAt}`);
+  logger.debug(`auction ends at: ${endsAt}`);
 
   return {
     creatorId,
-    startAt,
+    startsAt,
     type: AuctionType.Dutch,
     startPrice,
     decrementPrice,
     decrementInterval,
     minimumPrice,
+    description: faker.commerce.productDescription()
   };
 }
 
 function buildFirstPriceAuction(creatorId: string, status: AuctionStatus) {
-  const { startAt, endAt } = buildDatesForStatus(status);
+  const { startsAt, endsAt } = buildDatesForStatus(status);
   return {
     creatorId,
-    startAt,
-    endAt,
+    startsAt,
+    endsAt,
     type: AuctionType.FirstPrice,
     startPrice: 100,
+    description: faker.commerce.productDescription()
   };
 }
 
 function buildSecondPriceAuction(creatorId: string, status: AuctionStatus) {
-  const { startAt, endAt } = buildDatesForStatus(status);
+  const { startsAt, endsAt } = buildDatesForStatus(status);
   return {
     creatorId,
-    startAt,
-    endAt,
+    startsAt,
+    endsAt,
     type: AuctionType.SecondPrice,
     startPrice: 100,
+    description: faker.commerce.productDescription()
   };
 }
 
@@ -266,8 +270,8 @@ export async function initDb() {
   }
 
   /*const NotStarted = await Auction.create({
-    startAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
-    endAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
+    startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
+    endsAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
     creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.English,
@@ -275,8 +279,8 @@ export async function initDb() {
   });
 
   const InProgress = await Auction.create({
-    startAt: new Date(Date.now() + 1000), // parte subito
-    endAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
+    startsAt: new Date(Date.now() + 1000), // parte subito
+    endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
     creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.FirstPrice,
@@ -284,8 +288,8 @@ export async function initDb() {
   });
 
   const Ended = await Auction.create({
-    startAt: new Date(Date.now() + 1000), // 1 secondo
-    endAt: new Date(Date.now() + 2000), //2 secondi
+    startsAt: new Date(Date.now() + 1000), // 1 secondo
+    endsAt: new Date(Date.now() + 2000), //2 secondi
     creatorId: bidCreator.id,
     startPrice: 100,
     type: AuctionType.English,

@@ -3,11 +3,15 @@ import sequelize from "../integrations/sequelize.ts";
 import { Auction, AuctionStatus, AuctionType } from "./Auction.ts";
 import { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
-import { col, Op, where } from "sequelize";
+
+export async function getEndTime(auction: Auction): Promise<Date> {
+  const msToEnd = await getMsToEnd(auction);
+  return new Date(Date.now() + msToEnd)
+}
 
 export function getAuctionStatus(auction: Auction): AuctionStatus {
   if (auction.hasEnded) return AuctionStatus.Ended;
-  return auction.startAt <= new Date()
+  return auction.startsAt <= new Date()
     ? AuctionStatus.InProgress
     : AuctionStatus.NotStarted;
 }
@@ -17,13 +21,12 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
   const bids = await auction.getBids();
   let finishTime: Date = new Date();
 
-  if (auction.hasEnded) return -1;
   switch (auction.type) {
     case AuctionType.English:
-      if (auction.endAt == null)
-        throw new TypeError("Null attribute endAt");
+      if (auction.endsAt == null)
+        throw new TypeError("Null attribute endsAt");
 
-      if (bids.length === 0) finishTime = auction.endAt;
+      if (bids.length === 0) finishTime = auction.endsAt;
       else {
         const lastBid = bids.reduce((latest, bid) =>
           bid.createdAt > latest.createdAt ? bid : latest,
@@ -32,7 +35,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
           lastBid.createdAt.getTime() + auction.delayBeforeEnding,
         );
         finishTime =
-          lastBidDeadline > auction.endAt ? lastBidDeadline : auction.endAt;
+          lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
       }
       logger.debug(`auction ${auction.id} ends at: ${finishTime.toString()}`);
       logger.debug(now.toString());
@@ -46,21 +49,22 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       if (auction.minimumPrice == null)
         throw new TypeError("Null attribute minimumPrice");
 
-      if (bids.length > 0) return -1;
+      const firstBid = bids[0];
+      if (firstBid) return firstBid.createdAt.getTime() - now.getTime();
 
       //Calculate the finish time
       const priceRange = auction.startPrice - auction.minimumPrice!;
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
       const decrementIntervalMs = auction.decrementInterval!;
       const durationMs = decrementsNeeded * decrementIntervalMs;
-      finishTime = new Date(auction.startAt.getTime() + durationMs);
+      finishTime = new Date(auction.startsAt.getTime() + durationMs);
 
       //If the auction has not started yet, it cannot be ended
       if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
         return finishTime.getTime() - now.getTime();
 
       // Current price
-      const elapsed = now.getTime() - auction.startAt.getTime();
+      const elapsed = now.getTime() - auction.startsAt.getTime();
       const decrements = Math.floor(
         elapsed / (auction.decrementInterval! * 60 * 1000),
       );
@@ -76,20 +80,14 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
 
     case AuctionType.FirstPrice:
     case AuctionType.SecondPrice:
-      return auction.endAt.getTime() - now.getTime(); // negative if past
+      return auction.endsAt.getTime() - now.getTime(); // negative if past
   }
 }
 
-export async function getWinningBid(
-  auction: Auction,
-): Promise<{ bid: Bid; finalPrice: number; } | null> {
-  // get only bids from user with enought tokens
+export async function getWinningBid(auction: Auction): Promise<{ bid: Bid; finalPrice: number; } | null> {
   // descending order based on bidPrice
+  // TODO: check tokens?
   const bids = await auction.getBids({
-    include: [{ model: User, required: true }],
-    where: where(col("User.tokens"), {
-      [Op.gte]: col("bidPrice"),
-    }),
     order: [["bidPrice", "DESC"]],
   });
 

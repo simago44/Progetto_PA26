@@ -3,13 +3,25 @@ import { StatusCodes } from "http-status-codes";
 import bidRepository from "../repositories/bidRepository.ts";
 import { Bid } from "../models/Bid.ts";
 import { Errors } from "../factory/errorFactory.ts";
-import { getMsToEnd, getWinningBid } from "../models/AuctionUtils.ts";
+import { closeAuction, getMsToEnd, getWinningBid } from "../models/AuctionUtils.ts";
 import { Auction, AuctionType } from "../models/Auction.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import type { User } from "../models/User.ts";
-import type { CreationAttributes } from "sequelize";
 
+export async function getRealUserTokens(user: User) {
+  const bidsInProgessAuctions = await bidRepository.getUserBidsOfInProgessAuctions(user.id);
+  const highestByAuction = new Map<number, Bid>();
+  for (const bid of bidsInProgessAuctions) {
+    const current = highestByAuction.get(bid.auctionId);
+    if (!current || bid.bidPrice > current.bidPrice) {
+      highestByAuction.set(bid.auctionId, bid);
+    }
+  }
+
+  const totalTokensOfBids = highestByAuction.values().reduce((total, bid) => total + bid.bidPrice, 0);
+  return user.tokens - totalTokensOfBids;
+}
 
 async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
   const auctionMsToEnd = await getMsToEnd(auction);
@@ -33,6 +45,9 @@ async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
       if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
       break;
   }
+
+  const realUserTokens = await getRealUserTokens(user);
+  if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
 }
 
 export class BidController {
@@ -42,7 +57,7 @@ export class BidController {
 
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
-    
+
     const user = await userRepository.findByPk(userId);
     // TODO: if this happens, throw an error and invalidate the token???
     if (!user) throw new Errors.UnauthorizedError(); // should not happen because we validated
@@ -53,6 +68,8 @@ export class BidController {
     await checkIsBidValid(bid, auction, user);
 
     const createdBid = await bidRepository.create(bid);
+
+    if (auction.type == AuctionType.Dutch) await closeAuction(auction, 0);
 
     res.status(StatusCodes.OK).json({ id: createdBid.id });
   }

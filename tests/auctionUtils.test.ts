@@ -9,8 +9,8 @@ const futureDate10: Date = new Date(Date.now() + 10 * 60 * 1000)
 
 const EndedAuction1: Auction = new Auction({
   creatorId: "id",
-  startAt: new Date(passedDate10),
-  endAt: passedDate1,
+  startsAt: new Date(passedDate10),
+  endsAt: passedDate1,
   startPrice: 1000,
   type: AuctionType.Dutch,
   hasEnded: true,
@@ -21,8 +21,8 @@ const EndedAuction1: Auction = new Auction({
 
 const EndedAuction2: Auction = new Auction({
   creatorId: "id",
-  startAt: new Date(passedDate10),
-  endAt: passedDate1,
+  startsAt: new Date(passedDate10),
+  endsAt: passedDate1,
   startPrice: 1000,
   type: AuctionType.Dutch,
   hasEnded: false,
@@ -33,8 +33,8 @@ const EndedAuction2: Auction = new Auction({
 
 const InProgressAuction: Auction = new Auction({
   creatorId: "id",
-  startAt: passedDate1,
-  endAt: futureDate10,
+  startsAt: passedDate1,
+  endsAt: futureDate10,
   startPrice: 2000,
   type: AuctionType.Dutch,
   hasEnded: false,
@@ -45,8 +45,8 @@ const InProgressAuction: Auction = new Auction({
 
 const NotStartedAuction: Auction = new Auction({
   creatorId: "id",
-  startAt: futureDate1,
-  endAt: futureDate10,
+  startsAt: futureDate1,
+  endsAt: futureDate10,
   startPrice: 2000,
   type: AuctionType.Dutch,
   hasEnded: false,

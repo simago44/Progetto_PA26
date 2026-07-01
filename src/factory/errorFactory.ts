@@ -84,7 +84,8 @@ export const Errors = buildErrors({
   BidTooLowError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
   BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
   AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported, details: ErrorDetails.AuctionTypeNotSupported },
-  RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound }
+  RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
+  InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
 });
 
 export function createZodError(error: ZodError, form: string): AppError {

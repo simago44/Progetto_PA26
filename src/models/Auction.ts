@@ -31,6 +31,8 @@ export const AuctionStatus = {
 export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];
 
 const defaultDelayBeforeEnding = 5;
+export const descriptionMinLenght = 10;
+export const descriptionMaxLenght = 1023;
 
 export class Auction extends Model<
   InferAttributes<Auction, { omit: "bids"; }>,
@@ -38,10 +40,11 @@ export class Auction extends Model<
 > {
   declare id: CreationOptional<number>;
   declare creatorId: ForeignKey<User["id"]>;
-  declare startAt: Date;
-  declare endAt: CreationOptional<Date>;
+  declare startsAt: Date;
+  declare endsAt: CreationOptional<Date>;
   declare startPrice: number;
   declare type: AuctionType;
+  declare description: string;
   declare minimumIncrement: CreationOptional<number>;
   declare decrementPrice: CreationOptional<number>;
   declare decrementInterval: CreationOptional<number>;
@@ -64,7 +67,6 @@ export class Auction extends Model<
   get status(): NonAttribute<AuctionStatus> {
     return getAuctionStatus(this);
   }
-  //get msToEnd(): NonAttribute<number> { return getMsToEnd(this); }
 }
 
 Auction.init(
@@ -74,28 +76,28 @@ Auction.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    startAt: {
+    startsAt: {
       type: DataTypes.DATE,
       allowNull: false,
       validate: {
-        isAfterNow(startAt: Date) {
-          if (startAt <= new Date()) {
-            throw new Error("startAt must be in the future");
+        isAfterNow(startsAt: Date) {
+          if (startsAt <= new Date()) {
+            throw new Error("startsAt must be in the future");
           }
         },
-        isBeforeEndAt(this: Auction, startAt: Date) {
-          if (startAt >= this.endAt) {
-            throw new Error("startAt must be before endAt");
+        isBeforeendsAt(this: Auction, startsAt: Date) {
+          if (startsAt >= this.endsAt) {
+            throw new Error("startsAt must be before endsAt");
           }
         },
       },
     },
-    endAt: {
+    endsAt: {
       type: DataTypes.DATE,
       validate: {
-        isAfterStartAt(this: Auction, endAt: Date) {
-          if (endAt <= this.startAt) {
-            throw new Error("endAt must be after startAt");
+        isAfterstartsAt(this: Auction, endsAt: Date) {
+          if (endsAt <= this.startsAt) {
+            throw new Error("endsAt must be after startsAt");
           }
         },
       },
@@ -110,6 +112,13 @@ Auction.init(
     type: {
       type: DataTypes.ENUM(...Object.values(AuctionType)),
       allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: [descriptionMinLenght, descriptionMaxLenght],
+      },
     },
     minimumIncrement: {
       type: DataTypes.INTEGER,
