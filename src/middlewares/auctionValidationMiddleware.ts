@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { AuctionType } from "../models/Auction.ts";
+import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import { Errors, parseZodError } from "../factory/errorFactory.ts";
 import z from 'zod';
 
@@ -56,6 +56,27 @@ export async function validateAuctionMiddleware(req: Request, _res: Response, ne
 
   // Overwrite req.body with the safely parsed/sanitized fields
   req.body = result.data;
+
+  next();
+}
+
+const auctionStatusQuerySchema = z.object({
+  status: z
+    .coerce
+    .number()
+    .optional()
+    .transform((val) => (val !== undefined ? Number(val) : undefined))
+    .refine(
+      (val) => val === undefined || Object.values(AuctionStatus).includes(val as AuctionStatus)
+    ),
+});
+
+export function validateAuctionStatusMiddleware(req: Request, res: Response, next: NextFunction) {
+  const result = auctionStatusQuerySchema.safeParse(req.query);
+
+  if (!result.success) {
+    return next(new Errors.InvalidAuctionStatusError({ status: String(req.query.status) }));
+  }
 
   next();
 }

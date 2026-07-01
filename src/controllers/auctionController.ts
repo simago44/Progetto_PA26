@@ -1,11 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
-import auctionRepository from "../repositories/auctionRepository.ts";
-import { BaseError, ValidationError } from "sequelize";
-import logger from "../middlewares/logger.ts";
+import auctionService from "../services/auctionService.ts";
 import { Auction, AuctionStatus } from "../models/Auction.ts";
-import * as Messages from "../factory/messageStrings.ts";
 import { StatusCodes } from "http-status-codes";
-import { Errors } from "../factory/errorFactory.ts";
 
 export class AuctionController {
   /** Gets the auctions filtered by status
@@ -14,24 +10,15 @@ export class AuctionController {
    */
   public async getAuctions(req: Request, res: Response, next: NextFunction) {
     const statusValue = req.query.status !== undefined ? Number(req.query.status) : undefined;
-
-    if (
-      //invalid auction status
-      statusValue !== undefined &&
-      !Object.values(AuctionStatus).includes(statusValue as AuctionStatus)
-    ) {
-      throw new Errors.InvalidAuctionStatusError({ status: statusValue });
-    }
-
     const status = statusValue as AuctionStatus | undefined;
 
     const options = {
       ...(status !== undefined && { status }), //add status if status is not undefined
     };
 
-    const auctions: Auction[] = await auctionRepository.getFiltered(options);
+    const auctions: Auction[] = await auctionService.getFiltered(options);
 
-    res.status(StatusCodes.OK).json({ auctions });
+    res.status(StatusCodes.OK).json({ count: auctions.length, auctions: auctions });
   }
 
   /** Creates an auction and passes to the repository to save on db
@@ -40,9 +27,7 @@ export class AuctionController {
    * @returns void
    */
   public async createAuction(req: Request, res: Response, next: NextFunction) {
-    const auction = Auction.build({ ...req.body });
-
-    await auctionRepository.save(auction);
+    const auction = await auctionService.createAuction(req.body);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
 }

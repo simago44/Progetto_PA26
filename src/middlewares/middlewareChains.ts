@@ -1,7 +1,7 @@
 import { Auth0Permission } from "../services/auth0.ts";
 import { checkJwt, checkPermission, checkPermissionForSelf } from "./authMiddleware.ts";
 import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
-import { validateAuctionMiddleware } from "./auctionValidationMiddleware.ts";
+import { validateAuctionMiddleware, validateAuctionStatusMiddleware } from "./auctionValidationMiddleware.ts";
 import { validateBidMiddleware } from "./bidValidationMiddleware.ts";
 import { validateSignup } from "./authValidationMiddleware.ts";
 
@@ -15,6 +15,10 @@ export const authWithPermission = (permission: Auth0Permission) => [
 export const createAuctionMiddlewares = [
   ...authWithPermission(Auth0Permission.createAuction),
   validateAuctionMiddleware
+];
+
+export const getFilteredAuctionMiddlewares = [
+  validateAuctionStatusMiddleware
 ];
 
 export const signupMiddlewares = [
@@ -38,7 +42,7 @@ export const topUpWalletMiddlewares = [
   checkJwt,
   checkPermission(Auth0Permission.updateWallets),
   validateTopUpWallet
-]
+];
 
 export const createBidMiddlewares = [
   ...authWithPermission(Auth0Permission.createBid),
