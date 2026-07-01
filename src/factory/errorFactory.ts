@@ -1,8 +1,9 @@
 // factory/errorFactory.ts
 import { StatusCodes } from "http-status-codes";
 import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
-import { unknown, type ZodError } from "zod";
+import type { ZodError } from "zod";
 import type { AuctionType } from "../models/Auction.ts";
+import { UniqueConstraintError, ValidationError } from "sequelize";
 
 /**
  * Base error class for all application errors.
@@ -24,7 +25,7 @@ export class AppError extends Error {
 
 type MessageFn<T> = (params: T) => string;
 type DetailsFn<T> = (params: T) => unknown;
-type Details<T> = unknown | DetailsFn<T>;
+type Details<T> = string | object | DetailsFn<T>;
 
 // Args for constructors. Depends if the error needs params or not (fixed string, function without params)
 type CtorArgs<T> = T extends void ? [] : [T];
@@ -95,4 +96,44 @@ export function parseZodError(error: ZodError): Record<string, string[]> {
     details[path].push(issue.message);
   }
   return details;
+}
+
+export function parseSequelizeError(err: unknown, form: string) {
+  if (err instanceof UniqueConstraintError) {
+    const field = err.errors[0]?.path ?? "field";
+    const value = err.errors[0]?.value ?? "value";
+    throw new Errors.FieldAlreadyUsedError({field, value});
+  }
+
+  if (err instanceof ValidationError) {
+    const details: Record<string, string[]> = {};
+    for (const issue of err.errors) {
+      const path = issue.path as string // necessary because path it's an array
+      if (!details[path]) details[path] = [];
+      details[path].push(issue.message);
+    }
+    return new Errors.ValidationError({ form, errors: details });
+  }
+
+  // Not a Sequelize error we recognize — let the caller decide what to do.
+  throw err;
+}
+
+/**
+ * Parses an Auth0 error into an `AppError` with the appropriate HTTP status.
+ * Falls back to a 500 InternalServer error if the error is unrecognized.
+ * 
+ * @param err - The error thrown by the Auth0 SDK
+ */
+export function parseAuth0Error(err: any): AppError {
+  if (err?.statusCode && err?.body?.message) {
+    return new AppError(err.statusCode, err.body.message, err.constructor?.name);
+  }
+
+  if (err instanceof Error) {
+    const statusCode = (err as any)?.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    return new AppError(statusCode, err.message, err.name);
+  }
+
+  throw new Errors.InternalServerError();
 }

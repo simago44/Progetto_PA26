@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express"
 import userRepository from "../repositories/userRepository.ts";
-import { getAuthenticationToken, parseAuth0Error, RoleName } from "../services/auth0.ts";
+import { getAuthenticationToken, RoleName } from "../services/auth0.ts";
 import { userCreatedSuccessfully_message } from "../factory/messageStrings.ts";
+import { parseAuth0Error } from "../factory/errorFactory.ts";
 
 export class AuthController {
   public async signup(req: Request, res: Response, next: NextFunction) {

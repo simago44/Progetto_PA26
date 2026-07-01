@@ -5,24 +5,6 @@ import { Errors } from "../factory/errorFactory.ts";
 
 const DATABASE_URL = env.DATABASE_URL;
 
-export function parseSequelizeError(err: unknown) {
-  if (err instanceof UniqueConstraintError) {
-    const field = err.errors[0]?.path ?? "field";
-    const value = err.errors[0]?.value ?? "value";
-    throw new Errors.FieldAlreadyUsedError({field, value});
-  }
-
-  /*
-  if (err instanceof ValidationError) {
-    const detail = err.errors.map(e => e.message).join(", ");
-    return createError(ErrorEnum.ValidationError, detail);
-  }
-  */
-
-  // Not a Sequelize error we recognize — let the caller decide what to do.
-  throw err;
-}
-
 const sequelize = new Sequelize(DATABASE_URL, {
   logging: msg => logger.debug(msg)
 });

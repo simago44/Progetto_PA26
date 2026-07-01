@@ -1,8 +1,7 @@
 import env from "../config.ts";
 import { User } from "../models/User.ts";
-import { Auth0Roles, managementClient, parseAuth0Error, RoleName } from "../services/auth0.ts";
-import { Errors } from "../factory/errorFactory.ts";
-import { parseSequelizeError } from "../services/sequelize.ts";
+import { Auth0Roles, managementClient, RoleName } from "../services/auth0.ts";
+import { Errors, parseAuth0Error, parseSequelizeError } from "../factory/errorFactory.ts";
 
 class UserRepository {
   public async save(username: string, password: string, role: RoleName): Promise<User> {
@@ -28,7 +27,7 @@ class UserRepository {
       // Local save failed after the Auth0 user already exists — clean up
       // to avoid an orphaned Auth0 account with no matching local record.
       await managementClient.users.delete(user_id).catch(() => {});
-      throw parseSequelizeError(err);
+      throw parseSequelizeError(err, "createUser");
     }
   }
 

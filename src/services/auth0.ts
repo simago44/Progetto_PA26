@@ -2,29 +2,6 @@ import { AuthenticationClient, ManagementClient } from "auth0";
 import env from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import logger from "../middlewares/logger.ts";
-import { time } from "node:console";
-import { AppError, Errors } from "../factory/errorFactory.ts";
-import { StatusCodes } from "http-status-codes";
-
-
-/**
- * Parses an Auth0 error into an `AppError` with the appropriate HTTP status.
- * Falls back to a 500 InternalServer error if the error is unrecognized.
- * 
- * @param err - The error thrown by the Auth0 SDK
- */
-export function parseAuth0Error(err: any): AppError {
-  if (err?.statusCode && err?.body?.message) {
-    return new AppError(err.statusCode, err.body.message, err.constructor?.name);
-  }
-
-  if (err instanceof Error) {
-    const statusCode = (err as any)?.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-    return new AppError(statusCode, err.message, err.name);
-  }
-
-  throw new Errors.InternalServerError();
-}
 
 export const Auth0Permission = {
   createAuction: "create:auction",
