@@ -1,14 +1,26 @@
 import type { CreationAttributes } from "sequelize";
 import { Errors } from "../factory/errorFactory.ts";
-import { AuctionStatus, AuctionType, type Auction } from "../models/Auction.ts";
+import { AuctionType, type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import auctionService from "./auctionService.ts";
+import { omit } from "lodash-es";
 
 class BidService {
+  public async formatBids(bids: Bid[]): Promise<any[]> {
+    const formattedAuctions = await Promise.all(
+      bids.map(async (bid) => {
+        let cleaned = omit(bid.dataValues, ["updatedAt"]);
+
+        return cleaned;
+      })
+    );
+    return formattedAuctions;
+  }
+
   public async createBid(bidData: CreationAttributes<Bid>): Promise<Bid> {
     const auctionId: number = bidData.auctionId as number;
     const userId: string = bidData.userId;
@@ -41,9 +53,9 @@ class BidService {
       throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
     }
 
-    return await bidRepository.findAuctionBids(auction.id);
+    const bids = await bidRepository.findAuctionBids(auction.id);
+    return this.formatBids(bids);
   }
-
 
   public async getRealUserTokens(user: User) {
     const bidsInProgessAuctions = await bidRepository.getUserBidsOfInProgessAuctions(user.id);
@@ -65,6 +77,9 @@ class BidService {
 
     switch (auction.type) {
       case AuctionType.English:
+        // TODO
+        if (!auction.minimumIncrement) throw new Errors.InternalServerError();
+
         const winningBid = await auctionService.getWinningBid(auction);
         if (!winningBid) return "";
         if (bid.bidPrice < winningBid?.finalPrice + auction.minimumIncrement) {

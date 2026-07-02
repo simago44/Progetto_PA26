@@ -8,6 +8,7 @@ import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
+import { Errors } from "../factory/errorFactory.ts";
 
 class AuctionService {
   public async getFiltered(filters: AuctionFilters) {
@@ -51,6 +52,9 @@ class AuctionService {
 
     switch (auction.type) {
       case AuctionType.English:
+        // TODO
+        if (!auction.delayBeforeEnding) throw new Errors.InternalServerError();
+
         if (auction.endsAt == null)
           throw new TypeError("Null attribute endsAt");
 
@@ -130,22 +134,19 @@ class AuctionService {
 
     logger.debug(`Closing auction: ${auction.id}`);
 
-    await sequelize.transaction(async (t) => {
-      const winningBid = await this.getWinningBid(auction);
+    const winningBid = await this.getWinningBid(auction);
 
-      if (winningBid) {
-        const winnerId = winningBid.bid.userId;
-        const finalPrice = winningBid.finalPrice;
+    if (winningBid) {
+      const winnerId = winningBid.bid.userId;
+      const finalPrice = winningBid.finalPrice;
 
-        await auctionRepository.closeAuction(auction.id, winnerId, finalPrice, t);
+      await sequelize.transaction(async (t) => {
+        await auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);
         await userRepository.decrementTokens(winnerId, finalPrice, t);
-      } else {
-        await Auction.update(
-          { hasEnded: true },
-          { where: { id: auction.id }, transaction: t },
-        );
-      }
-    });
+      });
+    } else {
+      await auctionRepository.closeAuction(auction.id, null);
+    }
   };
 }
 

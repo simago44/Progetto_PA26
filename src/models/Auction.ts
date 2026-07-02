@@ -45,14 +45,14 @@ export class Auction extends Model<
   declare startPrice: number;
   declare type: AuctionType;
   declare description: string;
-  declare minimumIncrement: CreationOptional<number>;
-  declare decrementPrice: CreationOptional<number>;
-  declare decrementInterval: CreationOptional<number>;
-  declare minimumPrice: CreationOptional<number>;
-  declare delayBeforeEnding: CreationOptional<number>;
+  declare minimumIncrement: CreationOptional<number | null>;
+  declare decrementPrice: CreationOptional<number | null>;
+  declare decrementInterval: CreationOptional<number | null>;
+  declare minimumPrice: CreationOptional<number | null>;
+  declare delayBeforeEnding: CreationOptional<number | null>;
   declare hasEnded: CreationOptional<boolean>;
-  declare winnerId: CreationOptional<ForeignKey<User["id"]>>;
-  declare finalPrice: CreationOptional<number>;
+  declare winnerId: CreationOptional<ForeignKey<User["id"]> | null>;
+  declare finalPrice: CreationOptional<number | null>;
 
   declare getBids: HasManyGetAssociationsMixin<Bid>;
   declare addBid: HasManyAddAssociationMixin<Bid, number>;

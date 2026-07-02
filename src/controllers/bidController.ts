@@ -1,12 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import bidRepository from "../repositories/bidRepository.ts";
-import { Bid } from "../models/Bid.ts";
-import { Errors } from "../factory/errorFactory.ts";
-import auctionService from "../services/auctionService.ts";
-import { AuctionType } from "../models/Auction.ts";
-import auctionRepository from "../repositories/auctionRepository.ts";
-import userRepository from "../repositories/userRepository.ts";
 import bidService from "../services/bidService.ts";
 
 export class BidController {

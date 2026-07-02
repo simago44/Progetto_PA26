@@ -88,10 +88,10 @@ class AuctionRepository {
     return Auction.findAll({ where });
   }
 
-  public async closeAuction(auctionId: number, winnerId: string, finalPrice: number, transaction?: Transaction): Promise<void> {
+  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number} | null, transaction?: Transaction): Promise<void> {
     try {
       await Auction.update(
-        { hasEnded: true, winnerId, finalPrice },
+        { hasEnded: true, winnerId: winningBid?.winnerId ?? null, finalPrice: winningBid?.finalPrice ?? null },
         { where: { id: auctionId }, transaction: transaction ?? null },
       );
     } catch (err) {
