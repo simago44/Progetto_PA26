@@ -155,6 +155,6 @@ class AuctionService {
   };
 }
 
-const service = new AuctionService();
+const auctionService = new AuctionService();
 
-export default service;
+export default auctionService;
