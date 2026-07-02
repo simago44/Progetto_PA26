@@ -2,7 +2,7 @@ import type { CreationAttributes } from "sequelize";
 import auctionRepository, { type AuctionFilters } from "../repositories/auctionRepository.ts";
 import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval } from "../utils/dateUtils.ts";
-import logger from "../middlewares/logger.ts";
+import logger from "../core/logger.ts";
 import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";

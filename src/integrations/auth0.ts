@@ -1,7 +1,7 @@
 import { AuthenticationClient, ManagementClient } from "auth0";
-import env from "../config.ts";
+import env from "../core/config.ts";
 import userRepository from "../repositories/userRepository.ts";
-import logger from "../middlewares/logger.ts";
+import logger from "../core/logger.ts";
 import { RoleName, type Role } from "../enums/enums.ts";
 
 export const managementClient = new ManagementClient({

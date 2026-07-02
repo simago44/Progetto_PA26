@@ -1,6 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import env, { log_levels } from '../config.ts';
+import env, { log_levels } from './config.ts';
 
 /**
  * Builds a winston printf format from a template string.

@@ -1,6 +1,6 @@
 import { auth, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import type { Request, Response, NextFunction } from 'express';
-import env from '../config.ts';
+import env from '../core/config.ts';
 import { Errors } from '../factory/errorFactory.ts';
 
 const checkJwt = auth({

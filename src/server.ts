@@ -9,11 +9,10 @@ import userRoutes from "./routes/userRoutes.ts";
 import auctionRoutes from "./routes/auctionRoutes.ts";
 import bidRoutes from "./routes/bidRoutes.ts";
 import { errorHandler } from "./middlewares/errorHandler.ts";
-import logger from "./middlewares/logger.ts";
-import env from "./config.ts";
+import logger from "./core/logger.ts";
+import env from "./core/config.ts";
 import { healthCheck } from "./utils/healthUtils.ts";
-import { initDb } from "./integrations/initDb.ts";
-
+import { initDb } from "./bootstrap/initDb.ts";
 import "./integrations/BullMQ.ts";
 import { initBullMQ } from "./integrations/BullMQ.ts";
 import { Errors } from "./factory/errorFactory.ts";

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import sequelize from '../integrations/sequelize.ts';
-import env from "../config.ts";
+import env from "../core/config.ts";
 import { AuthenticationClient } from "auth0";
 
 const authClient = new AuthenticationClient({

@@ -1,4 +1,4 @@
-import env from "../config.ts";
+import env from "../core/config.ts";
 import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
 import { createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";

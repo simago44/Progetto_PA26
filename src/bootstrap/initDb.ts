@@ -1,11 +1,11 @@
-import sequelize from "./sequelize.ts";
+import sequelize from "../integrations/sequelize.ts";
 import { fakerIT as faker } from "@faker-js/faker";
 import "../models/relationships.ts";
 import { Auction, Bid, User } from "../models/relationships.ts";
-import env, { NodeEnv } from "../config.ts";
+import env, { NodeEnv } from "../core/config.ts";
 import userRepository from "../repositories/userRepository.ts";
-import { deleteStaleUsers } from "./auth0.ts";
-import logger from "../middlewares/logger.ts";
+import { deleteStaleUsers } from "../integrations/auth0.ts";
+import logger from "../core/logger.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUtils.ts";
 import auctionService from "../services/auctionService.ts";
@@ -20,7 +20,7 @@ const auth0UsernameMinLength = 1;
 const auth0UsernameMaxLength = 15;
 
 const auctionsPerTypeAndStatus = 20;
-const bidsNumber = 3000;
+const bidsNumber = 600;
 
 function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
   let username = faker.internet.username();
