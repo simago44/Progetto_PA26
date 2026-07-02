@@ -16,8 +16,8 @@ export class AuthController {
     const username = res.locals.username as string;
     const password = res.locals.password as string;
 
-    const authenticationToken = await authService.login(username, password);
+    const { userId, accessToken } = await authService.login(username, password);
 
-    res.json({ access_token: authenticationToken });
+    res.json({ userId, accessToken });
   };
 }

@@ -30,7 +30,8 @@ export const ErrorMessages = {
   BidAlreadyPlaced: "You have already placed a bid in this auction",
   AuctionTypeNotSupported: ({ type }: { type: AuctionType; }) => `This operation is not supported for ${type} auctions`,
   RouteNotFound: ({ path }: { path: string; }) => `Route on path '${path}' not found`,
-  InsufficientTokens: "Insufficient tokens"
+  InsufficientTokens: "Insufficient tokens",
+  InvariantViolation: ({ message }: { message: string }) => message,
 };
 
 export const ErrorDetails = {

@@ -8,7 +8,7 @@ import { deleteStaleUsers, RoleName } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import bidRepository from "../repositories/bidRepository.ts";
-import { addInterval, hours, minutes, seconds, tomorrow } from "../utils/dateUtils.ts";
+import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUtils.ts";
 import auctionService from "../services/auctionService.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 
@@ -19,8 +19,8 @@ const adminsLength = 0;
 const auth0UsernameMinLength = 1;
 const auth0UsernameMaxLength = 15;
 
-const auctionsPerTypeAndStatus = 2;
-const bidsNumber = 30;
+const auctionsPerTypeAndStatus = 20;
+const bidsNumber = 3000;
 
 function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
   let username = faker.internet.username();
@@ -57,22 +57,22 @@ async function generateUsersArray(
 function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: Date; } {
   switch (status) {
     case AuctionStatus.NotStarted:
-      const startDate = addInterval(new Date(), 24 * hours);
-      const startsAt = faker.date.between({ from: startDate, to: new Date(startDate.getTime() + 10 * hours) });
-      const endsAt = addInterval(startsAt, faker.number.float({ min: 3, max: 7 }) * hours);
+      const startDate = addInterval(new Date(), 24 * HOURS);
+      const startsAt = faker.date.between({ from: startDate, to: new Date(startDate.getTime() + 10 * HOURS) });
+      const endsAt = addInterval(startsAt, faker.number.float({ min: 3, max: 7 }) * HOURS);
       return {
         startsAt, // starts tomorrow
         endsAt, // ends after 3-7 hours from start
       };
     case AuctionStatus.InProgress:
       return {
-        startsAt: addInterval(new Date(), 1 * seconds), // starts in 1 second
-        endsAt: faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * hours) }), // ends tomorrow
+        startsAt: addInterval(new Date(), 1 * SECONDS), // starts in 1 second
+        endsAt: faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) }), // ends tomorrow
       };
     case AuctionStatus.Ended:
       return {
-        startsAt: addInterval(new Date(), 1 * seconds), // starts in 1 second
-        endsAt: addInterval(new Date(), 1 * minutes + 1 * seconds), // ends in 1 minute
+        startsAt: addInterval(new Date(), 1 * SECONDS), // starts in 1 second
+        endsAt: addInterval(new Date(), 1 * MINUTES + 1 * SECONDS), // ends in 1 minute
       };
   }
 }
@@ -169,8 +169,9 @@ async function generateAuctionsArray(creatorId: string, count: number): Promise<
       for (let i = 0; i < count; i++) {
         const auction = await auctionRepository.create(auctionBuilders[type](creatorId, status));
         if (type === AuctionType.Dutch && status === AuctionStatus.Ended) {
-          auction.createBid({
+          bidRepository.create({
             userId: "auth0|6a3fd852b4e640e31f20bbd2",
+            auctionId: auction.id,
             bidPrice: auction.startPrice
           });
         }

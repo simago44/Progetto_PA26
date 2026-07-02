@@ -8,7 +8,7 @@ import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
-import { Errors } from "../factory/errorFactory.ts";
+import { createAuctionMissingField } from "../factory/errorFactory.ts";
 
 class AuctionService {
   public async getFiltered(filters: AuctionFilters) {
@@ -52,11 +52,8 @@ class AuctionService {
 
     switch (auction.type) {
       case AuctionType.English:
-        // TODO
-        if (!auction.delayBeforeEnding) throw new Errors.InternalServerError();
-
-        if (auction.endsAt == null)
-          throw new TypeError("Null attribute endsAt");
+        if (auction.delayBeforeEnding == null) throw createAuctionMissingField(auction, 'delayBeforeEnding');
+        if (auction.endsAt == null) throw createAuctionMissingField(auction, 'endsAt');
 
         if (bids.length === 0) finishTime = auction.endsAt;
         else {
@@ -69,12 +66,9 @@ class AuctionService {
         return finishTime.getTime() - new Date().getTime(); // negative if past
 
       case AuctionType.Dutch:
-        if (auction.decrementPrice == null)
-          throw new TypeError("Null attribute decrementPrice");
-        if (auction.decrementInterval == null)
-          throw new TypeError("Null attribute decrementTime");
-        if (auction.minimumPrice == null)
-          throw new TypeError("Null attribute minimumPrice");
+        if (auction.decrementPrice == null) throw createAuctionMissingField(auction, 'decrementPrice');
+        if (auction.decrementInterval == null) throw createAuctionMissingField(auction, 'decrementInterval');
+        if (auction.minimumPrice == null) throw createAuctionMissingField(auction, 'minimumPrice');
 
         if (bids.length > 0 && bids[0]) return bids[0].createdAt.getTime() - new Date().getTime();
 
@@ -106,16 +100,17 @@ class AuctionService {
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
+        if (auction.endsAt == null) throw createAuctionMissingField(auction, 'endsAt');
+
         return auction.endsAt.getTime() - new Date().getTime(); // negative if past
     }
   }
 
-  public async getWinningBid(auction: Auction): Promise<{ bid: Bid; finalPrice: number; } | null> {
+  public async getWinningBid(auctionId: number): Promise<{ bid: Bid; bidPrice: number; } | null> {
+    const bids = await bidRepository.findAuctionBids(auctionId);
     // descending order based on bidPrice
     // TODO: check tokens?
-    const bids = await auction.getBids({
-      order: [["bidPrice", "DESC"]],
-    });
+    bids.sort((a, b) => b.bidPrice - a.bidPrice);
 
     const higherBid = bids[0];
     const secondHigherBid = bids[1];
@@ -125,7 +120,7 @@ class AuctionService {
     const bid = higherBid;
     const finalPrice = AuctionType.SecondPrice && secondHigherBid ? secondHigherBid.bidPrice : higherBid.bidPrice;
 
-    return { bid, finalPrice };
+    return { bid, bidPrice: finalPrice };
   }
 
   public async closeAuction(auction: Auction, msToEnd: number) {
@@ -134,11 +129,11 @@ class AuctionService {
 
     logger.debug(`Closing auction: ${auction.id}`);
 
-    const winningBid = await this.getWinningBid(auction);
+    const winningBid = await this.getWinningBid(auction.id);
 
     if (winningBid) {
       const winnerId = winningBid.bid.userId;
-      const finalPrice = winningBid.finalPrice;
+      const finalPrice = winningBid.bidPrice;
 
       await sequelize.transaction(async (t) => {
         await auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);

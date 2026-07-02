@@ -1,5 +1,5 @@
 import type { CreationAttributes } from "sequelize";
-import { Errors } from "../factory/errorFactory.ts";
+import { createAuctionMissingField, Errors } from "../factory/errorFactory.ts";
 import { AuctionType, type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
@@ -59,6 +59,7 @@ class BidService {
 
   public async getRealUserTokens(user: User) {
     const bidsInProgessAuctions = await bidRepository.getUserBidsOfInProgessAuctions(user.id);
+
     const highestByAuction = new Map<number, Bid>();
     for (const bid of bidsInProgessAuctions) {
       const current = highestByAuction.get(bid.auctionId);
@@ -77,13 +78,21 @@ class BidService {
 
     switch (auction.type) {
       case AuctionType.English:
-        // TODO
-        if (!auction.minimumIncrement) throw new Errors.InternalServerError();
+        if (auction.minimumIncrement == null) throw createAuctionMissingField(auction, 'minimumIncrement');
+        if (auction.minimumPrice == null) throw createAuctionMissingField(auction, 'minimumPrice');
 
-        const winningBid = await auctionService.getWinningBid(auction);
-        if (!winningBid) return "";
-        if (bid.bidPrice < winningBid?.finalPrice + auction.minimumIncrement) {
-          throw new Errors.BidTooLowError({ minimumBid: winningBid.finalPrice + auction.minimumIncrement });
+        const winningBid = await auctionService.getWinningBid(auction.id);
+
+        // if no bid is found, we check that the bid is at least equal to the minimumPrice
+        // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement
+        if (!winningBid) {
+          if (bid.bidPrice < auction.minimumPrice) {
+            throw new Errors.BidTooLowError({ minimumBid: auction.minimumPrice });
+          }
+        } else {
+          if (bid.bidPrice < winningBid.bidPrice + auction.minimumIncrement) {
+            throw new Errors.BidTooLowError({ minimumBid: winningBid.bidPrice + auction.minimumIncrement });
+          }
         }
         break;
 

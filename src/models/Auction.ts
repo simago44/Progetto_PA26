@@ -14,6 +14,7 @@ import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
 import service from "../services/auctionService.ts";
+import { MINUTES, SECONDS } from "../utils/dateUtils.ts";
 
 export const AuctionType = {
   English: "english",
@@ -30,7 +31,7 @@ export const AuctionStatus = {
 } as const;
 export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];
 
-const defaultDelayBeforeEnding = 5;
+export const defaultDelayBeforeEnding = 5 * MINUTES;
 export const descriptionMinLenght = 10;
 export const descriptionMaxLenght = 1023;
 
@@ -41,7 +42,7 @@ export class Auction extends Model<
   declare id: CreationOptional<number>;
   declare creatorId: ForeignKey<User["id"]>;
   declare startsAt: Date;
-  declare endsAt: CreationOptional<Date>;
+  declare endsAt: CreationOptional<Date | null>;
   declare startPrice: number;
   declare type: AuctionType;
   declare description: string;
@@ -53,10 +54,6 @@ export class Auction extends Model<
   declare hasEnded: CreationOptional<boolean>;
   declare winnerId: CreationOptional<ForeignKey<User["id"]> | null>;
   declare finalPrice: CreationOptional<number | null>;
-
-  declare getBids: HasManyGetAssociationsMixin<Bid>;
-  declare addBid: HasManyAddAssociationMixin<Bid, number>;
-  declare createBid: HasManyCreateAssociationMixin<Bid>;
 
   declare bids?: NonAttribute<Bid[]>;
 
@@ -86,7 +83,7 @@ Auction.init(
           }
         },
         isBeforeendsAt(this: Auction, startsAt: Date) {
-          if (startsAt >= this.endsAt) {
+          if (this.endsAt && startsAt >= this.endsAt) {
             throw new Error("startsAt must be before endsAt");
           }
         },
@@ -135,7 +132,7 @@ Auction.init(
     decrementInterval: {
       type: DataTypes.INTEGER,
       validate: {
-        min: 60 * 1000, // 60 secondi
+        min: 60 * SECONDS,
       },
     },
     minimumPrice: {
@@ -146,7 +143,6 @@ Auction.init(
     },
     delayBeforeEnding: {
       type: DataTypes.INTEGER,
-      defaultValue: defaultDelayBeforeEnding,
       validate: {
         min: 0,
       },

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { AuctionStatus, AuctionType, descriptionMaxLenght, descriptionMinLenght } from "../models/Auction.ts";
+import { AuctionStatus, AuctionType, defaultDelayBeforeEnding, descriptionMaxLenght, descriptionMinLenght } from "../models/Auction.ts";
 import { createZodError, Errors } from "../factory/errorFactory.ts";
 import z from 'zod';
 
@@ -17,7 +17,7 @@ const EnglishAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.English),
   endsAt: z.coerce.date(),
   minimumIncrement: z.int().min(1),
-  delayBeforeEnding: z.int().min(0)
+  delayBeforeEnding: z.int().min(0).optional().default(defaultDelayBeforeEnding)
 }).refine((data) => data.endsAt > data.startsAt, {
   message: "endsAt must be after startsAt",
   path: ["endsAt"],

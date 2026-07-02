@@ -123,7 +123,7 @@
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
               "});"
             ],
             "type": "text/javascript",
@@ -168,7 +168,7 @@
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
               "});"
             ],
             "type": "text/javascript",
@@ -213,7 +213,7 @@
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
               "});"
             ],
             "type": "text/javascript",
@@ -281,7 +281,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -335,7 +335,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -389,7 +389,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -443,7 +443,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startAt\": \"{{futureDate1}}\",\r\n    \"endAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -599,7 +599,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"tokens\": 100\n}",
+          "raw": "{\n    \"tokens\": 1000\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -638,7 +638,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions/9/bids",
+          "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
           "protocol": "http",
           "host": [
             "{{HOST}}"
@@ -646,7 +646,7 @@
           "port": "{{PORT}}",
           "path": [
             "auctions",
-            "9",
+            "1",
             "bids"
           ]
         }

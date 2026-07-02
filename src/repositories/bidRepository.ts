@@ -59,7 +59,7 @@ class BidRepository {
   }
 
   public async getUserBidsOfInProgessAuctions(userId: string): Promise<Bid[]> {
-    const openAuctions = await auctionRepository.getFiltered({ statuses: [AuctionStatus.InProgress] }); // already cached
+    const openAuctions = await auctionRepository.getFiltered({ statuses: [AuctionStatus.InProgress] });
     const bidsPerAuction = await Promise.all(
       openAuctions.map(auction => this.findAuctionBids(auction.id)) // already cached, per-auction
     );

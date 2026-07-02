@@ -13,7 +13,8 @@ class AuthService {
     if (!user) throw new Errors.WrongCredentialsErrors();
 
     try {
-      return await getAuthenticationToken(username, password);
+      const accessToken = await getAuthenticationToken(username, password);
+      return { userId: user.id, accessToken };
     } catch (err) {
       throw createAuth0Error(err);
     }

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
 import type { ZodError } from "zod";
-import type { AuctionType } from "../models/Auction.ts";
+import type { Auction, AuctionType } from "../models/Auction.ts";
 import { UniqueConstraintError, ValidationError } from "sequelize";
 
 /**
@@ -86,6 +86,7 @@ export const Errors = buildErrors({
   AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported },
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
   InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
+  InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation }
 });
 
 export function createZodError(error: ZodError, form: string): AppError {
@@ -140,4 +141,8 @@ export function createAuth0Error(error: any): AppError {
   }
 
   return new Errors.InternalServerError();
+}
+
+export function createAuctionMissingField(auction: Auction, fieldName: string): AppError {
+  return new Errors.InvariantViolationError({ message: `Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'` })
 }

@@ -7,13 +7,6 @@
 - [x] Configurare autenticazione con Auth0
 - [x] Configurare Docker / docker-compose
 
-## Modelli del database
-- [ ] Modello `User` (ruoli: admin, bid-creator, bid-participant)
-- [ ] Vedere come implementare il `Wallet` (attributo in user o modello separato?)
-- [ ] Modello `Auction` (tipologia, stato, parametri specifici)
-- [ ] Modello `Bid` (offerta, utente, asta, importo)
-- [ ] Modello `AuctionParticipant` (partecipanti per asta)
-
 ## Seed
 - [ ] Valutare utilizzo di Faker per generare dati iniziali
 - [ ] Seed utenti con ruoli (numerosità significativa)
@@ -36,6 +29,7 @@
 - [ ] `GET /users/:id/auctions-report` – Storico aste a cui si è partecipato, con esito aggiudicazione (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin)
 - [ ] `GET /users/:id/wallet-report` – Spesa in un periodo per aggiudicazioni (ruolo: bid-participant se id=self o id===jwt_id, altrimenti ruolo: admin) uri parameters: start=data end=data
 - [x] `POST /auctions` – Crea nuova asta (ruolo: bid-creator)
+- [ ] `PUT /auctions/:id/minimum-price` – Modifica del minimum price per le aste aperte
 - [x] `GET /auctions` – Lista aste con filtro per stato (pubblica, non autenticata)
 - [x] `POST /auctions/:id/bids` – Crea offerta per un'asta (ruolo: bid-participant)
 - [x] `GET /auctions/:id/bids` – Lista rilanci aste aperte (pubblica)
@@ -74,3 +68,10 @@
 - [ ] Pubblicare repository pubblico su GitHub
 - [ ] Verificare commit id da consegnare
 - [ ] Consegnare su Moodle con URL repo, commit id e data esame
+
+## Fixes
+- [ ] Paginazione
+- [ ] initDb
+- [ ] Postman collection
+- [ ] Test
+- [ ] Documentazione
