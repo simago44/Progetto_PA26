@@ -2,7 +2,7 @@
  * Message strings to be returned in the response body
  */
 
-import type { AuctionType } from "../models/Auction.ts";
+import type { AuctionType } from "../enums/enums.ts";
 
 // Success
 export const userCreatedSuccessfully_message: string =
@@ -16,6 +16,11 @@ export const ErrorMessages = {
     if (userId) return `User with id '${userId}' not found`;
     if (username) return `User with username '${username}' not found`;
     return "User not found";
+  },
+  WalletNotFound: ({ userId, username }: { userId?: string, username?: string; }) => {
+    if (userId) return `Wallet for user with id '${userId}' not found`;
+    if (username) return `Wallet for user with username '${username}' not found`;
+    return "Wallet for user not found";
   },
   Unauthorized: "Unauthorized",
   Forbidden: "Forbidden",

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
 import type { ZodError } from "zod";
-import type { Auction, AuctionType } from "../models/Auction.ts";
+import type { Auction } from "../models/Auction.ts";
 import { UniqueConstraintError, ValidationError } from "sequelize";
 
 /**
@@ -72,6 +72,7 @@ function buildErrors<M extends Record<string, ErrorSpec<any>>>(specs: M) {
 export const Errors = buildErrors({
   MalformedPayloadError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.MalformedPayload },
   UserNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.UserNotFound },
+  WalletNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.WalletNotFound },
   UnauthorizedError: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.Unauthorized },
   ForbiddenError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.Forbidden },
   InternalServerError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InternalServer },

@@ -1,6 +1,6 @@
 import type { CreationAttributes } from "sequelize";
 import { createAuctionMissingField, Errors } from "../factory/errorFactory.ts";
-import { AuctionType, type Auction } from "../models/Auction.ts";
+import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
@@ -8,6 +8,8 @@ import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import auctionService from "./auctionService.ts";
 import { omit } from "lodash-es";
+import userService from "./userService.ts";
+import { AuctionType } from "../enums/enums.ts";
 
 class BidService {
   public async formatBids(bids: Bid[]): Promise<any[]> {
@@ -57,21 +59,6 @@ class BidService {
     return this.formatBids(bids);
   }
 
-  public async getRealUserTokens(user: User) {
-    const bidsInProgessAuctions = await bidRepository.getUserBidsOfInProgessAuctions(user.id);
-
-    const highestByAuction = new Map<number, Bid>();
-    for (const bid of bidsInProgessAuctions) {
-      const current = highestByAuction.get(bid.auctionId);
-      if (!current || bid.bidPrice > current.bidPrice) {
-        highestByAuction.set(bid.auctionId, bid);
-      }
-    }
-
-    const totalTokensOfBids = highestByAuction.values().reduce((total, bid) => total + bid.bidPrice, 0);
-    return user.tokens - totalTokensOfBids;
-  }
-
   public async checkIsBidValid(bid: Bid, auction: Auction, user: User) {
     const auctionMsToEnd = await auctionService.getMsToEnd(auction);
     if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
@@ -106,7 +93,7 @@ class BidService {
         break;
     }
 
-    const realUserTokens = await this.getRealUserTokens(user);
+    const realUserTokens = await userService.getRealUserTokens(user);
     if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
   }
 }

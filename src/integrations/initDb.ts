@@ -4,13 +4,13 @@ import "../models/relationships.ts";
 import { Auction, Bid, User } from "../models/relationships.ts";
 import env, { NodeEnv } from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
-import { deleteStaleUsers, RoleName } from "./auth0.ts";
+import { deleteStaleUsers } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
-import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUtils.ts";
 import auctionService from "../services/auctionService.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
+import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -231,16 +231,19 @@ export async function initDb() {
   const admin = await User.create({
     id: "auth0|6a3fd812dbd594d590a92367",
     username: "admin",
+    tokens: NewUserTokens[RoleName.Admin]
   });
 
   const bidCreator = await User.create({
     id: "auth0|6a3fd835b4e640e31f20bbc4",
     username: "bid-creator",
+    tokens: NewUserTokens[RoleName.BidCreator]
   });
 
   const bidParticipant = await User.create({
     id: "auth0|6a3fd852b4e640e31f20bbd2",
     username: "bid-participant",
+    tokens: NewUserTokens[RoleName.BidParticipant]
   });
 
   try {

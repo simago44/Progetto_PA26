@@ -31,4 +31,12 @@ export class AuctionController {
     const auction = await auctionService.createAuction(res.locals.auction);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
+  
+  public async updateAuctionMinimumPrice(_req: Request, res: Response, _next: NextFunction) {
+    // TODO
+  }
+
+  public async getAuctionStatsByType(_req: Request, res: Response, _next: NextFunction) {
+    // TODO
+  }
 }

@@ -21,7 +21,6 @@ export function validateTopUpWallet(req: Request, res: Response, next: NextFunct
   const tokens = req.body.tokens
 
   const result = topUpWalletSchema.safeParse({ tokens });
-
   if (!result.success) throw createZodError(result.error, "validateTopUpWallet");
 
   res.locals.tokens = result.data.tokens;

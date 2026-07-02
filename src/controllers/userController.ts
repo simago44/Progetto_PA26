@@ -20,4 +20,12 @@ export class UserController {
 
     res.status(StatusCodes.OK).json({ message: walletUpdatedSuccessfully_message });
   }
+
+  public async getAuctionsReport(_req: Request, res: Response, next: NextFunction) {
+    // TODO
+  }
+
+  public async getWalletReport(_req: Request, res: Response, next: NextFunction) {
+    // TODO
+  }
 }

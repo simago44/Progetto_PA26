@@ -1,9 +1,9 @@
-import { Auth0Permission } from "../integrations/auth0.ts";
 import { checkJwtAuthorization, checkPermission, checkSelfOrAllPermission } from "./authMiddleware.ts";
 import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
 import { validateAuctionMiddleware, validateAuctionStatusMiddleware } from "./auctionValidationMiddleware.ts";
 import { validateBidMiddleware, validateGetAuctionBids } from "./bidValidationMiddleware.ts";
 import { validateSignup } from "./authValidationMiddleware.ts";
+import { Auth0Permission } from "../enums/enums.ts";
 
 export const createAuctionMiddlewares = [
   checkJwtAuthorization,
@@ -12,6 +12,18 @@ export const createAuctionMiddlewares = [
 ];
 
 export const getFilteredAuctionMiddlewares = [validateAuctionStatusMiddleware];
+
+export const updateAuctionMinimumPriceMiddlewares = [
+  checkJwtAuthorization,
+  checkPermission(Auth0Permission.updateAuction),
+  // validation
+];
+
+export const getAuctionStatsByTypeMiddlewares = [
+  checkJwtAuthorization,
+  checkPermission(Auth0Permission.readAuctionStats),
+  // validation
+];
 
 export const signupMiddlewares = [validateSignup];
 
@@ -27,6 +39,20 @@ export const topUpWalletMiddlewares = [
   checkJwtAuthorization,
   checkPermission(Auth0Permission.updateWallets),
   validateTopUpWallet
+];
+
+export const getAuctionsReportMiddlewares = [
+  checkJwtAuthorization,
+  resolveUserIdParam,
+  checkSelfOrAllPermission(Auth0Permission.readCurrentUserWallet, Auth0Permission.readWallets),
+  // validation
+];
+
+export const getWalletReportMiddlewares = [
+  checkJwtAuthorization,
+  resolveUserIdParam,
+  checkSelfOrAllPermission(Auth0Permission.readCurrentUserWallet, Auth0Permission.readWallets),
+  // validation
 ];
 
 export const createBidMiddlewares = [

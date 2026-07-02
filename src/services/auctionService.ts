@@ -1,4 +1,3 @@
-import { AuctionStatus, AuctionType, Auction } from "../models/Auction.ts";
 import type { CreationAttributes } from "sequelize";
 import auctionRepository, { type AuctionFilters } from "../repositories/auctionRepository.ts";
 import { isNil, omit, omitBy } from "lodash-es";
@@ -9,6 +8,8 @@ import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { createAuctionMissingField } from "../factory/errorFactory.ts";
+import type { Auction } from "../models/Auction.ts";
+import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 class AuctionService {
   public async getFiltered(filters: AuctionFilters) {
@@ -137,7 +138,10 @@ class AuctionService {
 
       await sequelize.transaction(async (t) => {
         await auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);
+        // remove tokens from winner
         await userRepository.decrementTokens(winnerId, finalPrice, t);
+        // and add tokens to auction creator
+        await userRepository.incrementTokens(auction.creatorId, finalPrice, t);
       });
     } else {
       await auctionRepository.closeAuction(auction.id, null);

@@ -3,12 +3,9 @@ import type { Request, Response, NextFunction } from 'express';
 import env from '../config.ts';
 import { Errors } from '../factory/errorFactory.ts';
 
-const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
-const AUTH0_AUDIENCE = env.AUTH0_AUDIENCE;
-
 const checkJwt = auth({
-  issuerBaseURL: `https://${AUTH0_DOMAIN}`,
-  audience: AUTH0_AUDIENCE,
+  issuerBaseURL: `https://${env.AUTH0_DOMAIN}`,
+  audience: env.AUTH0_AUDIENCE,
 });
 
 /**

@@ -2,13 +2,6 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import env, { log_levels } from '../config.ts';
 
-const LOG_FORMAT = env.LOG_FORMAT;
-const ENABLE_LOG_FILE = env.ENABLE_LOG_FILE;
-const LOG_DIR = env.LOG_DIR;
-const LOG_FILENAME_PREFIX = env.LOG_FILENAME_PREFIX;
-const CONSOLE_LOG_LEVEL = env.CONSOLE_LOG_LEVEL;
-const FILE_LOG_LEVEL = env.FILE_LOG_LEVEL;
-
 /**
  * Builds a winston printf format from a template string.
  * Supports the placeholders: `%timestamp%`, `%level%`, `%message%`.
@@ -34,7 +27,7 @@ function buildFormat() {
   return winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
-    buildPrintfTemplate(LOG_FORMAT),
+    buildPrintfTemplate(env.LOG_FORMAT),
   );
 }
 
@@ -45,17 +38,17 @@ transports.push(new winston.transports.Console({
     winston.format.colorize(),
     buildFormat(),
   ),
-  level: CONSOLE_LOG_LEVEL
+  level: env.CONSOLE_LOG_LEVEL
 }));
 
-if (ENABLE_LOG_FILE) {
+if (env.ENABLE_LOG_FILE) {
   transports.push(
     new DailyRotateFile({
       format: buildFormat(),
-      dirname: LOG_DIR,
-      filename: LOG_FILENAME_PREFIX + "-%DATE%.log",
+      dirname: env.LOG_DIR,
+      filename: env.LOG_FILENAME_PREFIX + "-%DATE%.log",
       datePattern: 'YYYY-MM-DD',
-      level: FILE_LOG_LEVEL
+      level: env.FILE_LOG_LEVEL
     }),
   );
 }

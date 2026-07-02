@@ -1,5 +1,5 @@
 import { type NextFunction, type Request, type Response } from 'express';
-import { Errors, createZodError } from '../factory/errorFactory.ts';
+import { createZodError } from '../factory/errorFactory.ts';
 import { z } from "zod";
 
 /** Zod schema for validating signup request body. */
@@ -39,14 +39,6 @@ export const loginSchema = z.object({
     .max(1000, "Invalid username or password")
 });
 
-export function getZodErrorMessage(zodResult: z.ZodSafeParseError<Record<string, unknown>>): string {
-  const errorMessages = Object.entries(z.treeifyError(zodResult.error).properties ?? {})
-    .map(([key, property]) => `${key}: ${property?.errors?.[0]}`)
-    .filter(Boolean);
-
-  return `${errorMessages.join("; ")}`;
-}
-
 /**
  * Creates a validation middleware for the given Zod schema.
  * On success, overwrites `req.body` with the sanitized and transformed data.
@@ -57,7 +49,6 @@ export function getZodErrorMessage(zodResult: z.ZodSafeParseError<Record<string,
 function validateCredentials(zodObject: z.ZodObject, form: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const result = zodObject.safeParse(req.body);
-
     if (!result.success) throw createZodError(result.error, form);
 
     // Overwrite req.body with the safely parsed/sanitized fields

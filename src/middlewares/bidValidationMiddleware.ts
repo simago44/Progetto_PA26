@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { Errors, createZodError } from "../factory/errorFactory.ts";
+import { createZodError } from "../factory/errorFactory.ts";
 import z from "zod";
 
 const BidSchema = z.object({
@@ -17,7 +17,6 @@ export async function validateBidMiddleware(req: Request, res: Response, next: N
   }
 
   const result = BidSchema.safeParse(bid);
-
   if (!result.success) throw createZodError(result.error, "validateBidMiddleware");
 
   res.locals.bid = result.data;

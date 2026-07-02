@@ -1,9 +1,9 @@
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { AuctionStatus } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import redis from "../integrations/redis.ts";
 import type { CreationAttributes } from "sequelize";
 import auctionRepository from "./auctionRepository.ts";
+import { AuctionStatus } from "../enums/enums.ts";
 
 class BidRepository {
   private auctionBidsKey(auctionId: number): string {

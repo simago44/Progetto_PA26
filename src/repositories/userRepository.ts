@@ -1,9 +1,10 @@
 import env from "../config.ts";
 import { User } from "../models/User.ts";
-import { Auth0Roles, managementClient, RoleName } from "../integrations/auth0.ts";
+import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
 import { createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";
 import redis from "../integrations/redis.ts";
 import type { Transaction } from "sequelize";
+import { NewUserTokens, type RoleName } from "../enums/enums.ts";
 
 class UserRepository {
   private idKey(userId: string): string {
@@ -40,7 +41,7 @@ class UserRepository {
     let user: User;
 
     try {
-      user = await User.create({ id: user_id, username });
+      user = await User.create({ id: user_id, username, tokens: NewUserTokens[role] });
     } catch (err) {
       // Local save failed after the Auth0 user already exists — clean up
       // to avoid an orphaned Auth0 account with no matching local record.
@@ -79,11 +80,12 @@ class UserRepository {
     return await User.findAll({ attributes: ['id'] });
   }
 
-  public async incrementTokens(userId: string, tokens: number): Promise<void> {
+  public async incrementTokens(userId: string, tokens: number, transaction?: Transaction): Promise<void> {
     try {
       await User.increment("tokens", {
         by: tokens,
-        where: { id: userId }
+        where: { id: userId },
+        transaction: transaction ?? null
       });
     } catch (err) {
       throw createSequelizeError(err, "incrementTokens");

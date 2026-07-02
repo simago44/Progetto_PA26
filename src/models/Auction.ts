@@ -5,35 +5,15 @@ import type {
   NonAttribute,
   Association,
   ForeignKey,
-  HasManyGetAssociationsMixin,
-  HasManyAddAssociationMixin,
-  HasManyCreateAssociationMixin,
 } from "sequelize";
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
 import service from "../services/auctionService.ts";
-import { MINUTES, SECONDS } from "../utils/dateUtils.ts";
-
-export const AuctionType = {
-  English: "english",
-  Dutch: "dutch",
-  FirstPrice: "first-price",
-  SecondPrice: "second-price",
-} as const;
-export type AuctionType = (typeof AuctionType)[keyof typeof AuctionType];
-
-export const AuctionStatus = {
-  NotStarted: "not-started",
-  InProgress: "in-progress",
-  Ended: "ended",
-} as const;
-export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];
-
-export const defaultDelayBeforeEnding = 5 * MINUTES;
-export const descriptionMinLenght = 10;
-export const descriptionMaxLenght = 1023;
+import { SECONDS } from "../utils/dateUtils.ts";
+import { AuctionType, type AuctionStatus } from "../enums/enums.ts";
+import { AuctionConstants } from "../constants/constants.ts";
 
 export class Auction extends Model<
   InferAttributes<Auction, { omit: "bids"; }>,
@@ -114,7 +94,7 @@ Auction.init(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: [descriptionMinLenght, descriptionMaxLenght],
+        len: [AuctionConstants.descriptionMinLenght, AuctionConstants.descriptionMaxLenght],
       },
     },
     minimumIncrement: {

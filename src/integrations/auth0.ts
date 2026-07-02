@@ -2,33 +2,7 @@ import { AuthenticationClient, ManagementClient } from "auth0";
 import env from "../config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import logger from "../middlewares/logger.ts";
-
-export const Auth0Permission = {
-  createAuction: "create:auction",
-  updateAuction: "update:auction",
-  createBid: "create:bid",
-  readCurrentUserWallet: "read:current_user_wallet",
-  readWallets: "read:wallets",
-  updateWallets: "update:wallets",
-  readAuctionReports: "read:auction_reports",
-  readCurrentUserAuctionReport: "read:current_user_auction_report",
-  readWalletReports: "read:wallet_reports",
-  readCurrentUserWalletReport: "read:current_user_wallet_report",
-  readAuctionStats: "read:auction_stats"
-} as const;
-export type Auth0Permission = (typeof Auth0Permission)[keyof typeof Auth0Permission];
-
-export const RoleName = {
-  Admin: "admin",
-  BidCreator: "bid-creator",
-  BidParticipant: "bid-participant",
-} as const;
-export type RoleName = (typeof RoleName)[keyof typeof RoleName];
-
-type Role = {
-  name: RoleName;
-  id: string;
-};
+import { RoleName, type Role } from "../enums/enums.ts";
 
 export const managementClient = new ManagementClient({
   domain: env.AUTH0_DOMAIN,

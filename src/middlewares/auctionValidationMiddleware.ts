@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
-import { AuctionStatus, AuctionType, defaultDelayBeforeEnding, descriptionMaxLenght, descriptionMinLenght } from "../models/Auction.ts";
-import { createZodError, Errors } from "../factory/errorFactory.ts";
+import { createZodError } from "../factory/errorFactory.ts";
 import z from 'zod';
+import { AuctionStatus, AuctionType } from "../enums/enums.ts";
+import { AuctionConstants } from "../constants/constants.ts";
 
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
@@ -10,14 +11,14 @@ const BaseAuctionSchema = z.object({
   }),
   startPrice: z.int().min(1),
   type: z.enum(AuctionType),
-  description: z.string().trim().min(descriptionMinLenght).max(descriptionMaxLenght)
+  description: z.string().trim().min(AuctionConstants.descriptionMinLenght).max(AuctionConstants.descriptionMaxLenght)
 });
 
 const EnglishAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.English),
   endsAt: z.coerce.date(),
   minimumIncrement: z.int().min(1),
-  delayBeforeEnding: z.int().min(0).optional().default(defaultDelayBeforeEnding)
+  delayBeforeEnding: z.int().min(0).optional().default(AuctionConstants.defaultDelayBeforeEnding)
 }).refine((data) => data.endsAt > data.startsAt, {
   message: "endsAt must be after startsAt",
   path: ["endsAt"],
@@ -49,7 +50,6 @@ export async function validateAuctionMiddleware(req: Request, res: Response, nex
   auction.creatorId = res.locals.authId;
 
   const result = AuctionSchema.safeParse(auction);
-
   if (!result.success) throw createZodError(result.error, "validateAuctionMiddleware");
 
   res.locals.auction = result.data;
@@ -72,7 +72,6 @@ export function validateAuctionStatusMiddleware(req: Request, res: Response, nex
   if (typeof types === "string") types = types.split(',');
 
   const result = auctionStatusQuerySchema.safeParse({ creatorIds, statuses, types });
-
   if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
 
   res.locals = result.data;

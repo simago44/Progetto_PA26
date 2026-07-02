@@ -1,7 +1,8 @@
-import { Auction, AuctionStatus, type AuctionType } from "../models/Auction.ts";
+import { Auction } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import redis from "../integrations/redis.ts";
+import { AuctionStatus, type AuctionType } from "../enums/enums.ts";
 
 export interface AuctionFilters {
   creatorIds?: string[];
