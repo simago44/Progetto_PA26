@@ -9,6 +9,7 @@ import logger from "../middlewares/logger.ts";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import { getMsToEnd } from "../models/AuctionUtils.ts";
 import bidRepository from "../repositories/bidRepository.ts";
+import { addInterval, hours, minutes, seconds, tomorrow } from "../utils/dateUtils.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -53,23 +54,24 @@ async function generateUsersArray(
 }
 
 function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: Date; } {
-  const now = Date.now();
-
   switch (status) {
     case AuctionStatus.NotStarted:
+      const startDate = addInterval(new Date(), 24 * hours);
+      const startsAt = faker.date.between({ from: startDate, to: new Date(startDate.getTime() + 10 * hours) });
+      const endsAt = addInterval(startsAt, faker.number.float({ min: 3, max: 7 }) * hours);
       return {
-        startsAt: new Date(now + 24 * 60 * 60 * 1000), // +1 giorno
-        endsAt: new Date(now + 27 * 60 * 60 * 1000),   // +1 giorno e 3 ore
+        startsAt, // starts tomorrow
+        endsAt, // ends after 3-7 hours from start
       };
     case AuctionStatus.InProgress:
       return {
-        startsAt: new Date(now + 1000),                // parte subito
-        endsAt: new Date(now + 24 * 60 * 60 * 1000),    // finisce tra 1 giorno
+        startsAt: addInterval(new Date(), 1 * seconds), // starts in 1 second
+        endsAt: faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * hours) }), // ends tomorrow
       };
     case AuctionStatus.Ended:
       return {
-        startsAt: new Date(now + 1000),  // +1 secondo
-        endsAt: new Date(now + 61_000),    // +61 secondi
+        startsAt: addInterval(new Date(), 1 * seconds), // starts in 1 second
+        endsAt: addInterval(new Date(), 1 * minutes + 1 * seconds), // ends in 1 minute
       };
   }
 }
@@ -200,7 +202,9 @@ async function generateBidsArray(length: number = bidsNumber, auctions: Auction[
       });
       await bidRepository.create(bid);
       bids.push(bid);
-      if (auction!.type === AuctionType.Dutch) {
+      //only english auctions can get more than one bids for every users.
+      //We are making bids from only bid participant user.
+      if (auction && auction.type !== AuctionType.English) {
         array = array.filter(a => a.id !== auction!.id);
       }
     } catch (err) {
@@ -248,7 +252,6 @@ export async function initDb() {
     deleteStaleUsers();
     if (err instanceof Error)
       logger.error(`user creations crashed: ${err.message}`);
-    return;
   }
 
   try {
@@ -257,7 +260,6 @@ export async function initDb() {
   } catch (err) {
     if (err instanceof Error)
       logger.error(`auction creations crashed: ${err.message}`);
-    return;
   }
 
   try {
@@ -266,48 +268,7 @@ export async function initDb() {
   } catch (err) {
     if (err instanceof Error)
       logger.error(`bid creations crashed: ${err.message}`);
-    return;
   }
-
-  /*const NotStarted = await Auction.create({
-    startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), //1 giorno (24 h)
-    endsAt: new Date(Date.now() + 27 * 60 * 60 * 1000), //1 giorno e 3 ore (27 h)
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.English,
-    delayBeforeEnding: 10000,
-  });
-
-  const InProgress = await Auction.create({
-    startsAt: new Date(Date.now() + 1000), // parte subito
-    endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 giorno (24 h)
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.FirstPrice,
-    delayBeforeEnding: 10000,
-  });
-
-  const Ended = await Auction.create({
-    startsAt: new Date(Date.now() + 1000), // 1 secondo
-    endsAt: new Date(Date.now() + 2000), //2 secondi
-    creatorId: bidCreator.id,
-    startPrice: 100,
-    type: AuctionType.English,
-    delayBeforeEnding: 10000,
-    minimumIncrement: 50
-  });
-
-  const BidEnded1 = await Bid.create({
-    auctionId: Ended.id,
-    userId: bidParticipant.id,
-    bidPrice: 200
-  });
-
-  const BidEnded2 = await Bid.create({
-    auctionId: Ended.id,
-    userId: bidParticipant.id,
-    bidPrice: 300
-  });*/
 
   await deleteStaleUsers();
 }

@@ -3,10 +3,11 @@ import sequelize from "../integrations/sequelize.ts";
 import { Auction, AuctionStatus, AuctionType } from "./Auction.ts";
 import { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
+import { addInterval } from "../utils/dateUtils.ts";
 
 export async function getEndTime(auction: Auction): Promise<Date> {
   const msToEnd = await getMsToEnd(auction);
-  return new Date(Date.now() + msToEnd)
+  return addInterval(new Date(), msToEnd);
 }
 
 export function getAuctionStatus(auction: Auction): AuctionStatus {
@@ -31,14 +32,9 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
         const lastBid = bids.reduce((latest, bid) =>
           bid.createdAt > latest.createdAt ? bid : latest,
         );
-        const lastBidDeadline = new Date(
-          lastBid.createdAt.getTime() + auction.delayBeforeEnding,
-        );
-        finishTime =
-          lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
+        const lastBidDeadline = addInterval(lastBid.createdAt, auction.delayBeforeEnding);
+        finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
       }
-      logger.debug(`auction ${auction.id} ends at: ${finishTime.toString()}`);
-      logger.debug(now.toString());
       return finishTime.getTime() - now.getTime(); // negative if past
 
     case AuctionType.Dutch:
@@ -57,7 +53,7 @@ export async function getMsToEnd(auction: Auction): Promise<number> {
       const decrementsNeeded = Math.floor(priceRange / auction.decrementPrice!);
       const decrementIntervalMs = auction.decrementInterval!;
       const durationMs = decrementsNeeded * decrementIntervalMs;
-      finishTime = new Date(auction.startsAt.getTime() + durationMs);
+      finishTime = addInterval(auction.startsAt, durationMs);
 
       //If the auction has not started yet, it cannot be ended
       if (getAuctionStatus(auction) === AuctionStatus.NotStarted)
