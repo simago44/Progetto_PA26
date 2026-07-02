@@ -7,686 +7,696 @@
   },
   "item": [
     {
-      "name": "signup",
-      "event": [
+      "name": "Auth",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
+          "name": "signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(",
+                  "    \"USERNAME\",",
+                  "    pm.variables.replaceIn(\"{{$randomUserName}}\")",
+                  ");",
+                  "",
+                  "pm.collectionVariables.set(",
+                  "    \"PASSWORD\",",
+                  "    pm.variables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/signup",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "signup"
+              ]
+            }
+          },
+          "response": []
         },
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "pm.collectionVariables.set(",
-              "    \"USERNAME\",",
-              "    pm.variables.replaceIn(\"{{$randomUserName}}\")",
-              ");",
-              "",
-              "pm.collectionVariables.set(",
-              "    \"PASSWORD\",",
-              "    pm.variables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
-              ");"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/signup",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "signup"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "login",
-      "event": [
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "login bid-participant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN_BID_PARTICIPANT\", jsonData.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/login",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "login bid-participant",
-      "event": [
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"bid-participant\",\n    \"password\": \"Password1@\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"username\": \"bid-participant\",\n    \"password\": \"Password1@\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "login bid-creator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN_BID_CREATOR\", jsonData.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/login",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "login bid-creator",
-      "event": [
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"bid-creator\",\n    \"password\": \"Password1@\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"username\": \"bid-creator\",\n    \"password\": \"Password1@\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN_ADMIN\", jsonData.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/login",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "login"
-          ]
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Password1@\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "login admin",
-      "event": [
+      "name": "Bids",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "    var jsonData = pm.response.json();",
-              "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Password1@\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "Create bid",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/login",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Create English Auction",
-      "event": [
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"bidPrice\": 100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/10/bids",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions",
+                "10",
+                "bids"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-              "pm.environment.set('futureDate1', futureDate1);\r",
-              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-              "pm.environment.set('futureDate2', futureDate2);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+          "name": "Get Auction Bids",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions",
+                "1",
+                "bids"
+              ]
             }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions"
-          ]
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Create Dutch Auction",
-      "event": [
+      "name": "Auctions",
+      "item": [
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-              "pm.environment.set('futureDate1', futureDate1);\r",
-              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-              "pm.environment.set('futureDate2', futureDate2);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
+          "name": "Create English Auction",
+          "event": [
             {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Create First Price Auction",
-      "event": [
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"english\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-              "pm.environment.set('futureDate1', futureDate1);\r",
-              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-              "pm.environment.set('futureDate2', futureDate2);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
+          "name": "Create Dutch Auction",
+          "event": [
             {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Create Second Price Auction",
-      "event": [
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-              "pm.environment.set('futureDate1', futureDate1);\r",
-              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-              "pm.environment.set('futureDate2', futureDate2);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
+          "name": "Create First Price Auction",
+          "event": [
             {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Create bid",
-      "event": [
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions"
+              ]
+            }
+          },
+          "response": []
+        },
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-              "pm.environment.set('futureDate1', futureDate1);\r",
-              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-              "pm.environment.set('futureDate2', futureDate2);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
+          "name": "Create Second Price Auction",
+          "event": [
             {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"bidPrice\": 100\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions/10/bids",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
           ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions",
-            "10",
-            "bids"
-          ]
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Filtered Auctions",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions?types=english&statuses=in-progress",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions"
+              ],
+              "query": [
+                {
+                  "key": "types",
+                  "value": "english"
+                },
+                {
+                  "key": "statuses",
+                  "value": "in-progress"
+                }
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Get Current User Wallet",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Current User Wallet",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/users/self/wallet",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "users",
+                "self",
+                "wallet"
+              ]
             }
-          ]
+          },
+          "response": []
         },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/users/self/wallet",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "users",
-            "self",
-            "wallet"
-          ]
+        {
+          "name": "Get User Wallet",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_CREATOR_USER_ID}}/wallet",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "users",
+                "{{BID_CREATOR_USER_ID}}",
+                "wallet"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Updated User Wallet",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_ADMIN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tokens\": 47813\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "users",
+                "{{BID_PARTICIPANT_USER_ID}}",
+                "wallet"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
-    },
-    {
-      "name": "Get User Wallet",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "users",
-            "{{BID_PARTICIPANT_USER_ID}}",
-            "wallet"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Updated User Wallet",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "PUT",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"tokens\": 1000\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "users",
-            "{{BID_PARTICIPANT_USER_ID}}",
-            "wallet"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Get Auction Bids",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions",
-            "1",
-            "bids"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Get Filtered Auctions",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{JWT_TOKEN}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{HOST}}:{{PORT}}/auctions?types=dutch",
-          "protocol": "http",
-          "host": [
-            "{{HOST}}"
-          ],
-          "port": "{{PORT}}",
-          "path": [
-            "auctions"
-          ],
-          "query": [
-            {
-              "key": "types",
-              "value": "dutch"
-            }
-          ]
-        }
-      },
-      "response": []
+      ]
     }
   ],
   "variable": [
@@ -700,6 +710,18 @@
     },
     {
       "key": "PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN_ADMIN",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN_BID_CREATOR",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN_BID_PARTICIPANT",
       "value": ""
     }
   ]
