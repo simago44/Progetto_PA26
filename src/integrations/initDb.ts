@@ -10,6 +10,7 @@ import { AuctionStatus, AuctionType } from "../models/Auction.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { addInterval, hours, minutes, seconds, tomorrow } from "../utils/dateUtils.ts";
 import auctionService from "../services/auctionService.ts";
+import auctionRepository from "../repositories/auctionRepository.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -166,7 +167,7 @@ async function generateAuctionsArray(creatorId: string, count: number): Promise<
   for (const type of types) {
     for (const status of statuses) {
       for (let i = 0; i < count; i++) {
-        const auction = await Auction.create(auctionBuilders[type](creatorId, status));
+        const auction = await auctionRepository.create(auctionBuilders[type](creatorId, status));
         if (type === AuctionType.Dutch && status === AuctionStatus.Ended) {
           auction.createBid({
             userId: "auth0|6a3fd852b4e640e31f20bbd2",
@@ -194,12 +195,11 @@ async function generateBidsArray(length: number = bidsNumber, auctions: Auction[
     if (auctions.length <= 0) { throw new Error("auction array is empty"); };
     try {
       const auction = array[Math.floor(Math.random() * array.length)];
-      const bid = Bid.build({
+      const bid = await bidRepository.create({
         userId: "auth0|6a3fd852b4e640e31f20bbd2",
         bidPrice: faker.number.int({ min: 100, max: 400 }),
         auctionId: auction?.id,
       });
-      await bidRepository.create(bid);
       bids.push(bid);
       //only english auctions can get more than one bids for every users.
       //We are making bids from only bid participant user.

@@ -1,9 +1,25 @@
 import env from "../config.ts";
 import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient, RoleName } from "../integrations/auth0.ts";
-import { Errors, createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";
+import { createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";
+import redis from "../integrations/redis.ts";
+import type { Transaction } from "sequelize";
 
 class UserRepository {
+  private idKey(userId: string): string {
+    return `user:id:${userId}`;
+  }
+  private usernameKey(username: string): string {
+    return `user:username:${username}`;
+  }
+
+  private async cacheUser(user: User): Promise<void> {
+    await Promise.all([
+      redis.set(this.idKey(user.id), JSON.stringify(user)),
+      redis.set(this.usernameKey(user.username), user.id),
+    ]);
+  }
+
   public async create(username: string, password: string, role: RoleName): Promise<User> {
     let user_id: string;
 
@@ -21,22 +37,38 @@ class UserRepository {
       throw createAuth0Error(err);
     }
 
+    let user: User;
+
     try {
-      return await User.create({ id: user_id, username });
+      user = await User.create({ id: user_id, username });
     } catch (err) {
       // Local save failed after the Auth0 user already exists — clean up
       // to avoid an orphaned Auth0 account with no matching local record.
       await managementClient.users.delete(user_id).catch(() => { });
       throw createSequelizeError(err, "createUser");
     }
+
+    await this.cacheUser(user);
+    return user;
   }
 
-  public async findByPk(userId: string): Promise<User|null> {
-    return await User.findByPk(userId);
+  public async findByPk(userId: string): Promise<User | null> {
+    const cached = await redis.get(this.idKey(userId));
+    if (cached) return User.build(JSON.parse(cached));
+
+    const user = await User.findByPk(userId);
+    if (user) await this.cacheUser(user);
+    return user;
+
   }
 
-  public async findByUsername(username: string): Promise<User|null> {
-    return await User.findOne({ where: { username } });
+  public async findByUsername(username: string): Promise<User | null> {
+    const id = await redis.get(this.usernameKey(username));
+    if (id) return this.findByPk(id);
+
+    const user = await User.findOne({ where: { username } });
+    if (user) await this.cacheUser(user);
+    return user;
   }
 
   public async findAll(): Promise<User[]> {
@@ -47,19 +79,42 @@ class UserRepository {
     return await User.findAll({ attributes: ['id'] });
   }
 
-  public async update(user: User): Promise<User> {
-    // TODO: prevent username change
-
+  public async incrementTokens(userId: string, tokens: number): Promise<void> {
     try {
-      return await user.save();
+      await User.increment("tokens", {
+        by: tokens,
+        where: { id: userId }
+      });
     } catch (err) {
-      throw createSequelizeError(err, "updateUser");
+      throw createSequelizeError(err, "incrementTokens");
     }
+
+    // invalidate cache
+    await redis.del(this.idKey(userId));
+  }
+
+  public async decrementTokens(userId: string, tokens: number, transaction?: Transaction): Promise<void> {
+    try {
+      await User.decrement("tokens", {
+        by: tokens,
+        where: { id: userId },
+        transaction: transaction ?? null
+      });
+    } catch (err) {
+      throw createSequelizeError(err, "decrementTokens");
+    }
+
+    // invalidate cache
+    await redis.del(this.idKey(userId));
   }
 
   public async delete(user: User): Promise<void> {
     try {
       await user.destroy();
+      await Promise.all([
+        redis.del(this.idKey(user.id)),
+        redis.del(this.usernameKey(user.username)),
+      ]);
     } catch (err) {
       throw createSequelizeError(err, "deleteUser");
     }

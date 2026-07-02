@@ -24,8 +24,7 @@ export class UserController {
     const user = await userRepository.findByPk(userId);
     if (!user) throw new Errors.UserNotFoundError({ userId });
 
-    user.tokens += tokens;
-    await userRepository.update(user);
+    await userRepository.incrementTokens(userId, tokens);
 
     res.status(StatusCodes.OK).json({ message: walletUpdatedSuccessfully_message });
   }

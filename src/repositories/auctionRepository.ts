@@ -1,6 +1,6 @@
 import { Auction, AuctionStatus, type AuctionType } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { Op, type CreationAttributes, type WhereOptions } from "sequelize";
+import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import redis from "../integrations/redis.ts";
 
 export interface AuctionFilters {
@@ -10,7 +10,7 @@ export interface AuctionFilters {
 }
 
 class AuctionRepository {
-  private cacheKey(auctionId: number): string {
+  private idKey(auctionId: number): string {
     return `auction:${auctionId}`;
   }
 
@@ -35,54 +35,70 @@ class AuctionRepository {
     }
   }
 
-  public async create(data: CreationAttributes<Auction>): Promise<Auction> {
+  public build(attributes: CreationAttributes<Auction>): Auction {
     try {
-      const auction = await Auction.create(data);
-      await redis.set(this.cacheKey(auction.id), JSON.stringify(auction));
+      return Auction.build(attributes);
+    } catch (err) {
+      throw createSequelizeError(err, "buildAuction");
+    }
+  }
+
+  public async save(auction: Auction): Promise<Auction> {
+    try {
+      const created_auction = await auction.save();
+      await redis.set(this.idKey(auction.id), JSON.stringify(created_auction));
       return auction;
     } catch (err) {
       throw createSequelizeError(err, "createAuction");
     }
   }
 
-  public async findByPk(auctionId: number): Promise<Auction | null> {
-    const cached = await redis.get(this.cacheKey(auctionId));
-    if (cached) return JSON.parse(cached) as Auction;
-
-    return await Auction.findByPk(auctionId);
+  public async create(auctionAttributes: CreationAttributes<Auction>): Promise<Auction> {
+    let auction = this.build(auctionAttributes);
+    auction = await this.save(auction);
+    return auction;
   }
 
-  public async loadAll(): Promise<Auction[]> {
+  public async findByPk(auctionId: number): Promise<Auction | null> {
+    const cached = await redis.get(this.idKey(auctionId));
+    if (cached) return Auction.build(JSON.parse(cached));
+
+    const auction = await Auction.findByPk(auctionId);
+    if (auction) await redis.set(this.idKey(auction.id), JSON.stringify(auction));
+    return auction;
+  }
+
+  public async findAll(): Promise<Auction[]> {
     return await Auction.findAll();
   }
 
   public async getFiltered(filters: AuctionFilters): Promise<Auction[]> {
     const where: any = {};
-
-    where[Op.and] = []
+    where[Op.and] = [];
     if (filters.creatorIds) {
-      const or_list = []
-      for (const creatorId of filters.creatorIds) {
-        or_list.push({ creatorId });
-      };
-      where[Op.and].push({ [Op.or]: or_list })
+      where[Op.and].push({ creatorId: { [Op.in]: filters.creatorIds } });
     }
     if (filters.types) {
-      const or_list = []
-      for (const type of filters.types) {
-        or_list.push({ type });
-      };
-      where[Op.and].push({ [Op.or]: or_list })
+      where[Op.and].push({ type: { [Op.in]: filters.types } });
     }
     if (filters.statuses) {
-      const or_list = []
-      for (const status of filters.statuses) {
-        or_list.push(this.buildStatusWhere(status));
-      };
-      where[Op.and].push({ [Op.or]: or_list })
+      const or_list = filters.statuses.map(s => this.buildStatusWhere(s));
+      where[Op.and].push({ [Op.or]: or_list });
+    }    
+    return Auction.findAll({ where });
+  }
+
+  public async closeAuction(auctionId: number, winnerId: string, finalPrice: number, transaction?: Transaction): Promise<void> {
+    try {
+      await Auction.update(
+        { hasEnded: true, winnerId, finalPrice },
+        { where: { id: auctionId }, transaction: transaction ?? null },
+      );
+    } catch (err) {
+      throw createSequelizeError(err, "closeAuction");
     }
 
-    return Auction.findAll({ where });
+    await redis.del(this.idKey(auctionId));
   }
 }
 

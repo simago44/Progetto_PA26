@@ -26,6 +26,8 @@ export class AuctionController {
    * @returns void
    */
   public async createAuction(_req: Request, res: Response, _next: NextFunction) {
+    // No validation necessary. The creatorId is guaranteed to exists thanks to validation
+    // The other fields are validated in middleware
     const auction = await auctionService.createAuction(res.locals.auction);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }

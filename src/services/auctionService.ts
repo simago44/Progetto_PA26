@@ -5,8 +5,9 @@ import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval } from "../utils/dateUtils.ts";
 import logger from "../middlewares/logger.ts";
 import sequelize from "../integrations/sequelize.ts";
-import { User } from "../models/User.ts";
 import type { Bid } from "../models/Bid.ts";
+import userRepository from "../repositories/userRepository.ts";
+import bidRepository from "../repositories/bidRepository.ts";
 
 class AuctionService {
   public async getFiltered(filters: AuctionFilters) {
@@ -45,7 +46,7 @@ class AuctionService {
   }
 
   public async getMsToEnd(auction: Auction): Promise<number> {
-    const bids = await auction.getBids();
+    const bids = await bidRepository.findAuctionBids(auction.id);
     let finishTime: Date = new Date();
 
     switch (auction.type) {
@@ -136,15 +137,8 @@ class AuctionService {
         const winnerId = winningBid.bid.userId;
         const finalPrice = winningBid.finalPrice;
 
-        await Auction.update(
-          { hasEnded: true, winnerId, finalPrice },
-          { where: { id: auction.id }, transaction: t },
-        );
-        await User.decrement("tokens", {
-          by: finalPrice,
-          where: { id: winnerId },
-          transaction: t,
-        });
+        await auctionRepository.closeAuction(auction.id, winnerId, finalPrice, t);
+        await userRepository.decrementTokens(winnerId, finalPrice, t);
       } else {
         await Auction.update(
           { hasEnded: true },

@@ -1,63 +1,69 @@
-import { Op, Sequelize } from "sequelize";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { Auction } from "../models/Auction.ts";
+import { AuctionStatus } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
+import redis from "../integrations/redis.ts";
+import type { CreationAttributes } from "sequelize";
+import auctionRepository from "./auctionRepository.ts";
 
 class BidRepository {
-  public async create(bid: Bid): Promise<Bid> {
+  private auctionBidsKey(auctionId: number): string {
+    return `auction:${auctionId}:bids`;
+  }
+
+  public build(attributes: CreationAttributes<Bid>): Bid {
     try {
-      return await bid.save();
+      return Bid.build(attributes);
+    } catch (err) {
+      throw createSequelizeError(err, "buildBid");
+    }
+  }
+
+  public async save(bid: Bid): Promise<Bid> {
+    try {
+      const created_bid = await bid.save();
+      // we invalidate cache for the auction
+      await redis.del(this.auctionBidsKey(created_bid.auctionId));
+      return created_bid;
     } catch (err) {
       throw createSequelizeError(err, "createBid");
     }
+  }
+
+  public async create(bidAttributes: CreationAttributes<Bid>): Promise<Bid> {
+    let bid = this.build(bidAttributes);
+    bid = await this.save(bid);
+    return bid;
   }
 
   public async findAll(): Promise<Bid[]> {
     return await Bid.findAll();
   }
 
-  public async userHasBidsInAuction(auctionId: number, userId: string): Promise<boolean> {
-    const bid = await Bid.findOne({
-      where: {
-        userId: userId,
-        auctionId: auctionId
-      }
-    });
+  public async findAuctionBids(auctionId: number): Promise<Bid[]> {
+    const cached = await redis.get(this.auctionBidsKey(auctionId));
+    if (cached) return Bid.bulkBuild(JSON.parse(cached));
 
-    return bid != null;
+    const bids = await Bid.findAll({ where: { auctionId } });
+    await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
+    return bids;
+  }
+
+  public async userHasBidsInAuction(auctionId: number, userId: string): Promise<boolean> {
+    const bids = await this.findAuctionBids(auctionId);
+    return bids.some(b => b.userId === userId);
   }
 
   public async auctionHasBids(auctionId: number): Promise<boolean> {
-    const bid = await Bid.findOne({
-      where: {
-        auctionId: auctionId
-      }
-    });
-
-    return bid != null;
-  }
-
-  public async findAuctionBids(auctionId: number): Promise<Bid[]> {
-    const bids = await Bid.findAll({
-      where: {
-        auctionId: auctionId
-      }
-    });
-
-    return bids;
+    const bids = await this.findAuctionBids(auctionId);
+    return bids.length > 0;
   }
 
   public async getUserBidsOfInProgessAuctions(userId: string): Promise<Bid[]> {
-    const bids = await Bid.findAll({
-      where: { userId },
-      include: [{
-        model: Auction,
-        required: true,
-        where: { hasEnded: false }
-      }]
-    });
-
-    return bids;
+    const openAuctions = await auctionRepository.getFiltered({ statuses: [AuctionStatus.InProgress] }); // already cached
+    const bidsPerAuction = await Promise.all(
+      openAuctions.map(auction => this.findAuctionBids(auction.id)) // already cached, per-auction
+    );
+    return bidsPerAuction.flat().filter(bid => bid.userId === userId);
   }
 }
 

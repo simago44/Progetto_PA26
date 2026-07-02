@@ -45,7 +45,7 @@ export async function createCloseAuctionJob(auction: Auction) {
 }
 
 export async function initBullMQ() {
-  const auctions = await auctionRepository.loadAll();
+  const auctions = await auctionRepository.findAll();
   auctions.forEach(async (auction) => {
     if (auction.hasEnded) return;
 

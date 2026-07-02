@@ -35,6 +35,5 @@ export const ErrorMessages = {
 
 export const ErrorDetails = {
   Validation: ({ errors }: { errors: Record<string, string[]>; }) => errors,
-  BidTooLow: ({ minimumBid }: { minimumBid: number; }) => ({ minimumBid }),
-  AuctionTypeNotSupported: ({ type }: { type: AuctionType; }) => ({ type }),
+  BidTooLow: ({ minimumBid }: { minimumBid: number; }) => ({ minimumBid })
 };

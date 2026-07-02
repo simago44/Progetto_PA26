@@ -21,11 +21,11 @@ class BidService {
     if (!user) throw new Errors.UnauthorizedError(); // should not happen because we validated
 
     // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
-    const bid: Bid = Bid.build(bidData);
+    const bid: Bid = bidRepository.build(bidData);
 
     await this.checkIsBidValid(bid, auction, user);
 
-    const createdBid = await bidRepository.create(bid);
+    const createdBid = await bidRepository.save(bid);
 
     //If the auction is dutch must be closed when the first bid arrives
     if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction, 0);

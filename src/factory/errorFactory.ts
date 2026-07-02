@@ -83,7 +83,7 @@ export const Errors = buildErrors({
   AuctionEndedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionEnded },
   BidTooLowError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
   BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
-  AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported, details: ErrorDetails.AuctionTypeNotSupported },
+  AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported },
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
   InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
 });

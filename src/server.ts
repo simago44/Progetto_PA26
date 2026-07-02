@@ -17,7 +17,9 @@ import { initDb } from "./integrations/initDb.ts";
 import "./integrations/BullMQ.ts";
 import { initBullMQ } from "./integrations/BullMQ.ts";
 import { Errors } from "./factory/errorFactory.ts";
+import { initRedis } from "./integrations/redis.ts";
 
+await initRedis();
 await initDb();
 await initBullMQ();
 
