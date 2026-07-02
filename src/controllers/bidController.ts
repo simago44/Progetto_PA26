@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import bidRepository from "../repositories/bidRepository.ts";
 import { Bid } from "../models/Bid.ts";
 import { Errors } from "../factory/errorFactory.ts";
-import { closeAuction, getMsToEnd, getWinningBid } from "../models/AuctionUtils.ts";
+import auctionService from "../services/auctionService.ts";
 import { Auction, AuctionType } from "../models/Auction.ts";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
@@ -24,12 +24,12 @@ export async function getRealUserTokens(user: User) {
 }
 
 async function checkIsBidValid(bid: Bid, auction: Auction, user: User) {
-  const auctionMsToEnd = await getMsToEnd(auction);
+  const auctionMsToEnd = await auctionService.getMsToEnd(auction);
   if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
 
   switch (auction.type) {
     case AuctionType.English:
-      const winningBid = await getWinningBid(auction);
+      const winningBid = await auctionService.getWinningBid(auction);
       if (!winningBid) return "";
       if (bid.bidPrice < winningBid?.finalPrice + auction.minimumIncrement) {
         throw new Errors.BidTooLowError({ minimumBid: winningBid.finalPrice + auction.minimumIncrement });
@@ -69,7 +69,7 @@ export class BidController {
 
     const createdBid = await bidRepository.create(bid);
 
-    if (auction.type == AuctionType.Dutch) await closeAuction(auction, 0);
+    if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction, 0);
 
     res.status(StatusCodes.OK).json({ id: createdBid.id });
   }

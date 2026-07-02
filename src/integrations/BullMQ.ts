@@ -1,8 +1,8 @@
 import { Queue, Worker, createNodeRedisClient } from 'bullmq';
 import redis from './redis.ts';
 import { Auction } from '../models/Auction.ts';
-import { closeAuction, getMsToEnd } from '../models/AuctionUtils.ts';
 import auctionRepository from '../repositories/auctionRepository.ts';
+import auctionService from '../services/auctionService.ts';
 
 export const connection = createNodeRedisClient(redis);
 
@@ -20,14 +20,14 @@ const myWorker = new Worker(queueName, async job => {
       const auction = await Auction.findByPk(auctionId);
       if (auction == null) return;
 
-      const msToEnd = await getMsToEnd(auction);
+      const msToEnd = await auctionService.getMsToEnd(auction);
       if (auction.hasEnded) break;
       if (msToEnd > 0) {
         createCloseAuctionJob(auction);
         break;
       }
 
-      await closeAuction(auction, msToEnd);
+      await auctionService.closeAuction(auction, msToEnd);
       break;
   }
 }, { connection });
@@ -35,7 +35,7 @@ const myWorker = new Worker(queueName, async job => {
 export async function createCloseAuctionJob(auction: Auction) {
   await auctionQueue.remove(`close-auction-${auction.id}`);
   await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
-    delay: await getMsToEnd(auction),
+    delay: await auctionService.getMsToEnd(auction),
     attempts: 3,
     jobId: `close-auction-${auction.id}`,
     backoff: { type: 'exponential', delay: 2000 },

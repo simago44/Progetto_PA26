@@ -13,7 +13,7 @@ import { DataTypes, Model } from "sequelize";
 import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
-import { getAuctionStatus } from "./AuctionUtils.ts";
+import service from "../services/auctionService.ts";
 
 export const AuctionType = {
   English: "english",
@@ -65,7 +65,7 @@ export class Auction extends Model<
   };
 
   get status(): NonAttribute<AuctionStatus> {
-    return getAuctionStatus(this);
+    return service.getAuctionStatus(this);
   }
 }
 

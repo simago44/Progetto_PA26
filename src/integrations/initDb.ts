@@ -7,9 +7,9 @@ import userRepository from "../repositories/userRepository.ts";
 import { deleteStaleUsers, RoleName } from "./auth0.ts";
 import logger from "../middlewares/logger.ts";
 import { AuctionStatus, AuctionType } from "../models/Auction.ts";
-import { getMsToEnd } from "../models/AuctionUtils.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { addInterval, hours, minutes, seconds, tomorrow } from "../utils/dateUtils.ts";
+import auctionService from "../services/auctionService.ts";
 
 const bidParticipantsLength = 0;
 const bidCreatorsLength = 0;
@@ -114,7 +114,6 @@ function buildDutchAuction(creatorId: string, status: AuctionStatus) {
     endsAt,
     startPrice
   );
-  logger.debug(`auction ends at: ${endsAt}`);
 
   return {
     creatorId,
@@ -185,7 +184,7 @@ async function generateAuctionsArray(creatorId: string, count: number): Promise<
 async function generateBidsArray(length: number = bidsNumber, auctions: Auction[]): Promise<Bid[]> {
   const bids: Bid[] = [];
   const msToEndResults = await Promise.all(
-    auctions.map(a => getMsToEnd(a))
+    auctions.map(a => auctionService.getMsToEnd(a))
   );
 
   let array: Auction[] = auctions.filter((auction, index) =>
