@@ -41,7 +41,7 @@ class AuctionService {
   }
 
   public getAuctionStatus(auction: Auction): AuctionStatus {
-    if (auction.hasEnded) return AuctionStatus.Ended;
+    if (auction.endedAt) return AuctionStatus.Ended;
     return auction.startsAt <= new Date()
       ? AuctionStatus.InProgress
       : AuctionStatus.NotStarted;
@@ -126,7 +126,7 @@ class AuctionService {
 
   public async closeAuction(auction: Auction, msToEnd: number) {
     // if it was already closed or is not ended yet, we return
-    if (auction.hasEnded || msToEnd > 0) return;
+    if (auction.endedAt || msToEnd > 0) return;
 
     logger.debug(`Closing auction: ${auction.id}`);
 
@@ -147,6 +147,10 @@ class AuctionService {
       await auctionRepository.closeAuction(auction.id, null);
     }
   };
+
+  public async getAuctionStats(type: AuctionType, startDate: Date, endDate: Date) {
+
+  }
 }
 
 const auctionService = new AuctionService();

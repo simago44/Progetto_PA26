@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { BidController } from "../controllers/bidController.ts";
 import { createBidMiddlewares, getAuctionBidsMiddlewares } from "../middlewares/middlewareChains.ts";
+import bidController from "../controllers/bidController.ts";
 
-const controller = new BidController();
 const router = Router();
 
-router.get("/:auctionId/bids", getAuctionBidsMiddlewares, controller.getAuctionBids);
-router.post("/:auctionId/bids", createBidMiddlewares, controller.createBid);
+router.get("/:auctionId/bids", getAuctionBidsMiddlewares, bidController.getAuctionBids);
+router.post("/:auctionId/bids", createBidMiddlewares, bidController.createBid);
 
 export default router;

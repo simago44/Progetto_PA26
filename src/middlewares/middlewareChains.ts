@@ -1,6 +1,6 @@
 import { checkJwtAuthorization, checkPermission, checkSelfOrAllPermission } from "./authMiddleware.ts";
 import { resolveUserIdParam, validateTopUpWallet } from "./walletValidationMiddleware.ts";
-import { validateAuctionMiddleware, validateAuctionStatusMiddleware } from "./auctionValidationMiddleware.ts";
+import { validateAuctionMiddleware, validateAuctionStatusMiddleware, validateGetAuctionStatsMiddleware } from "./auctionValidationMiddleware.ts";
 import { validateBidMiddleware, validateGetAuctionBids } from "./bidValidationMiddleware.ts";
 import { validateSignup } from "./authValidationMiddleware.ts";
 import { Auth0Permission } from "../enums/enums.ts";
@@ -20,10 +20,10 @@ export const updateAuctionMinimumPriceMiddlewares = [
   // validation
 ];
 
-export const getAuctionStatsByTypeMiddlewares = [
+export const getAuctionStatsMiddlewares = [
   checkJwtAuthorization,
   checkPermission(Auth0Permission.readAuctionStats),
-  // validation
+  validateGetAuctionStatsMiddleware
 ];
 
 export const signupMiddlewares = [validateSignup];

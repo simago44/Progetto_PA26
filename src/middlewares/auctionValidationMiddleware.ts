@@ -45,7 +45,25 @@ const AuctionSchema = z.discriminatedUnion("type", [
   SealedAuctionSchema,
 ]);
 
-export async function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
+const auctionStatusQuerySchema = z.object({
+  creatorIds: z.array(z.string()).optional(),
+  statuses: z.array(z.enum(AuctionStatus)).optional(),
+  types: z.array(z.enum(AuctionType)).optional()
+});
+
+const getAuctionStatsQuerySchema = z.object({
+  type: z.enum(AuctionType),
+  startDate: z.coerce.date().optional().default(new Date(0)),
+  endDate: z.coerce.date().optional().default(() => new Date()).refine(
+    (date) => date <= new Date(),
+    { message: "endDate cannot be in the future" }
+  ),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "endDate must be after startDate",
+  path: ["endDate"],
+});
+
+export function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
   const auction = req.body;
   auction.creatorId = res.locals.authId;
 
@@ -57,12 +75,6 @@ export async function validateAuctionMiddleware(req: Request, res: Response, nex
   next();
 }
 
-const auctionStatusQuerySchema = z.object({
-  creatorIds: z.array(z.string()).optional(),
-  statuses: z.array(z.enum(AuctionStatus)).optional(),
-  types: z.array(z.enum(AuctionType)).optional()
-});
-
 export function validateAuctionStatusMiddleware(req: Request, res: Response, next: NextFunction) {
   let creatorIds = req.query.creatorIds;
   let statuses = req.query.statuses;
@@ -73,6 +85,18 @@ export function validateAuctionStatusMiddleware(req: Request, res: Response, nex
 
   const result = auctionStatusQuerySchema.safeParse({ creatorIds, statuses, types });
   if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
+
+  res.locals = result.data;
+  next();
+}
+
+export function validateGetAuctionStatsMiddleware(req: Request, res: Response, next: NextFunction) {
+  const type = req.params.type;
+  const startDate = req.query.startDate;
+  const endDate = req.query.endDate;
+
+  const result = getAuctionStatsQuerySchema.safeParse({ type, startDate, endDate });
+  if (!result.success) throw createZodError(result.error, "validateGetAuctionStats");
 
   res.locals = result.data;
   next();

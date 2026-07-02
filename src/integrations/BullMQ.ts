@@ -19,7 +19,7 @@ const myWorker = new Worker(queueName, async job => {
       if (auction == null) return;
 
       const msToEnd = await auctionService.getMsToEnd(auction);
-      if (auction.hasEnded) break;
+      if (auction.endedAt) break;
       if (msToEnd > 0) {
         createCloseAuctionJob(auction);
         break;
@@ -45,7 +45,7 @@ export async function createCloseAuctionJob(auction: Auction) {
 export async function initBullMQ() {
   const auctions = await auctionRepository.findAll();
   auctions.forEach(async (auction) => {
-    if (auction.hasEnded) return;
+    if (auction.endedAt) return;
 
     createCloseAuctionJob(auction);
   });

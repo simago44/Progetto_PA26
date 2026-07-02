@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { AuctionController } from "../controllers/auctionController.ts";
-import { createAuctionMiddlewares, getAuctionStatsByTypeMiddlewares, getFilteredAuctionMiddlewares, updateAuctionMinimumPriceMiddlewares } from "../middlewares/middlewareChains.ts";
+import auctionController from "../controllers/auctionController.ts";
+import { createAuctionMiddlewares, getAuctionStatsMiddlewares, getFilteredAuctionMiddlewares, updateAuctionMinimumPriceMiddlewares } from "../middlewares/middlewareChains.ts";
 
-const controller = new AuctionController();
 const router = Router();
 
-router.post("/", createAuctionMiddlewares, controller.createAuction);
-router.get("/", getFilteredAuctionMiddlewares, controller.getAuctions);
-router.put("/:id/minimum-price", updateAuctionMinimumPriceMiddlewares, controller.updateAuctionMinimumPrice);
-router.get("/:type/stats", getAuctionStatsByTypeMiddlewares, controller.getAuctionStatsByType);
+router.post("/", createAuctionMiddlewares, auctionController.createAuction);
+router.get("/", getFilteredAuctionMiddlewares, auctionController.getAuctions);
+router.put("/:id/minimum-price", updateAuctionMinimumPriceMiddlewares, auctionController.updateAuctionMinimumPrice);
+router.get("/:type/stats", getAuctionStatsMiddlewares, auctionController.getAuctionStats);
 
 export default router;

@@ -22,17 +22,17 @@ class AuctionRepository {
       case AuctionStatus.NotStarted:
         return {
           startsAt: { [Op.gt]: now },
-          hasEnded: false
+          endedAt: null
         };
 
       case AuctionStatus.InProgress:
         return {
           startsAt: { [Op.lte]: now },
-          hasEnded: false,
+          endedAt: null
         };
 
       case AuctionStatus.Ended:
-        return { hasEnded: true };
+        return { endedAt: { [Op.ne]: null } };
     }
   }
 
@@ -85,14 +85,14 @@ class AuctionRepository {
     if (filters.statuses) {
       const or_list = filters.statuses.map(s => this.buildStatusWhere(s));
       where[Op.and].push({ [Op.or]: or_list });
-    }    
+    }
     return Auction.findAll({ where });
   }
 
-  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number} | null, transaction?: Transaction): Promise<void> {
+  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number } | null, transaction?: Transaction): Promise<void> {
     try {
       await Auction.update(
-        { hasEnded: true, winnerId: winningBid?.winnerId ?? null, finalPrice: winningBid?.finalPrice ?? null },
+        { endedAt: new Date(), winnerId: winningBid?.winnerId ?? null, finalPrice: winningBid?.finalPrice ?? null },
         { where: { id: auctionId }, transaction: transaction ?? null },
       );
     } catch (err) {

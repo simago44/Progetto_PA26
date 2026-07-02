@@ -5,7 +5,7 @@ import userService from "../services/userService.ts";
 import auctionService from "../services/auctionService.ts";
 import type { AuctionFilters } from "../repositories/auctionRepository.ts";
 
-export class UserController {
+class UserController {
   public async getWallet(_req: Request, res: Response, _next: NextFunction) {
     const userId = res.locals.userId as string;
 
@@ -38,3 +38,7 @@ export class UserController {
     // TODO
   }
 }
+
+const userController = new UserController();
+
+export default userController;

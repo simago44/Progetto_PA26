@@ -3,7 +3,7 @@ import auctionService from "../services/auctionService.ts";
 import { Auction } from "../models/Auction.ts";
 import { StatusCodes } from "http-status-codes";
 
-export class AuctionController {
+class AuctionController {
   /** Gets the auctions filtered by status
    * If the status code is not present in query params it returns all the auctions
    * Example URL: /auctions?status=0
@@ -36,7 +36,17 @@ export class AuctionController {
     // TODO
   }
 
-  public async getAuctionStatsByType(_req: Request, res: Response, _next: NextFunction) {
-    // TODO
+  public async getAuctionStats(_req: Request, res: Response, _next: NextFunction) {
+    const type = res.locals.type;
+    const startDate = res.locals.startDate;
+    const endDate = res.locals.endDate;
+
+    const stats = auctionService.getAuctionStats(type, startDate, endDate);
+
+    res.status(StatusCodes.OK).json({});
   }
 }
+
+const auctionController = new AuctionController();
+
+export default auctionController;
