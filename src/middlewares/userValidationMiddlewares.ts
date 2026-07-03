@@ -19,7 +19,7 @@ export function validateAuctionReportFilters(req: Request, res: Response, next: 
   const result = auctionReportFiltersQuerySchema.safeParse(data);
   if (!result.success) throw createZodError(result.error, "validateAuctionReportFilters");
 
-  res.locals = result.data;
+  res.locals.filters = result.data;
 
   next();
 }

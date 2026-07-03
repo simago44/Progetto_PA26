@@ -1,39 +1,11 @@
 import { Auction } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
+import { Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import redis from "../integrations/redis.ts";
-import { AuctionStatus, type AuctionType } from "../enums/enums.ts";
-
-export interface AuctionFilters {
-  creatorIds?: string[];
-  statuses?: AuctionStatus[];
-  types?: AuctionType[];
-}
 
 class AuctionRepository {
   private idKey(auctionId: number): string {
     return `auction:${auctionId}`;
-  }
-
-  private buildStatusWhere(status: AuctionStatus): WhereOptions {
-    const now = new Date();
-
-    switch (status) {
-      case AuctionStatus.NotStarted:
-        return {
-          startsAt: { [Op.gt]: now },
-          endedAt: null
-        };
-
-      case AuctionStatus.InProgress:
-        return {
-          startsAt: { [Op.lte]: now },
-          endedAt: null
-        };
-
-      case AuctionStatus.Ended:
-        return { endedAt: { [Op.ne]: null } };
-    }
   }
 
   public build(attributes: CreationAttributes<Auction>): Auction {
@@ -79,23 +51,26 @@ class AuctionRepository {
     return await Auction.findAll();
   }
 
-  public async getFiltered(filters: AuctionFilters): Promise<Auction[]> {
-    const where: any = {};
-    where[Op.and] = [];
-    if (filters.creatorIds) {
-      where[Op.and].push({ creatorId: { [Op.in]: filters.creatorIds } });
-    }
-    if (filters.types) {
-      where[Op.and].push({ type: { [Op.in]: filters.types } });
-    }
-    if (filters.statuses) {
-      const or_list = filters.statuses.map(s => this.buildStatusWhere(s));
-      where[Op.and].push({ [Op.or]: or_list });
-    }
+  public async getFiltered(where: WhereOptions): Promise<Auction[]> {
     return Auction.findAll({ where });
   }
 
-  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number } | null, transaction?: Transaction): Promise<void> {
+  public async getUserAuctions(where: WhereOptions, userId: string) {
+    return Auction.findAll({
+      where,
+      include: [
+        {
+          association: Auction.associations.bids,
+          where: { userId },
+          required: true,
+          attributes: [],
+        },
+      ],
+      group: ['Auction.id'],
+    });
+  }
+
+  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number; } | null, transaction?: Transaction): Promise<void> {
     try {
       await Auction.update(
         { endedAt: new Date(), winnerId: winningBid?.winnerId ?? null, finalPrice: winningBid?.finalPrice ?? null },

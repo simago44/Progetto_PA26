@@ -16,7 +16,7 @@ class AuctionController {
       types: res.locals.types
     };
 
-    const auctions: Auction[] = await auctionService.getFiltered(options);
+    const auctions: Auction[] = await auctionService.getAuctions(options);
 
     res.status(StatusCodes.OK).json({ count: auctions.length, auctions: await auctionService.formatAuctions(auctions) });
   }
@@ -32,7 +32,7 @@ class AuctionController {
     const auction = await auctionService.createAuction(res.locals.auction);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
-  
+
   public async updateAuctionReservePrice(_req: Request, res: Response, _next: NextFunction) {
     const auctionId = res.locals.auctionId;
     const reservePrice = res.locals.reservePrice;
@@ -43,11 +43,9 @@ class AuctionController {
   }
 
   public async getAuctionStats(_req: Request, res: Response, _next: NextFunction) {
-    const type = res.locals.type;
-    const startDate = res.locals.startDate;
-    const endDate = res.locals.endDate;
-
-    const stats = auctionService.getAuctionStats(type, startDate, endDate);
+    const type = res.locals.filters.type;
+    const startDate = res.locals.filters.startDate;
+    const endDate = res.locals.filters.endDate;
 
     res.status(StatusCodes.OK).json({});
   }

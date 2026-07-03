@@ -45,7 +45,7 @@ export const topUpWalletMiddlewares = [
 export const getAuctionsReportMiddlewares = [
   checkJwtAuthorization,
   resolveUserIdParam,
-  checkSelfOrAllPermission(Auth0Permission.readCurrentUserWallet, Auth0Permission.readWallets),
+  checkSelfOrAllPermission(Auth0Permission.readCurrentUserAuctionReport, Auth0Permission.readAuctionReports),
   validateAuctionReportFilters,
 ];
 

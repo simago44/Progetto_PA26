@@ -45,8 +45,7 @@ export function checkJwtAuthorization(req: Request, res: Response, next: NextFun
   checkJwt(req, res, (err) => {
     if (err instanceof UnauthorizedError) return next(new Errors.UnauthorizedError());
     if (err) return next(err);
-
-    res.locals.authId = req.auth?.payload.sub
-    next()
+    res.locals.authId = req.auth?.payload.sub;
+    next();
   });
 }
