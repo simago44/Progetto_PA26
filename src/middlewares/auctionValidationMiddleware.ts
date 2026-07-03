@@ -117,6 +117,6 @@ export function validateGetAuctionStatsMiddleware(req: Request, res: Response, n
   const result = getAuctionStatsSchema.safeParse({ type, startDate, endDate });
   if (!result.success) throw createZodError(result.error, "validateGetAuctionStats");
 
-  res.locals = result.data;
+  res.locals.filters = result.data;
   next();
 }

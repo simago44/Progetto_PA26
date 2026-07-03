@@ -43,11 +43,8 @@ class AuctionController {
   }
 
   public async getAuctionStats(_req: Request, res: Response, _next: NextFunction) {
-    const type = res.locals.filters.type;
-    const startDate = res.locals.filters.startDate;
-    const endDate = res.locals.filters.endDate;
-
-    res.status(StatusCodes.OK).json({});
+    const stats = await auctionService.getAuctionStats(res.locals.filters);
+    res.status(StatusCodes.OK).json(stats);
   }
 }
 

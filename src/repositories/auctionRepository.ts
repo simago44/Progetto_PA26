@@ -1,7 +1,8 @@
 import { Auction } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
+import { col, fn, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import redis from "../integrations/redis.ts";
+import type { AuctionType } from "../enums/enums.ts";
 
 class AuctionRepository {
   private idKey(auctionId: number): string {
@@ -68,6 +69,42 @@ class AuctionRepository {
       ],
       group: ['Auction.id'],
     });
+  }
+
+  public async getStatsByType(where: WhereOptions) {
+    const participantsPerAuction = await Auction.findAll({
+      where,
+      attributes: [
+        'id',
+        'type',
+        [fn('COUNT', fn('DISTINCT', col('bids.userId'))), 'participantCount'],
+      ],
+      include: [
+        {
+          association: Auction.associations.bids,
+          attributes: [],
+          required: false,
+        },
+      ],
+      group: ['Auction.id', 'Auction.type'],
+      raw: true,
+    });
+
+    const byType = new Map<AuctionType, number[]>();
+    for (const row of participantsPerAuction as unknown as { type: AuctionType; participantCount: string; }[]) {
+      const count = Number(row.participantCount);
+      if (!byType.has(row.type)) byType.set(row.type, []);
+      byType.get(row.type)!.push(count);
+    }
+
+    const stats = Array.from(byType.entries()).map(([type, counts]) => ({
+      type,
+      auctionCount: counts.length,
+      avgParticipants: counts.reduce((a, b) => a + b, 0) / counts.length,
+      minParticipants: Math.min(...counts),
+      maxParticipants: Math.max(...counts),
+    }));
+    return (stats);
   }
 
   public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number; } | null, transaction?: Transaction): Promise<void> {

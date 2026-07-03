@@ -99,6 +99,18 @@ class AuctionService {
     return auctionRepository.getUserAuctions(where, filters.participantId);
   }
 
+  public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate'>> & { type: AuctionType; }) {
+    const parsedFilters: AuctionFilters = {
+      types: [filters.type],
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+    };
+    console.log(parsedFilters);
+    const finalFilters = this.buildFilters(parsedFilters);
+    console.log(finalFilters);
+    return await auctionRepository.getStatsByType(finalFilters);
+  }
+
   public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
     return auctionRepository.create(data);
   }
@@ -257,10 +269,6 @@ class AuctionService {
 
     auction.reservePrice = reservePrice;
     await auctionRepository.save(auction);
-  }
-
-  public async getAuctionStats(type: AuctionType, startDate: Date, endDate: Date) {
-
   }
 }
 
