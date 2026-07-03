@@ -9,7 +9,7 @@ const BaseAuctionSchema = z.object({
   startsAt: z.coerce.date().refine((date) => date > new Date(), {
     message: "startsAt must be in the future",
   }),
-  startPrice: z.int().min(1),
+  reservePrice: z.int().min(AuctionConstants.minReservePrice),
   type: z.enum(AuctionType),
   description: z.string().trim().min(AuctionConstants.descriptionMinLenght).max(AuctionConstants.descriptionMaxLenght)
 });
@@ -28,7 +28,10 @@ const DutchAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.Dutch),
   decrementPrice: z.int().min(1),
   decrementInterval: z.int().min(60000),
-  minimumPrice: z.int().positive().min(0),
+  startPrice: z.int().positive(),
+}).refine((data) => data.startPrice > data.reservePrice, {
+  message: "startPrice must be higher than the reservePrice",
+  path: ["startPrice"],
 });
 
 const SealedAuctionSchema = BaseAuctionSchema.extend({
@@ -51,7 +54,7 @@ const auctionStatusQuerySchema = z.object({
   types: z.array(z.enum(AuctionType)).optional()
 });
 
-const getAuctionStatsQuerySchema = z.object({
+const getAuctionStatsSchema = z.object({
   type: z.enum(AuctionType),
   startDate: z.coerce.date().optional().default(new Date(0)),
   endDate: z.coerce.date().optional().default(() => new Date()).refine(
@@ -61,6 +64,11 @@ const getAuctionStatsQuerySchema = z.object({
 }).refine((data) => data.endDate >= data.startDate, {
   message: "endDate must be after startDate",
   path: ["endDate"],
+});
+
+const updateReservePriceMiddleware = z.object({
+  auctionId: z.coerce.number().nonnegative(),
+  reservePrice: z.number().min(AuctionConstants.minReservePrice),
 });
 
 export function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -90,12 +98,23 @@ export function validateAuctionStatusMiddleware(req: Request, res: Response, nex
   next();
 }
 
+export function validateUpdateReservePriceMiddleware(req: Request, res: Response, next: NextFunction) {
+  const auctionId = req.params.auctionId;
+  const reservePrice = req.body.reservePrice;
+
+  const result = updateReservePriceMiddleware.safeParse({ auctionId, reservePrice });
+  if (!result.success) throw createZodError(result.error, "validateUpdateReservePrice");
+
+  res.locals = result.data;
+  next();
+}
+
 export function validateGetAuctionStatsMiddleware(req: Request, res: Response, next: NextFunction) {
   const type = req.params.type;
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
 
-  const result = getAuctionStatsQuerySchema.safeParse({ type, startDate, endDate });
+  const result = getAuctionStatsSchema.safeParse({ type, startDate, endDate });
   if (!result.success) throw createZodError(result.error, "validateGetAuctionStats");
 
   res.locals = result.data;

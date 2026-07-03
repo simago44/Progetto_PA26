@@ -7,4 +7,5 @@ export const AuctionConstants = Object.freeze({
   defaultDelayBeforeEnding: 5 * MINUTES,
   descriptionMinLenght: 10,
   descriptionMaxLenght: 1023,
+  minReservePrice: 1
 });

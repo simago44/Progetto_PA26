@@ -5,10 +5,9 @@
 import type { AuctionType } from "../enums/enums.ts";
 
 // Success
-export const userCreatedSuccessfully_message: string =
-  "User created successfully";
-export const walletUpdatedSuccessfully_message: string =
-  "Wallet updated successfully";
+export const userCreatedSuccessfully_message: string = "User created successfully";
+export const walletUpdatedSuccessfully_message: string = "Wallet updated successfully";
+export const reservePriceUpdatedSuccessfully_message: string = "Reserve price updated successfully";
 
 export const ErrorMessages = {
   MalformedPayload: "Bad Request - Malformed payload",
@@ -37,6 +36,7 @@ export const ErrorMessages = {
   RouteNotFound: ({ path }: { path: string; }) => `Route on path '${path}' not found`,
   InsufficientTokens: "Insufficient tokens",
   InvariantViolation: ({ message }: { message: string }) => message,
+  AuctionHasAlreadyABid: "Auction has already a bid",
 };
 
 export const ErrorDetails = {

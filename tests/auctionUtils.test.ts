@@ -11,48 +11,48 @@ const EndedAuction1: Auction = new Auction({
   creatorId: "id",
   startsAt: new Date(passedDate10),
   endsAt: passedDate1,
-  startPrice: 1000,
+  reservePrice: 1000,
   type: AuctionType.Dutch,
   hasEnded: true,
   decrementPrice: 100,
   decrementTime: 1,
-  minimumPrice: 500
+  startPrice: 500
 });
 
 const EndedAuction2: Auction = new Auction({
   creatorId: "id",
   startsAt: new Date(passedDate10),
   endsAt: passedDate1,
-  startPrice: 1000,
+  reservePrice: 1000,
   type: AuctionType.Dutch,
   hasEnded: false,
   decrementPrice: 100,
   decrementTime: 1,
-  minimumPrice: 500
+  startPrice: 500
 });
 
 const InProgressAuction: Auction = new Auction({
   creatorId: "id",
   startsAt: passedDate1,
   endsAt: futureDate10,
-  startPrice: 2000,
+  reservePrice: 2000,
   type: AuctionType.Dutch,
   hasEnded: false,
   decrementPrice: 100,
   decrementTime: 1,
-  minimumPrice: 900
+  startPrice: 900
 });
 
 const NotStartedAuction: Auction = new Auction({
   creatorId: "id",
   startsAt: futureDate1,
   endsAt: futureDate10,
-  startPrice: 2000,
+  reservePrice: 2000,
   type: AuctionType.Dutch,
   hasEnded: false,
   decrementPrice: 100,
   decrementTime: 1,
-  minimumPrice: 1100
+  startPrice: 1100
 });
 
 describe("auctionUtils functions", () => {

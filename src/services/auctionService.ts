@@ -7,7 +7,7 @@ import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
-import { createAuctionMissingField } from "../factory/errorFactory.ts";
+import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factory/errorFactory.ts";
 import type { Auction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
@@ -53,8 +53,8 @@ class AuctionService {
 
     switch (auction.type) {
       case AuctionType.English:
-        if (auction.delayBeforeEnding == null) throw createAuctionMissingField(auction, 'delayBeforeEnding');
-        if (auction.endsAt == null) throw createAuctionMissingField(auction, 'endsAt');
+        if (auction.delayBeforeEnding == null) throw createAuctionMissingFieldError(auction, 'delayBeforeEnding');
+        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
 
         if (bids.length === 0) finishTime = auction.endsAt;
         else {
@@ -67,19 +67,21 @@ class AuctionService {
         return finishTime.getTime() - new Date().getTime(); // negative if past
 
       case AuctionType.Dutch:
-        if (auction.decrementPrice == null) throw createAuctionMissingField(auction, 'decrementPrice');
-        if (auction.decrementInterval == null) throw createAuctionMissingField(auction, 'decrementInterval');
-        if (auction.minimumPrice == null) throw createAuctionMissingField(auction, 'minimumPrice');
+        if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
+        if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
+        if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
 
         if (bids.length > 0 && bids[0]) return bids[0].createdAt.getTime() - new Date().getTime();
 
-        const priceRange = auction.startPrice - auction.minimumPrice;
+        const priceRange = auction.startPrice - auction.reservePrice;
         //We use ceil because the last step will be less than the minimum price
         const decrementsNeeded = Math.ceil(priceRange / auction.decrementPrice);
         const decrementInterval = auction.decrementInterval;
         const duration = decrementsNeeded * decrementInterval;
         finishTime = addInterval(auction.startsAt, duration);
 
+        // TODO: necessary??
+        /*
         //If the auction has not started yet, it cannot be ended
         if (this.getAuctionStatus(auction) === AuctionStatus.NotStarted) {
           return finishTime.getTime() - new Date().getTime();
@@ -90,18 +92,18 @@ class AuctionService {
         const decrements = Math.floor(
           elapsed / (auction.decrementInterval! * 60 * 1000),
         );
-        const currentPrice = auction.startPrice - decrements * auction.decrementPrice;
+        const currentPrice = auction.reservePrice - decrements * auction.decrementPrice;
 
-        /** If the current price is less than minimumPrice,
-         * The auction is ended in not selled case
-         * */
-        if (currentPrice <= auction.minimumPrice) return -1;
+        // If the current price is less than startPrice,
+        // The auction is ended in not selled case
+        if (currentPrice <= auction.reservePrice) return -1;
+        */
 
         return finishTime.getTime() - new Date().getTime();
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
-        if (auction.endsAt == null) throw createAuctionMissingField(auction, 'endsAt');
+        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
 
         return auction.endsAt.getTime() - new Date().getTime(); // negative if past
     }
@@ -147,6 +149,32 @@ class AuctionService {
       await auctionRepository.closeAuction(auction.id, null);
     }
   };
+
+
+  public async updateAuctionReservePrice(auctionId: number, reservePrice: number) {
+    const auction = await auctionRepository.findByPk(auctionId);
+    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+
+    switch (auction.type) {
+      case AuctionType.English:
+        if (auction.endedAt) throw new Error("The auction has ended")
+        if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
+        if (await bidRepository.auctionHasBids(auction.id)) throw new Errors.AuctionHasAlreadyAbBidError();
+
+        break;
+      case AuctionType.Dutch:
+        if (auction.endedAt) throw new Errors.AuctionEndedError();
+        if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
+
+        break;
+      case AuctionType.FirstPrice:
+      case AuctionType.SecondPrice:
+        throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
+    }
+
+    auction.reservePrice = reservePrice;
+    await auctionRepository.save(auction);
+  }
 
   public async getAuctionStats(type: AuctionType, startDate: Date, endDate: Date) {
 

@@ -558,6 +558,62 @@
           "response": []
         },
         {
+          "name": "Update Auction Reserve Price",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+                  "pm.environment.set('futureDate2', futureDate2);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"reservePrice\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/reserve-price",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "auctions",
+                "1",
+                "reserve-price"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Filtered Auctions",
           "request": {
             "auth": {
@@ -566,7 +622,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions?types=english&statuses=in-progress",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions?types=english&statuses=ended",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -582,7 +638,7 @@
                 },
                 {
                   "key": "statuses",
-                  "value": "in-progress"
+                  "value": "ended"
                 }
               ]
             }

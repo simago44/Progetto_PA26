@@ -55,7 +55,13 @@ class UserRepository {
 
   public async findByPk(userId: string): Promise<User | null> {
     const cached = await redis.get(this.idKey(userId));
-    if (cached) return User.build(JSON.parse(cached));
+    if (cached) {
+      const user = User.build(JSON.parse(cached));
+      // necessary to save it without errors on unique id
+      // we can't use build option isNewRecord because it erases createdAt and other fields 
+      user.isNewRecord = false;
+      return user;
+    }
 
     const user = await User.findByPk(userId);
     if (user) await this.cacheUser(user);

@@ -62,7 +62,13 @@ class AuctionRepository {
 
   public async findByPk(auctionId: number): Promise<Auction | null> {
     const cached = await redis.get(this.idKey(auctionId));
-    if (cached) return Auction.build(JSON.parse(cached));
+    if (cached) {
+      const auction = Auction.build(JSON.parse(cached));
+      // necessary to save it without errors on unique id
+      // we can't use build option isNewRecord because it erases createdAt and other fields 
+      auction.isNewRecord = false;
+      return auction;
+    }
 
     const auction = await Auction.findByPk(auctionId);
     if (auction) await redis.set(this.idKey(auction.id), JSON.stringify(auction));

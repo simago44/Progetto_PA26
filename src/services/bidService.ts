@@ -1,5 +1,5 @@
 import type { CreationAttributes } from "sequelize";
-import { createAuctionMissingField, Errors } from "../factory/errorFactory.ts";
+import { createAuctionMissingFieldError, Errors } from "../factory/errorFactory.ts";
 import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
@@ -65,16 +65,15 @@ class BidService {
 
     switch (auction.type) {
       case AuctionType.English:
-        if (auction.minimumIncrement == null) throw createAuctionMissingField(auction, 'minimumIncrement');
-        if (auction.minimumPrice == null) throw createAuctionMissingField(auction, 'minimumPrice');
+        if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
 
         const winningBid = await auctionService.getWinningBid(auction.id);
 
-        // if no bid is found, we check that the bid is at least equal to the minimumPrice
+        // if no bid is found, we check that the bid is at least equal to the reservePrice
         // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement
         if (!winningBid) {
-          if (bid.bidPrice < auction.minimumPrice) {
-            throw new Errors.BidTooLowError({ minimumBid: auction.minimumPrice });
+          if (bid.bidPrice < auction.reservePrice) {
+            throw new Errors.BidTooLowError({ minimumBid: auction.reservePrice });
           }
         } else {
           if (bid.bidPrice < winningBid.bidPrice + auction.minimumIncrement) {

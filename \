@@ -45,8 +45,6 @@ class BidRepository {
       const bids = [];
       for (const bid of JSON.parse(cached)) {
         const builtBid = Bid.build(bid);
-        // necessary to save it without errors on unique id
-        // we can't use bulkBuild option isNewRecord because it erases createdAt and other fields 
         builtBid.isNewRecord = false;
         bids.push(builtBid);
       }

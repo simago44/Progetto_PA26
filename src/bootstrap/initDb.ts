@@ -80,17 +80,17 @@ function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: D
 function buildDutchParams(startsAt: Date, endsAt: Date, startPrice: number) {
   const durationMs = endsAt.getTime() - startsAt.getTime();
 
-  const minimumPrice = faker.number.int({ min: 0, max: startPrice - 10 });
+  const reservePrice = faker.number.int({ min: 1, max: startPrice - 10 });
 
   const decrementIntervalMin = faker.number.int({ min: 1, max: 30 });
   const decrementInterval = Math.min(decrementIntervalMin * 60 * 1000, durationMs);
 
   const decrementsNeeded = Math.max(Math.floor(durationMs / decrementInterval), 1);
 
-  const priceRange = startPrice - minimumPrice;
+  const priceRange = startPrice - reservePrice;
   const decrementPrice = Math.max(Math.round(priceRange / decrementsNeeded), 1);
 
-  return { decrementPrice, decrementInterval, minimumPrice };
+  return { decrementPrice, decrementInterval, reservePrice };
 }
 
 function buildEnglishAuction(creatorId: string, status: AuctionStatus) {
@@ -100,7 +100,7 @@ function buildEnglishAuction(creatorId: string, status: AuctionStatus) {
     startsAt,
     endsAt,
     type: AuctionType.English,
-    startPrice: 100,
+    reservePrice: 100,
     minimumIncrement: 50,
     delayBeforeEnding: 10000,
     description: faker.commerce.productDescription()
@@ -110,20 +110,16 @@ function buildEnglishAuction(creatorId: string, status: AuctionStatus) {
 function buildDutchAuction(creatorId: string, status: AuctionStatus) {
   const { startsAt, endsAt } = buildDatesForStatus(status);
   const startPrice = 100;
-  const { decrementPrice, decrementInterval, minimumPrice } = buildDutchParams(
-    startsAt,
-    endsAt,
-    startPrice
-  );
+  const { decrementPrice, decrementInterval, reservePrice } = buildDutchParams(startsAt, endsAt, startPrice);
 
   return {
     creatorId,
     startsAt,
     type: AuctionType.Dutch,
-    startPrice,
+    reservePrice,
     decrementPrice,
     decrementInterval,
-    minimumPrice,
+    startPrice,
     description: faker.commerce.productDescription()
   };
 }
@@ -135,7 +131,7 @@ function buildFirstPriceAuction(creatorId: string, status: AuctionStatus) {
     startsAt,
     endsAt,
     type: AuctionType.FirstPrice,
-    startPrice: 100,
+    reservePrice: 100,
     description: faker.commerce.productDescription()
   };
 }
@@ -147,7 +143,7 @@ function buildSecondPriceAuction(creatorId: string, status: AuctionStatus) {
     startsAt,
     endsAt,
     type: AuctionType.SecondPrice,
-    startPrice: 100,
+    reservePrice: 100,
     description: faker.commerce.productDescription()
   };
 }
@@ -172,7 +168,7 @@ async function generateAuctionsArray(creatorId: string, count: number): Promise<
           bidRepository.create({
             userId: "auth0|6a3fd852b4e640e31f20bbd2",
             auctionId: auction.id,
-            bidPrice: auction.startPrice
+            bidPrice: auction.reservePrice
           });
         }
         auctions.push(auction);
@@ -257,13 +253,8 @@ export async function initDb() {
       logger.error(`user creations crashed: ${err.message}`);
   }
 
-  try {
-    auctions = await generateAuctionsArray(bidCreator.id, auctionsPerTypeAndStatus);
-    logger.info(`${auctions.length} auctions created`);
-  } catch (err) {
-    if (err instanceof Error)
-      logger.error(`auction creations crashed: ${err.message}`);
-  }
+  auctions = await generateAuctionsArray(bidCreator.id, auctionsPerTypeAndStatus);
+  logger.info(`${auctions.length} auctions created`);
 
   try {
     const bids = await generateBidsArray(bidsNumber, auctions);

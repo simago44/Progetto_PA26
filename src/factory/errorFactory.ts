@@ -87,7 +87,8 @@ export const Errors = buildErrors({
   AuctionTypeNotSupportedError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionTypeNotSupported },
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
   InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
-  InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation }
+  InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation },
+  AuctionHasAlreadyAbBidError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionHasAlreadyABid }
 });
 
 export function createZodError(error: ZodError, form: string): AppError {
@@ -144,6 +145,14 @@ export function createAuth0Error(error: any): AppError {
   return new Errors.InternalServerError();
 }
 
-export function createAuctionMissingField(auction: Auction, fieldName: string): AppError {
+export function createAuctionMissingFieldError(auction: Auction, fieldName: string): AppError {
   return new Errors.InvariantViolationError({ message: `Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'` })
+}
+
+export function createReservePriceTooHighError(form: string): AppError {
+  return new Errors.ValidationError({
+    form, errors: {
+      reservePrice: ["Reserve price too high: must be lower than the current auction reserve price."],
+    }
+  });
 }

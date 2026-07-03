@@ -23,13 +23,13 @@ export class Auction extends Model<
   declare creatorId: ForeignKey<User["id"]>;
   declare startsAt: Date;
   declare endsAt: CreationOptional<Date | null>;
-  declare startPrice: number;
+  declare reservePrice: number;
   declare type: AuctionType;
   declare description: string;
   declare minimumIncrement: CreationOptional<number | null>;
   declare decrementPrice: CreationOptional<number | null>;
   declare decrementInterval: CreationOptional<number | null>;
-  declare minimumPrice: CreationOptional<number | null>;
+  declare startPrice: CreationOptional<number | null>;
   declare delayBeforeEnding: CreationOptional<number | null>;
   declare endedAt: CreationOptional<Date | null>;
   declare winnerId: CreationOptional<ForeignKey<User["id"]> | null>;
@@ -79,11 +79,11 @@ Auction.init(
         },
       },
     },
-    startPrice: {
+    reservePrice: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        min: 1,
+        min: AuctionConstants.minReservePrice,
       },
     },
     type: {
@@ -115,10 +115,14 @@ Auction.init(
         min: 60 * SECONDS,
       },
     },
-    minimumPrice: {
+    startPrice: {
       type: DataTypes.INTEGER,
       validate: {
-        min: 0,
+        higherThanReservePrice(this: Auction, startPrice: number) {
+          if (startPrice <= this.reservePrice) {
+            throw new Error("startPrice must be higher than the reservePrice");
+          }
+        },
       },
     },
     delayBeforeEnding: {

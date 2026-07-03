@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import auctionService from "../services/auctionService.ts";
 import { Auction } from "../models/Auction.ts";
 import { StatusCodes } from "http-status-codes";
+import { reservePriceUpdatedSuccessfully_message } from "../factory/messageStrings.ts";
 
 class AuctionController {
   /** Gets the auctions filtered by status
@@ -32,8 +33,13 @@ class AuctionController {
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
   
-  public async updateAuctionMinimumPrice(_req: Request, res: Response, _next: NextFunction) {
-    // TODO
+  public async updateAuctionReservePrice(_req: Request, res: Response, _next: NextFunction) {
+    const auctionId = res.locals.auctionId;
+    const reservePrice = res.locals.reservePrice;
+
+    await auctionService.updateAuctionReservePrice(auctionId, reservePrice);
+
+    res.status(StatusCodes.OK).json({ message: reservePriceUpdatedSuccessfully_message });
   }
 
   public async getAuctionStats(_req: Request, res: Response, _next: NextFunction) {
