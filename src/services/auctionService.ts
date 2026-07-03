@@ -13,6 +13,7 @@ import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 export interface AuctionFilters {
   creatorIds?: string[];
+  winnerIds?: string[];
   statuses?: AuctionStatus[];
   types?: AuctionType[];
   startDate?: Date;
@@ -48,6 +49,9 @@ class AuctionService {
 
     if (filters.creatorIds) {
       andConditions.push({ creatorId: { [Op.in]: filters.creatorIds } });
+    }
+    if (filters.winnerIds) {
+      andConditions.push({ winnerId: { [Op.in]: filters.winnerIds } });
     }
     if (filters.types) {
       andConditions.push({ type: { [Op.in]: filters.types } });
@@ -96,8 +100,13 @@ class AuctionService {
 
   public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
     const where = this.buildFilters(filters);
-    const auctions = await auctionRepository.getUserAuctions(where, filters.participantId);
+    const auctions = await auctionRepository.getUserAuctions(filters.participantId, where);
     return this.formatAuctions(auctions);
+  }
+
+  public async getWalletReport(filters: Required<Pick<AuctionFilters, 'winnerIds' | 'startDate' | 'endDate'>>) {
+    const where = this.buildFilters(filters);
+    return await auctionRepository.getTotalFinalPrice(where);
   }
 
   public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {

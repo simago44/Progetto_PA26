@@ -27,3 +27,15 @@ export function validateAuctionReportFilters(req: Request, res: Response, next: 
 
   next();
 }
+
+export function validateWalletReportFilters(req: Request, res: Response, next: NextFunction) {
+  const data = req.query;
+  if (typeof data.types === "string") data.types = data.types.split(',');
+  
+  const result = auctionReportFiltersQuerySchema.safeParse(data);
+  if (!result.success) throw createZodError(result.error, "validateAuctionReportFilters");
+
+  res.locals.filters = result.data;
+
+  next();
+}

@@ -56,7 +56,7 @@ class AuctionRepository {
     return Auction.findAll({ where });
   }
 
-  public async getUserAuctions(where: WhereOptions, userId: string) {
+  public async getUserAuctions(userId: string, where: WhereOptions) {
     return Auction.findAll({
       where,
       include: [
@@ -69,6 +69,10 @@ class AuctionRepository {
       ],
       group: ['Auction.id'],
     });
+  }
+
+  public async getTotalFinalPrice(where: WhereOptions) {
+    return await Auction.sum('finalPrice', { where }) ?? 0;
   }
 
   public async getParticipantsPerAuction(where: WhereOptions) {

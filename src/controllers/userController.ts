@@ -24,14 +24,18 @@ class UserController {
 
   public async getAuctionsReport(_req: Request, res: Response, _next: NextFunction) {
     const filters = res.locals.filters;
-    filters.participantId = res.locals.userId;
+    filters.winnerIds = [res.locals.userId];
 
     const report = await auctionService.getAuctionReport(filters);
     res.status(StatusCodes.OK).json(report);
   }
 
   public async getWalletReport(_req: Request, res: Response, next: NextFunction) {
-    res.status(StatusCodes.OK).json({});
+    const filters = res.locals.filters;
+    filters.participantId = res.locals.userId;
+
+    const userSpending = await auctionService.getWalletReport(filters);
+    res.status(StatusCodes.OK).json({ total: userSpending });
   }
 }
 
