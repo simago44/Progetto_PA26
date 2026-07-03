@@ -794,7 +794,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report?startDate=2026-07-03&won=true&types=dutch",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -804,6 +804,20 @@
                 "users",
                 "{{BID_PARTICIPANT_USER_ID}}",
                 "auctions-report"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-07-03"
+                },
+                {
+                  "key": "won",
+                  "value": "true"
+                },
+                {
+                  "key": "types",
+                  "value": "dutch"
+                }
               ]
             }
           },
@@ -825,7 +839,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report?endDate=2026-07-03",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -835,6 +849,12 @@
                 "users",
                 "{{BID_PARTICIPANT_USER_ID}}",
                 "wallet-report"
+              ],
+              "query": [
+                {
+                  "key": "endDate",
+                  "value": "2026-07-03"
+                }
               ]
             }
           },
