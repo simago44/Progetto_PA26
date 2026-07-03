@@ -71,11 +71,10 @@ class AuctionRepository {
     });
   }
 
-  public async getStatsByType(where: WhereOptions) {
+  public async getParticipantsPerAuction(where: WhereOptions) {
     const participantsPerAuction = await Auction.findAll({
       where,
       attributes: [
-        'id',
         'type',
         [fn('COUNT', fn('DISTINCT', col('bids.userId'))), 'participantCount'],
       ],
@@ -86,25 +85,11 @@ class AuctionRepository {
           required: false,
         },
       ],
-      group: ['Auction.id', 'Auction.type'],
+      group: ['Auction.id'],
       raw: true,
-    });
+    }) as unknown as { type: AuctionType, participantCount: number }[];
 
-    const byType = new Map<AuctionType, number[]>();
-    for (const row of participantsPerAuction as unknown as { type: AuctionType; participantCount: string; }[]) {
-      const count = Number(row.participantCount);
-      if (!byType.has(row.type)) byType.set(row.type, []);
-      byType.get(row.type)!.push(count);
-    }
-
-    const stats = Array.from(byType.entries()).map(([type, counts]) => ({
-      type,
-      auctionCount: counts.length,
-      avgParticipants: counts.reduce((a, b) => a + b, 0) / counts.length,
-      minParticipants: Math.min(...counts),
-      maxParticipants: Math.max(...counts),
-    }));
-    return (stats);
+    return participantsPerAuction;
   }
 
   public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number; } | null, transaction?: Transaction): Promise<void> {

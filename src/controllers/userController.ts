@@ -31,7 +31,7 @@ class UserController {
   }
 
   public async getWalletReport(_req: Request, res: Response, next: NextFunction) {
-    // TODO
+    res.status(StatusCodes.OK).json({});
   }
 }
 

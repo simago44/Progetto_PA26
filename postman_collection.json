@@ -622,7 +622,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions?types=english&statuses=ended",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions?statuses=not-started",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -633,12 +633,8 @@
               ],
               "query": [
                 {
-                  "key": "types",
-                  "value": "english"
-                },
-                {
                   "key": "statuses",
-                  "value": "ended"
+                  "value": "not-started"
                 }
               ]
             }
@@ -661,7 +657,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/english/stats?startDate=2026-07-01&endDate=2026-07-02",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -669,18 +665,7 @@
               "port": "{{PORT}}",
               "path": [
                 "auctions",
-                "english",
                 "stats"
-              ],
-              "query": [
-                {
-                  "key": "startDate",
-                  "value": "2026-07-01"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2026-07-02"
-                }
               ]
             }
           },
@@ -788,6 +773,68 @@
                 "users",
                 "{{BID_PARTICIPANT_USER_ID}}",
                 "wallet"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auctions report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "users",
+                "{{BID_PARTICIPANT_USER_ID}}",
+                "auctions-report"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Wallet report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "users",
+                "{{BID_PARTICIPANT_USER_ID}}",
+                "wallet-report"
               ]
             }
           },

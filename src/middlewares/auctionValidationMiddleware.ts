@@ -48,20 +48,17 @@ const AuctionSchema = z.discriminatedUnion("type", [
   SealedAuctionSchema,
 ]);
 
-const auctionStatusQuerySchema = z.object({
+const getAuctionsSchema = z.object({
   creatorIds: z.array(z.string()).optional(),
   statuses: z.array(z.enum(AuctionStatus)).optional(),
   types: z.array(z.enum(AuctionType)).optional()
 });
 
 const getAuctionStatsSchema = z.object({
-  type: z.enum(AuctionType),
+  types: z.array(z.enum(AuctionType)).optional(),
   startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional().default(() => new Date()).refine(
-    (date) => date <= new Date(),
-    { message: "endDate cannot be in the future" }
-  ),
-}).refine((data) => data.endDate >= data.startDate, {
+  endDate: z.coerce.date().optional(),
+}).refine((data) => !data.endDate || data.endDate >= data.startDate, {
   message: "endDate must be after startDate",
   path: ["endDate"],
 });
@@ -83,15 +80,13 @@ export function validateAuctionMiddleware(req: Request, res: Response, next: Nex
   next();
 }
 
-export function validateAuctionStatusMiddleware(req: Request, res: Response, next: NextFunction) {
-  let creatorIds = req.query.creatorIds;
-  let statuses = req.query.statuses;
-  let types = req.query.types;
-  if (typeof creatorIds === "string") creatorIds = creatorIds.split(',');
-  if (typeof statuses === "string") statuses = statuses.split(',');
-  if (typeof types === "string") types = types.split(',');
+export function validateGetAuctionsMiddleware(req: Request, res: Response, next: NextFunction) {
+  const data = req.query;
+  if (typeof data.creatorIds === "string") data.creatorIds = data.creatorIds.split(',');
+  if (typeof data.statuses === "string") data.statuses = data.statuses.split(',');
+  if (typeof data.types === "string") data.types = data.types.split(',');
 
-  const result = auctionStatusQuerySchema.safeParse({ creatorIds, statuses, types });
+  const result = getAuctionsSchema.safeParse(data);
   if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
 
   res.locals = result.data;
@@ -110,11 +105,10 @@ export function validateUpdateReservePriceMiddleware(req: Request, res: Response
 }
 
 export function validateGetAuctionStatsMiddleware(req: Request, res: Response, next: NextFunction) {
-  const type = req.params.type;
-  const startDate = req.query.startDate;
-  const endDate = req.query.endDate;
+  const data = req.query;
+  if (typeof data.types === "string") data.types = data.types.split(',');
 
-  const result = getAuctionStatsSchema.safeParse({ type, startDate, endDate });
+  const result = getAuctionStatsSchema.safeParse(data);
   if (!result.success) throw createZodError(result.error, "validateGetAuctionStats");
 
   res.locals.filters = result.data;

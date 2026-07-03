@@ -8,7 +8,7 @@ import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factory/errorFactory.ts";
-import type { Auction } from "../models/Auction.ts";
+import { Auction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 export interface AuctionFilters {
@@ -96,19 +96,39 @@ class AuctionService {
 
   public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
     const where = this.buildFilters(filters);
-    return auctionRepository.getUserAuctions(where, filters.participantId);
+    const auctions = await auctionRepository.getUserAuctions(where, filters.participantId);
+    return this.formatAuctions(auctions);
   }
 
-  public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate'>> & { type: AuctionType; }) {
+  public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {
     const parsedFilters: AuctionFilters = {
-      types: [filters.type],
+      types: filters.types,
       startDate: filters.startDate,
       endDate: filters.endDate,
     };
-    console.log(parsedFilters);
     const finalFilters = this.buildFilters(parsedFilters);
-    console.log(finalFilters);
-    return await auctionRepository.getStatsByType(finalFilters);
+    const participantsPerAuction = await auctionRepository.getParticipantsPerAuction(finalFilters);
+
+    // if filters.types is null, we replace it with all the types (see below)
+    const types = filters.types ?? (Object.values(AuctionType) as AuctionType[]);
+
+    // we initialize byType, so if there isn't an auction type in the query
+    // result, the type will still show up in the output
+    const byType = new Map<AuctionType, number[]>(types.map(t => [t, []]));
+
+    for (const row of participantsPerAuction) {
+      byType.get(row.type)?.push(Number(row.participantCount));
+    }
+
+    const stats = Array.from(byType.entries()).map(([type, counts]) => ({
+      type,
+      auctionCount: counts.length,
+      avgParticipants: counts.length ? counts.reduce((a, b) => a + b, 0) / counts.length : 0,
+      minParticipants: counts.length ? Math.min(...counts) : 0,
+      maxParticipants: counts.length ? Math.max(...counts) : 0,
+    }));
+
+    return stats;
   }
 
   public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
