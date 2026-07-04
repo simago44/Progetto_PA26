@@ -3,6 +3,7 @@ import { createZodError } from "../factory/errorFactory.ts";
 import z from 'zod';
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { AuctionConstants } from "../constants/constants.ts";
+import { MINUTES } from "../utils/dateUtils.ts";
 
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
@@ -27,7 +28,7 @@ const EnglishAuctionSchema = BaseAuctionSchema.extend({
 const DutchAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.Dutch),
   decrementPrice: z.int().min(1),
-  decrementInterval: z.int().min(60000),
+  decrementInterval: z.int().min(1 * MINUTES),
   startPrice: z.int().positive(),
 }).refine((data) => data.startPrice > data.reservePrice, {
   message: "startPrice must be higher than the reservePrice",
@@ -42,7 +43,7 @@ const SealedAuctionSchema = BaseAuctionSchema.extend({
   path: ["endsAt"],
 });
 
-const AuctionSchema = z.discriminatedUnion("type", [
+export const AuctionSchema = z.discriminatedUnion("type", [
   EnglishAuctionSchema,
   DutchAuctionSchema,
   SealedAuctionSchema,

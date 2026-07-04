@@ -142,3 +142,4 @@ package-lock.json
 .prettierrc
 
 seeds/
+/seeds

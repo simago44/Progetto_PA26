@@ -3,6 +3,7 @@ import { ErrorDetails, ErrorMessages } from "./messageStrings.ts";
 import type { ZodError } from "zod";
 import type { Auction } from "../models/Auction.ts";
 import { UniqueConstraintError, ValidationError } from "sequelize";
+import logger from "../core/logger.ts";
 
 /**
  * Base error class for all application errors.
@@ -109,17 +110,22 @@ export function createSequelizeError(error: unknown, form: string): AppError {
   if (error instanceof UniqueConstraintError) {
     const field = error.errors[0]?.path ?? "field";
     const value = error.errors[0]?.value ?? "value";
-    return new Errors.FieldAlreadyUsedError({field, value});
+    return new Errors.FieldAlreadyUsedError({ field, value });
   }
 
   if (error instanceof ValidationError) {
     const details: Record<string, string[]> = {};
     for (const issue of error.errors) {
-      const path = issue.path as string // necessary because path it's an array
+      const path = issue.path as string; // necessary because path it's an array
       if (!details[path]) details[path] = [];
       details[path].push(issue.message);
     }
     return new Errors.ValidationError({ form, errors: details });
+  }
+
+  if (error instanceof Error && error.name == 'SequelizeDatabaseError') {
+    logger.error(`Database error: ${error.stack}`);
+    return new Errors.InternalServerError();
   }
 
   // Not a Sequelize error we recognize — let the caller decide what to do.
@@ -147,7 +153,7 @@ export function createAuth0Error(error: unknown): AppError {
 }
 
 export function createAuctionMissingFieldError(auction: Auction, fieldName: string): AppError {
-  return new Errors.InvariantViolationError({ message: `Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'` })
+  return new Errors.InvariantViolationError({ message: `Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'` });
 }
 
 export function createReservePriceTooHighError(form: string): AppError {

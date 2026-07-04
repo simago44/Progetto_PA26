@@ -39,7 +39,7 @@ export const ErrorMessages = {
   AuctionTypeNotSupported: ({ type }: { type: AuctionType; }) => `This operation is not supported for ${type} auctions`,
   RouteNotFound: ({ path }: { path: string; }) => `Route on path '${path}' not found`,
   InsufficientTokens: "Insufficient tokens",
-  InvariantViolation: ({ message }: { message: string }) => message,
+  InvariantViolation: ({ message }: { message: string; }) => message,
   AuctionHasAlreadyABid: "Auction has already a bid",
 };
 

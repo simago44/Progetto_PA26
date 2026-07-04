@@ -1,198 +1,171 @@
-import sequelize from "../integrations/sequelize.ts";
-import { fakerIT as faker } from "@faker-js/faker";
-import "../models/relationships.ts";
-import { Auction, Bid, User } from "../models/relationships.ts";
-import env, { NodeEnv } from "../core/config.ts";
-import userRepository from "../repositories/userRepository.ts";
-import { deleteStaleUsers } from "../integrations/auth0.ts";
 import logger from "../core/logger.ts";
-import bidRepository from "../repositories/bidRepository.ts";
+import { AuctionStatus, AuctionType, RoleName } from "../enums/enums.ts";
+import { createSequelizeError, createZodError, Errors } from "../factory/errorFactory.ts";
+import type { User } from "../models/User.ts";
+import userRepository from "../repositories/userRepository.ts";
+import env, { NodeEnv } from "../core/config.ts";
+import sequelize from "../integrations/sequelize.ts";
+import "../models/relationships.ts";
+import { fakerIT as faker } from "@faker-js/faker";
+import { AuctionSchema } from "../middlewares/auctionMiddleware.ts";
+import { AuctionConstants } from "../constants/constants.ts";
+import type { CreationAttributes } from "sequelize";
+import { Auction } from "../models/Auction.ts";
 import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUtils.ts";
+import z from "zod";
+import { readFileSync } from "node:fs";
 import auctionService from "../services/auctionService.ts";
-import auctionRepository from "../repositories/auctionRepository.ts";
-import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
 
-const bidParticipantsLength = 0;
-const bidCreatorsLength = 0;
-const adminsLength = 0;
+const SeedUserSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  role: z.enum(RoleName),
+});
+const UsersSeedSchema = z.array(SeedUserSchema);
 
-const auth0UsernameMinLength = 1;
-const auth0UsernameMaxLength = 15;
+function loadUsersByRole(): Record<RoleName, { userId: string; username: string; }[]> {
+  const raw = readFileSync(env.USERS_BY_ROLE_SEED_PATH, "utf-8");
+  const users = UsersSeedSchema.parse(JSON.parse(raw));
 
-const auctionsPerTypeAndStatus = 20;
-const bidsNumber = 600;
+  const usersByRole = Object.fromEntries(
+    Object.values(RoleName).map(
+      (role): [RoleName, { userId: string; username: string; }[]] => [role, []]
+    )
+  ) as Record<RoleName, { userId: string; username: string; }[]>;
 
-function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0UsernameMaxLength): string {
-  let username = faker.internet.username();
-  if (username.length < minLength) {
-    username += faker.string.alphanumeric(minLength - username.length);
+  for (const { userId, username, role } of users) {
+    usersByRole[role].push({ userId, username });
   }
-  if (username.length > maxLength) {
-    username = username.slice(0, maxLength);
-  }
-  return username;
+
+  return usersByRole;
 }
 
-function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: Date; } {
+export async function generateUsersArray(
+  usersByRole: Record<RoleName, { userId: string, username: string; }[]>,
+  role: RoleName
+) {
+  const array: User[] = [];
+  for (const userData of usersByRole[role]) {
+    try {
+      array.push(await userRepository.create({ ...userData, role }));
+    } catch (err) {
+      logger.error(createSequelizeError(err, `generateUsersArray`).stack);
+      continue;
+    }
+  }
+  return array;
+}
+
+function computeDatesForStatus(
+  status: AuctionStatus
+): { startsAt: Date; endsAt: Date; } {
+  const tomorrowDate = faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) });
+  const tomorrowDate2 = addInterval(tomorrowDate, faker.number.int({ min: 3, max: 10 }) * HOURS);
+  const now = addInterval(new Date(), 1 * SECONDS);
+  const now2 = addInterval(now, 1 * SECONDS);
+
+  const startsAt = status === AuctionStatus.NotStarted ? tomorrowDate : now;
   switch (status) {
     case AuctionStatus.NotStarted:
-      const startDate = addInterval(new Date(), 24 * HOURS);
-      const startsAt = faker.date.between({ from: startDate, to: new Date(startDate.getTime() + 10 * HOURS) });
-      const endsAt = addInterval(startsAt, faker.number.float({ min: 3, max: 7 }) * HOURS);
-      return {
-        startsAt, // starts tomorrow
-        endsAt, // ends after 3-7 hours from start
-      };
     case AuctionStatus.InProgress:
-      return {
-        startsAt: addInterval(new Date(), 1 * SECONDS), // starts in 1 second
-        endsAt: faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) }), // ends tomorrow
-      };
+      return { startsAt, endsAt: tomorrowDate2 };
     case AuctionStatus.Ended:
-      return {
-        startsAt: addInterval(new Date(), 1 * SECONDS), // starts in 1 second
-        endsAt: addInterval(new Date(), 1 * MINUTES + 1 * SECONDS), // ends in 1 minute
-      };
+    default:
+      return { startsAt, endsAt: now2 };
   }
 }
 
-function buildDutchParams(startsAt: Date, endsAt: Date, startPrice: number) {
-  const durationMs = endsAt.getTime() - startsAt.getTime();
+function computeDutchParams(status: AuctionStatus): {
+  startsAt: Date;
+  reservePrice: number;
+  startPrice: number;
+  decrementPrice: number;
+  decrementInterval: number;
+} {
+  const { startsAt, endsAt } = computeDatesForStatus(status);
 
-  const reservePrice = faker.number.int({ min: 1, max: startPrice - 10 });
+  //duration minima 1 minuto
+  const duration = Math.max(endsAt.getTime() - startsAt.getTime(), 1 * MINUTES);
 
-  const decrementIntervalMin = faker.number.int({ min: 1, max: 30 });
-  const decrementInterval = Math.min(decrementIntervalMin * 60 * 1000, durationMs);
+  const reservePrice = faker.number.int({
+    min: AuctionConstants.minReservePrice,
+    max: AuctionConstants.minReservePrice + 500,
+  });
 
-  const decrementsNeeded = Math.max(Math.floor(durationMs / decrementInterval), 1);
+  //maximum steps 1 for seconds
+  const totalSteps = faker.number.int({ min: 1, max: duration / MINUTES });
+  const decrementInterval = Math.floor(duration / totalSteps);
+  const decrementPrice = faker.number.int({ min: 1, max: 10 });
+  const startPrice = reservePrice + decrementPrice * totalSteps;
 
-  const priceRange = startPrice - reservePrice;
-  const decrementPrice = Math.max(Math.round(priceRange / decrementsNeeded), 1);
-
-  return { decrementPrice, decrementInterval, reservePrice };
+  return { startsAt, reservePrice, startPrice, decrementPrice, decrementInterval };
 }
 
-function buildEnglishAuction(creatorId: string, status: AuctionStatus) {
-  const { startsAt, endsAt } = buildDatesForStatus(status);
-  return {
-    creatorId,
-    startsAt,
-    endsAt,
-    type: AuctionType.English,
-    reservePrice: 100,
-    minimumIncrement: 50,
-    delayBeforeEnding: 10000,
-    description: faker.commerce.productDescription()
-  };
-}
-
-function buildDutchAuction(creatorId: string, status: AuctionStatus) {
-  const { startsAt, endsAt } = buildDatesForStatus(status);
-  const startPrice = 100;
-  const { decrementPrice, decrementInterval, reservePrice } = buildDutchParams(startsAt, endsAt, startPrice);
-
-  return {
-    creatorId,
-    startsAt,
-    type: AuctionType.Dutch,
-    reservePrice,
-    decrementPrice,
-    decrementInterval,
-    startPrice,
-    description: faker.commerce.productDescription()
-  };
-}
-
-function buildFirstPriceAuction(creatorId: string, status: AuctionStatus) {
-  const { startsAt, endsAt } = buildDatesForStatus(status);
-  return {
-    creatorId,
-    startsAt,
-    endsAt,
-    type: AuctionType.FirstPrice,
-    reservePrice: 100,
-    description: faker.commerce.productDescription()
-  };
-}
-
-function buildSecondPriceAuction(creatorId: string, status: AuctionStatus) {
-  const { startsAt, endsAt } = buildDatesForStatus(status);
-  return {
-    creatorId,
-    startsAt,
-    endsAt,
-    type: AuctionType.SecondPrice,
-    reservePrice: 100,
-    description: faker.commerce.productDescription()
-  };
-}
-
-const auctionBuilders: Record<AuctionType, (creatorId: string, status: AuctionStatus) => any> = {
-  [AuctionType.English]: buildEnglishAuction,
-  [AuctionType.Dutch]: buildDutchAuction,
-  [AuctionType.FirstPrice]: buildFirstPriceAuction,
-  [AuctionType.SecondPrice]: buildSecondPriceAuction,
-};
-
-async function generateAuctionsArray(creatorId: string, count: number): Promise<Auction[]> {
-  const auctions: Auction[] = [];
+export async function generateAuctionsArray(length: number, creatorsArray: User[]) {
   const types = Object.values(AuctionType);
   const statuses = Object.values(AuctionStatus);
+  const array: Auction[] = [];
 
-  for (const type of types) {
-    for (const status of statuses) {
-      for (let i = 0; i < count; i++) {
-        const auction = await auctionRepository.create(auctionBuilders[type](creatorId, status));
-        if (type === AuctionType.Dutch && status === AuctionStatus.Ended) {
-          bidRepository.create({
-            userId: "auth0|6a3fd852b4e640e31f20bbd2",
-            auctionId: auction.id,
-            bidPrice: auction.reservePrice
-          });
+  for (let type of types) {
+    for (let status of statuses) {
+      for (let i = 0; i < length; i++) {
+        const index = faker.number.int({ min: 0, max: creatorsArray.length - 1 });
+        if (!creatorsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for creatorId" });
+        const creatorId = creatorsArray[index].id;
+        const basePayload = {
+          creatorId,
+          reservePrice: AuctionConstants.minReservePrice,
+          description: faker.commerce.productDescription(),
+          type,
+        };
+
+        let payload: CreationAttributes<Auction> | null = null;
+
+        switch (type) {
+          case AuctionType.English:
+            payload = {
+              ...basePayload,
+              ...computeDatesForStatus(status),
+              minimumIncrement: faker.number.int({ min: 1, max: 10 }),
+            };
+            break;
+
+          case AuctionType.Dutch: {
+            payload = {
+              ...basePayload,
+              ...computeDutchParams(status),
+            };
+            break;
+          }
+
+          case AuctionType.FirstPrice:
+          case AuctionType.SecondPrice:
+          default:
+            payload = {
+              ...basePayload,
+              ...computeDatesForStatus(status),
+            };
+            break;
         }
-        auctions.push(auction);
+
+        const result = AuctionSchema.safeParse(payload);
+
+        if (!result.success) {
+          const error = createZodError(result.error, 'initDb');
+          logger.error(`[${error.name}(${error.status})] ${error.message}`);
+          logger.error(result.error);
+          continue;
+        }
+
+        array.push(await auctionService.createAuction(result.data));
       }
     }
   }
-
-  return auctions;
-}
-
-async function generateBidsArray(length: number = bidsNumber, auctions: Auction[]): Promise<Bid[]> {
-  const bids: Bid[] = [];
-  const msToEndResults = await Promise.all(
-    auctions.map(a => auctionService.getMsToEnd(a))
-  );
-
-  let array: Auction[] = auctions.filter((auction, index) =>
-    !(auction.type === AuctionType.Dutch && msToEndResults[index]! < 0)
-  );
-  for (let i = 0; i < length; i++) {
-    if (auctions.length <= 0) { throw new Error("auction array is empty"); };
-    try {
-      const auction = array[Math.floor(Math.random() * array.length)];
-      const bid = await bidRepository.create({
-        userId: "auth0|6a3fd852b4e640e31f20bbd2",
-        bidPrice: faker.number.int({ min: 100, max: 400 }),
-        auctionId: auction?.id,
-      });
-      bids.push(bid);
-      //only english auctions can get more than one bids for every users.
-      //We are making bids from only bid participant user.
-      if (auction && auction.type !== AuctionType.English) {
-        array = array.filter(a => a.id !== auction!.id);
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        logger.error(err.message);
-        continue;
-      }
-    }
-  }
-  return bids;
+  return array;
 }
 
 export async function initDb() {
+  //Initialize database
   if (env.NODE_ENV != NodeEnv.Development) {
     await sequelize.sync();
     return;
@@ -200,45 +173,16 @@ export async function initDb() {
 
   await sequelize.sync({ force: true });
 
-  let auctions: Auction[] = [];
+  const usersByRole = loadUsersByRole();
 
-  //User creation
-  const admin = await User.create({
-    id: "auth0|6a3fd812dbd594d590a92367",
-    username: "admin",
-    tokens: NewUserTokens[RoleName.Admin]
-  });
+  //Generates statics users only in the DataBase
+  const admins = await generateUsersArray(usersByRole, RoleName.Admin);
+  const bidCreators = await generateUsersArray(usersByRole, RoleName.BidCreator);
+  const bidParticipants = await generateUsersArray(usersByRole, RoleName.BidParticipant);
 
-  const bidCreator = await User.create({
-    id: "auth0|6a3fd835b4e640e31f20bbc4",
-    username: "bid-creator",
-    tokens: NewUserTokens[RoleName.BidCreator]
-  });
+  //Generates auctions
+  const auctions = await generateAuctionsArray(1, bidCreators);
 
-  const bidParticipant = await User.create({
-    id: "auth0|6a3fd852b4e640e31f20bbd2",
-    username: "bid-participant",
-    tokens: NewUserTokens[RoleName.BidParticipant]
-  });
-
-  try {
-
-  } catch (err) {
-    deleteStaleUsers();
-    if (err instanceof Error)
-      logger.error(`user creations crashed: ${err.message}`);
-  }
-
-  auctions = await generateAuctionsArray(bidCreator.id, auctionsPerTypeAndStatus);
-  logger.info(`${auctions.length} auctions created`);
-
-  try {
-    const bids = await generateBidsArray(bidsNumber, auctions);
-    logger.info(`${bids.length} bids created`);
-  } catch (err) {
-    if (err instanceof Error)
-      logger.error(`bid creations crashed: ${err.message}`);
-  }
-
-  // deleteStaleUsers();
+  //Generates bids
+  return;
 }
