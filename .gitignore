@@ -140,3 +140,5 @@ package-lock.json
 # Postman
 *postman_environment.json
 .prettierrc
+
+seeds/

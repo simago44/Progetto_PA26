@@ -240,5 +240,5 @@ export async function initDb() {
       logger.error(`bid creations crashed: ${err.message}`);
   }
 
-  await deleteStaleUsers();
+  // deleteStaleUsers();
 }

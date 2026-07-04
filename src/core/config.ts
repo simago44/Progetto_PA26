@@ -39,7 +39,8 @@ const configSchema = z.object({
   CONSOLE_LOG_LEVEL: logLevel.default("debug"),
   FILE_LOG_LEVEL: logLevel.default("info"),
   LOG_FORMAT: logFormat,
-  NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development)
+  NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
+  USERS_BY_ROLE_SEED_PATH: z.string()
 })
 
 const result = configSchema.safeParse(process.env);
