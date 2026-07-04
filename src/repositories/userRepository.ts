@@ -5,6 +5,7 @@ import { createAuth0Error, createSequelizeError } from "../factory/errorFactory.
 import redis from "../integrations/redis.ts";
 import type { Transaction } from "sequelize";
 import { NewUserTokens, type RoleName } from "../enums/enums.ts";
+import type { CreateUserAttributeProfileResponseContent } from "auth0/legacy";
 
 class UserRepository {
   private idKey(userId: string): string {
@@ -21,36 +22,29 @@ class UserRepository {
     ]);
   }
 
-  public async create(username: string, password: string, role: RoleName): Promise<User> {
-    let user_id: string;
-
-    try {
-      const user = await managementClient.users.create({
-        connection: env.AUTH0_CONNECTION,
-        username,
-        password
-      });
-      user_id = user.user_id as string;
-      await managementClient.users.roles.assign(user_id, {
-        roles: [Auth0Roles[role].id]
-      });
-    } catch (err) {
-      throw createAuth0Error(err);
-    }
-
-    let user: User;
-
-    try {
-      user = await User.create({ id: user_id, username, tokens: NewUserTokens[role] });
-    } catch (err) {
-      // Local save failed after the Auth0 user already exists — clean up
-      // to avoid an orphaned Auth0 account with no matching local record.
-      await managementClient.users.delete(user_id).catch(() => { });
-      throw createSequelizeError(err, "createUser");
-    }
-
+  public async create(
+    { userId, username, role }: { userId: string, username: string, role: RoleName; }
+  ): Promise<User> {
+    const user = await User.create({ id: userId, username, tokens: NewUserTokens[role] });
     await this.cacheUser(user);
     return user;
+  }
+
+  public async createAuth0User(
+    { username, password, role }: { username: string, password: string, role: RoleName; }
+  ): Promise<string> {
+    let userId: string;
+
+    const user = await managementClient.users.create({
+      connection: env.AUTH0_CONNECTION,
+      username,
+      password
+    });
+    userId = user.user_id as string;
+    await managementClient.users.roles.assign(userId, {
+      roles: [Auth0Roles[role].id]
+    });
+    return userId;
   }
 
   public async findByPk(userId: string): Promise<User | null> {
@@ -126,6 +120,10 @@ class UserRepository {
     } catch (err) {
       throw createSequelizeError(err, "deleteUser");
     }
+  }
+
+  public async deleteFromAuth0(userId: string) {
+    return await managementClient.users.delete(userId).catch(() => { });
   }
 }
 
