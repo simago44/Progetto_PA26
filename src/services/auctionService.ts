@@ -13,7 +13,6 @@ import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 export interface AuctionFilters {
   creatorIds?: string[];
-  winnerIds?: string[];
   statuses?: AuctionStatus[];
   types?: AuctionType[];
   startDate?: Date;
@@ -49,9 +48,6 @@ class AuctionService {
 
     if (filters.creatorIds) {
       andConditions.push({ creatorId: { [Op.in]: filters.creatorIds } });
-    }
-    if (filters.winnerIds) {
-      andConditions.push({ winnerId: { [Op.in]: filters.winnerIds } });
     }
     if (filters.types) {
       andConditions.push({ type: { [Op.in]: filters.types } });
@@ -104,18 +100,14 @@ class AuctionService {
     return this.formatAuctions(auctions);
   }
 
-  public async getWalletReport(filters: Required<Pick<AuctionFilters, 'winnerIds' | 'startDate' | 'endDate'>>) {
+  public async getWalletReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
+    filters.won = true;
     const where = this.buildFilters(filters);
     return await auctionRepository.getTotalFinalPrice(where);
   }
 
   public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {
-    const parsedFilters: AuctionFilters = {
-      types: filters.types,
-      startDate: filters.startDate,
-      endDate: filters.endDate,
-    };
-    const finalFilters = this.buildFilters(parsedFilters);
+    const finalFilters = this.buildFilters(filters);
     const participantsPerAuction = await auctionRepository.getParticipantsPerAuction(finalFilters);
 
     // if filters.types is null, we replace it with all the types (see below)
@@ -172,7 +164,7 @@ class AuctionService {
   }
 
   public async getMsToEnd(auction: Auction): Promise<number> {
-    const bids = await bidRepository.findAuctionBids(auction.id);
+    const winningBid = await this.getWinningBid(auction.id);
     let finishTime: Date = new Date();
 
     switch (auction.type) {
@@ -180,48 +172,26 @@ class AuctionService {
         if (auction.delayBeforeEnding == null) throw createAuctionMissingFieldError(auction, 'delayBeforeEnding');
         if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
 
-        if (bids.length === 0) finishTime = auction.endsAt;
-        else {
-          const lastBid = bids.reduce((latest, bid) =>
-            bid.createdAt > latest.createdAt ? bid : latest,
-          );
-          const lastBidDeadline = addInterval(lastBid.createdAt, auction.delayBeforeEnding);
-          finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
-        }
-        return finishTime.getTime() - new Date().getTime(); // negative if past
+        if (winningBid == null) return auction.endsAt.getTime() - new Date().getTime();
+
+        const lastBidDeadline = addInterval(winningBid.bid.createdAt, auction.delayBeforeEnding);
+        finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
+        
+        return finishTime.getTime() - new Date().getTime();
 
       case AuctionType.Dutch:
         if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
         if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
         if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
 
-        if (bids.length > 0 && bids[0]) return bids[0].createdAt.getTime() - new Date().getTime();
+        if (winningBid) return winningBid.bid.createdAt.getTime() - new Date().getTime();
 
         const priceRange = auction.startPrice - auction.reservePrice;
-        //We use ceil because the last step will be less than the minimum price
+        // We use ceil because the last step will be less than the minimum price
         const decrementsNeeded = Math.ceil(priceRange / auction.decrementPrice);
         const decrementInterval = auction.decrementInterval;
         const duration = decrementsNeeded * decrementInterval;
         finishTime = addInterval(auction.startsAt, duration);
-
-        // TODO: necessary??
-        /*
-        //If the auction has not started yet, it cannot be ended
-        if (this.getAuctionStatus(auction) === AuctionStatus.NotStarted) {
-          return finishTime.getTime() - new Date().getTime();
-        }
-
-        // Current price
-        const elapsed = new Date().getTime() - auction.startsAt.getTime();
-        const decrements = Math.floor(
-          elapsed / (auction.decrementInterval! * 60 * 1000),
-        );
-        const currentPrice = auction.reservePrice - decrements * auction.decrementPrice;
-
-        // If the current price is less than startPrice,
-        // The auction is ended in not selled case
-        if (currentPrice <= auction.reservePrice) return -1;
-        */
 
         return finishTime.getTime() - new Date().getTime();
 
@@ -229,7 +199,7 @@ class AuctionService {
       case AuctionType.SecondPrice:
         if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
 
-        return auction.endsAt.getTime() - new Date().getTime(); // negative if past
+        return auction.endsAt.getTime() - new Date().getTime();
     }
   }
 

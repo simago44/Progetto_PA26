@@ -24,7 +24,7 @@ class UserController {
 
   public async getAuctionsReport(_req: Request, res: Response, _next: NextFunction) {
     const filters = res.locals.filters;
-    filters.winnerIds = [res.locals.userId];
+    filters.participantId = res.locals.userId;
 
     const report = await auctionService.getAuctionReport(filters);
     res.status(StatusCodes.OK).json(report);
