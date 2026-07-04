@@ -7,7 +7,7 @@ const redis = await createClient({
 }).on("error", (err) => logger.error("Redis Client Error", err))
   .connect();
 
-export async function initRedis() {
+export async function initRedis(): Promise<void> {
   if (env.NODE_ENV == NodeEnv.Development) {
     await redis.flushAll();
   }

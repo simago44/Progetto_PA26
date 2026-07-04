@@ -1,5 +1,5 @@
 // middleware/errorHandler.ts
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 import { AppError, Errors } from "../factory/errorFactory.ts";
 import logger from "../core/logger.ts";
 import { StatusCodes } from "http-status-codes";
@@ -8,7 +8,7 @@ import { StatusCodes } from "http-status-codes";
  * Global Express error handler middleware.
  * Responds with the HTTP status and message from the `Error`.
  */
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
+export function errorHandler(err: Error, _req: Request, res: Response) {
   // Catch json parsing errors
   if (err instanceof SyntaxError && 'status' in err &&
       err.status === StatusCodes.BAD_REQUEST && 'body' in err

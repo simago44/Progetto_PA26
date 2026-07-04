@@ -41,7 +41,7 @@ app.use("/users", userRoutes);
 app.use("/auctions", auctionRoutes);
 app.use("/auctions", bidRoutes);
 
-app.use((req, res, next) => {
+app.use((req) => {
   throw new Errors.RouteNotFoundError({ path: req.path });
 });
 

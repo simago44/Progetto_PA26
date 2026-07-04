@@ -1,11 +1,11 @@
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { walletUpdatedSuccessfully_message } from "../factory/messageStrings.ts";
 import userService from "../services/userService.ts";
 import auctionService from "../services/auctionService.ts";
+import { SuccessMesages } from "../factory/messageStrings.ts";
 
 class UserController {
-  public async getWallet(_req: Request, res: Response, _next: NextFunction) {
+  public async getWallet(_req: Request, res: Response) {
     const userId = res.locals.userId as string;
 
     const tokens = await userService.getWallet(userId);
@@ -13,16 +13,16 @@ class UserController {
     res.status(StatusCodes.OK).json({ tokens });
   }
 
-  public async topUpWallet(_req: Request, res: Response, next: NextFunction) {
+  public async topUpWallet(_req: Request, res: Response) {
     const userId = res.locals.userId as string;
     const tokens = res.locals.tokens as number;
 
     await userService.topUpWallet(userId, tokens);
 
-    res.status(StatusCodes.OK).json({ message: walletUpdatedSuccessfully_message });
+    res.status(StatusCodes.OK).json({ message: SuccessMesages.WalletUpdatedSuccessfully });
   }
 
-  public async getAuctionsReport(_req: Request, res: Response, _next: NextFunction) {
+  public async getAuctionsReport(_req: Request, res: Response) {
     const filters = res.locals.filters;
     filters.participantId = res.locals.userId;
 
@@ -30,7 +30,7 @@ class UserController {
     res.status(StatusCodes.OK).json(report);
   }
 
-  public async getWalletReport(_req: Request, res: Response, next: NextFunction) {
+  public async getWalletReport(_req: Request, res: Response) {
     const filters = res.locals.filters;
     filters.participantId = res.locals.userId;
 

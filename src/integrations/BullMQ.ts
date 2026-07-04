@@ -9,9 +9,9 @@ export const connection = createNodeRedisClient(redis);
 
 const auctionQueue = new Queue(queueName, { connection });
 
-const myWorker = new Worker(queueName, async job => {
+new Worker(queueName, async job => {
   switch (job.name) {
-    case closeAuctionJobName:
+    case closeAuctionJobName: {
       // TODO
       const auctionId = job.data.auctionId as string;
 
@@ -27,10 +27,11 @@ const myWorker = new Worker(queueName, async job => {
 
       await auctionService.closeAuction(auction, msToEnd);
       break;
+    }
   }
 }, { connection });
 
-export async function createCloseAuctionJob(auction: Auction) {
+export async function createCloseAuctionJob(auction: Auction): Promise<void> {
   await auctionQueue.remove(`close-auction-${auction.id}`);
   await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
     delay: await auctionService.getMsToEnd(auction),
@@ -42,7 +43,7 @@ export async function createCloseAuctionJob(auction: Auction) {
   });
 }
 
-export async function initBullMQ() {
+export async function initBullMQ(): Promise<void> {
   const auctions = await auctionRepository.findAll();
   auctions.forEach(async (auction) => {
     if (auction.endedAt) return;

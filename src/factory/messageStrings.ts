@@ -5,9 +5,13 @@
 import type { AuctionType } from "../enums/enums.ts";
 
 // Success
-export const userCreatedSuccessfully_message: string = "User created successfully";
-export const walletUpdatedSuccessfully_message: string = "Wallet updated successfully";
-export const reservePriceUpdatedSuccessfully_message: string = "Reserve price updated successfully";
+export const SuccessMesages = {
+  UserCreatedSyccessfully: ({ userId }: { userId?: string }) => {
+    return `User with id '${userId}' created successfully`;
+  },
+  WalletUpdatedSuccessfully: "Wallet updated successfully",
+  ReservePriceUpdatedSuccessfully: "Reserve price updated successfully"
+}
 
 export const ErrorMessages = {
   MalformedPayload: "Bad Request - Malformed payload",

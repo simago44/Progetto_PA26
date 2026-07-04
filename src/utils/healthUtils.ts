@@ -1,13 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import sequelize from '../integrations/sequelize.ts';
 import env from "../core/config.ts";
-import { AuthenticationClient } from "auth0";
-
-const authClient = new AuthenticationClient({
-  domain: env.AUTH0_DOMAIN,
-  clientId: env.AUTH0_CLIENT_ID,
-  clientSecret: env.AUTH0_CLIENT_SECRET,
-});
+import { authenticationClient } from "../integrations/auth0.ts";
 
 /**
  * Verifies Auth0 connectivity and credential validity
@@ -16,7 +10,7 @@ const authClient = new AuthenticationClient({
  * @throws {Error} If Auth0 is unreachable or credentials are invalid
  */
 const checkAuth0 = async () => {
-  await authClient.oauth.clientCredentialsGrant({
+  await authenticationClient.oauth.clientCredentialsGrant({
     audience: env.AUTH0_AUDIENCE,
   });
   return 'ok';

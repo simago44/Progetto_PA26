@@ -40,7 +40,7 @@ export async function getAuthenticationToken(username: string, password: string)
   return user.data.access_token;
 }
 
-export async function deleteStaleUsers() {
+export async function deleteStaleUsers(): Promise<void> {
   const auth0Users = (await managementClient.users.list()).data;
   const dbUsers = await userRepository.findAllIds();
 

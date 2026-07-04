@@ -27,7 +27,7 @@ type DetailsFn<T> = (params: T) => unknown;
 type Details<T> = string | object | DetailsFn<T>;
 
 // Args for constructors. Depends if the error needs params or not (fixed string, function without params)
-type CtorArgs<T> = T extends void ? [] : [T];
+type CtorArgs<T> = [T] extends [void] ? [] : [T];
 
 function defineAppErrorClass<T = void>(
   statusCode: number,
@@ -60,11 +60,11 @@ type ErrorSpec<T> = {
 type ParamsOf<S> = S extends ErrorSpec<infer T> ? (unknown extends T ? void : T) : never;
 type AppErrorClass<T> = new (...args: CtorArgs<T>) => AppError;
 
-function buildErrors<M extends Record<string, ErrorSpec<any>>>(specs: M) {
+function buildErrors<M extends Record<string, ErrorSpec<never>>>(specs: M) {
   const result = {} as { [K in keyof M]: AppErrorClass<ParamsOf<M[K]>> };
   (Object.keys(specs) as (keyof M)[]).forEach((key) => {
     const { status, message, details } = specs[key]!;
-    result[key] = defineAppErrorClass(status, key as string, message, details) as any;
+    result[key] = defineAppErrorClass(status, key as string, message, details);
   });
   return result;
 }
@@ -132,13 +132,14 @@ export function createSequelizeError(error: unknown, form: string): AppError {
  * 
  * @param error - The error thrown by the Auth0 SDK
  */
-export function createAuth0Error(error: any): AppError {
-  if (error?.statusCode && error?.body?.message) {
-    return new AppError(error.statusCode, error.body.message, error.constructor?.name);
+export function createAuth0Error(error: unknown): AppError {
+  if (typeof error === "object" && error !== null && "statusCode" in error && "body" in error) {
+    const err = error as { statusCode: unknown; body?: { message?: string }; constructor?: { name?: string } };
+    return new AppError(Number(err.statusCode), err.body?.message ?? "Unknown error", err.constructor?.name ?? "Auth0Error");
   }
 
   if (error instanceof Error) {
-    const statusCode = (error as any)?.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    const statusCode = "statusCode" in error ? Number(error.statusCode) : StatusCodes.INTERNAL_SERVER_ERROR;
     return new AppError(statusCode, error.message, error.name);
   }
 

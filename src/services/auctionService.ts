@@ -1,6 +1,6 @@
 import { Op, type CreationAttributes, type WhereOptions } from "sequelize";
 import auctionRepository from "../repositories/auctionRepository.ts";
-import { filter, isNil, omit, omitBy } from "lodash-es";
+import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval, HOURS } from "../utils/dateUtils.ts";
 import logger from "../core/logger.ts";
 import sequelize from "../integrations/sequelize.ts";
@@ -136,19 +136,13 @@ class AuctionService {
     return auctionRepository.create(data);
   }
 
-  public async formatAuctions(auctions: Auction[]): Promise<any[]> {
-    const formattedAuctions = await Promise.all(
+  public async formatAuctions(auctions: Auction[]): Promise<Record<string, unknown>[]> {
+    return Promise.all(
       auctions.map(async (auction) => {
-        let cleaned: any = auction;
-        cleaned.endsAt = await this.getEndTime(auction);
-
-        cleaned = omitBy(auction.dataValues, isNil);
-        cleaned = omit(cleaned, ["createdAt", "updatedAt"]);
-
-        return cleaned;
+        const endsAt = await this.getEndTime(auction);
+        return omit(omitBy({ ...auction.dataValues, endsAt }, isNil), ["createdAt", "updatedAt"]);
       })
     );
-    return formattedAuctions;
   }
 
   public async getEndTime(auction: Auction): Promise<Date> {
@@ -165,21 +159,21 @@ class AuctionService {
 
   public async getMsToEnd(auction: Auction): Promise<number> {
     const winningBid = await this.getWinningBid(auction.id);
-    let finishTime: Date = new Date();
 
     switch (auction.type) {
-      case AuctionType.English:
+      case AuctionType.English: {
         if (auction.delayBeforeEnding == null) throw createAuctionMissingFieldError(auction, 'delayBeforeEnding');
         if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
 
         if (winningBid == null) return auction.endsAt.getTime() - new Date().getTime();
 
         const lastBidDeadline = addInterval(winningBid.bid.createdAt, auction.delayBeforeEnding);
-        finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
-        
-        return finishTime.getTime() - new Date().getTime();
+        const finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
 
-      case AuctionType.Dutch:
+        return finishTime.getTime() - new Date().getTime();
+      }
+
+      case AuctionType.Dutch: {
         if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
         if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
         if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
@@ -191,9 +185,10 @@ class AuctionService {
         const decrementsNeeded = Math.ceil(priceRange / auction.decrementPrice);
         const decrementInterval = auction.decrementInterval;
         const duration = decrementsNeeded * decrementInterval;
-        finishTime = addInterval(auction.startsAt, duration);
+        const finishTime = addInterval(auction.startsAt, duration);
 
         return finishTime.getTime() - new Date().getTime();
+      }
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
@@ -220,7 +215,7 @@ class AuctionService {
     return { bid, bidPrice: finalPrice };
   }
 
-  public async closeAuction(auction: Auction, msToEnd: number) {
+  public async closeAuction(auction: Auction, msToEnd: number): Promise<void> {
     // if it was already closed or is not ended yet, we return
     if (auction.endedAt || msToEnd > 0) return;
 
@@ -245,7 +240,7 @@ class AuctionService {
   };
 
 
-  public async updateAuctionReservePrice(auctionId: number, reservePrice: number) {
+  public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 

@@ -1,11 +1,10 @@
 import env from "../core/config.ts";
 import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
-import { createAuth0Error, createSequelizeError } from "../factory/errorFactory.ts";
+import { createSequelizeError } from "../factory/errorFactory.ts";
 import redis from "../integrations/redis.ts";
 import type { Transaction } from "sequelize";
 import { NewUserTokens, type RoleName } from "../enums/enums.ts";
-import type { CreateUserAttributeProfileResponseContent } from "auth0/legacy";
 
 class UserRepository {
   private idKey(userId: string): string {
@@ -33,14 +32,13 @@ class UserRepository {
   public async createAuth0User(
     { username, password, role }: { username: string, password: string, role: RoleName; }
   ): Promise<string> {
-    let userId: string;
 
     const user = await managementClient.users.create({
       connection: env.AUTH0_CONNECTION,
       username,
       password
     });
-    userId = user.user_id as string;
+    const userId = user.user_id as string;
     await managementClient.users.roles.assign(userId, {
       roles: [Auth0Roles[role].id]
     });
@@ -122,7 +120,7 @@ class UserRepository {
     }
   }
 
-  public async deleteFromAuth0(userId: string) {
+  public async deleteFromAuth0(userId: string): Promise<void> {
     return await managementClient.users.delete(userId).catch(() => { });
   }
 }

@@ -33,27 +33,6 @@ function generateUsername(minLength = auth0UsernameMinLength, maxLength = auth0U
   return username;
 }
 
-async function generateUsersArray(
-  length: number,
-  logString?: string,
-  loggerMethod?: (_: string) => {}
-): Promise<User[]> {
-  const users: User[] = [];
-  if (loggerMethod && logString) loggerMethod(`generating ${length} ${logString}...`);
-  for (let i = 0; i < length; i++) {
-    const username: string = generateUsername();
-    logger.debug(`creating user with username: ${username}`);
-    const user = await userRepository.create(
-      username,
-      "Password1@",
-      RoleName.BidParticipant
-    );
-    users.push(user);
-  }
-  if (loggerMethod && logString) loggerMethod(`${length} ${logString} created`);
-  return users;
-}
-
 function buildDatesForStatus(status: AuctionStatus): { startsAt: Date; endsAt: Date; } {
   switch (status) {
     case AuctionStatus.NotStarted:
@@ -243,9 +222,6 @@ export async function initDb() {
   });
 
   try {
-    const bidParticipants = await generateUsersArray(bidParticipantsLength, "bid participants", logger.info);
-    const bidCreators = await generateUsersArray(bidCreatorsLength, "bid creators", logger.info);
-    const admins = await generateUsersArray(adminsLength, "bid participants", logger.info);
 
   } catch (err) {
     deleteStaleUsers();

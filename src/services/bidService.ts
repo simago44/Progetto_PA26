@@ -12,12 +12,10 @@ import userService from "./userService.ts";
 import { AuctionType } from "../enums/enums.ts";
 
 class BidService {
-  public async formatBids(bids: Bid[]): Promise<any[]> {
+  public async formatBids(bids: Bid[]): Promise<Record<string, unknown>[]> {
     const formattedAuctions = await Promise.all(
       bids.map(async (bid) => {
-        let cleaned = omit(bid.dataValues, ["updatedAt"]);
-
-        return cleaned;
+        return omit(bid.dataValues, ["updatedAt"]);
       })
     );
     return formattedAuctions;
@@ -47,7 +45,7 @@ class BidService {
     return createdBid;
   }
 
-  public async getAuctionBids(auctionId: number) {
+  public async getAuctionBids(auctionId: number): Promise<Record<string, unknown>[]> {
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
@@ -59,12 +57,12 @@ class BidService {
     return this.formatBids(bids);
   }
 
-  public async checkIsBidValid(bid: Bid, auction: Auction, user: User) {
+  public async checkIsBidValid(bid: Bid, auction: Auction, user: User): Promise<void> {
     const auctionMsToEnd = await auctionService.getMsToEnd(auction);
     if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
 
     switch (auction.type) {
-      case AuctionType.English:
+      case AuctionType.English: {
         if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
 
         const winningBid = await auctionService.getWinningBid(auction.id);
@@ -81,15 +79,17 @@ class BidService {
           }
         }
         break;
+      }
 
       case AuctionType.Dutch:
         break;
 
       case AuctionType.FirstPrice:
-      case AuctionType.SecondPrice:
+      case AuctionType.SecondPrice: {
         const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id);
         if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
         break;
+      }
     }
 
     const realUserTokens = await userService.getRealUserTokens(user);
