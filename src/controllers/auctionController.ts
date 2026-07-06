@@ -1,42 +1,17 @@
 import type { Request, Response } from "express";
 import auctionService from "../services/auctionService.ts";
 import { StatusCodes } from "http-status-codes";
-import { SuccessMesages } from "../factory/messageStrings.ts";
 import type { CreationAttributes } from "sequelize";
 import type { Auction } from "../models/Auction.ts";
 import type { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 class AuctionController {
   /**
-   * Update an auction reserve price from the validated payload on `res.locals`.
-   * 
-   * `res.locals.auctionId` must be a validated `number`
-   * 
-   * `res.locals.reservePrice` must be a validated `number`
-   * 
-   * Returns `200 OK` with the list of auctions
-   * 
-   * @param _req Unused request object.
-   * @param res Response object.
-   */
-  public async getAuctions(
-    _req: Request,
-    res: Response<unknown, { creatorIds: string[], statuses: AuctionStatus[], types: AuctionType[] }>
-  ) {
-    const auctions = await auctionService.getAuctions(res.locals);
-
-    res.status(StatusCodes.OK).json({ auctions: await auctionService.formatAuctions(auctions) });
-  }
-
-  /**
    * Creates an auction from the validated payload on `res.locals`.
    * 
-   * `res.locals.auction` is the new auction to create
+   * `res.locals.auction` is the new auction to create.
    * 
    * Returns `201 Created` with the ID of the created auction.
-   * 
-   * @param _req Unused request object.
-   * @param res Response object.
    */
   public async createAuction(
     _req: Request,
@@ -49,16 +24,54 @@ class AuctionController {
   }
 
   /**
+   * Get auctions filtered by the validated payload on `res.locals`.
+   * 
+   * `res.locals.filters` is the object containing the filters applied to the search.
+   * 
+   * The auctions can be filtered by:
+   *  - `creatorIds`: auction creators IDs;
+   *  - `statuses`: auction's status (not-started, in-progress, ended);
+   *  - `types`: auction's type (english, dutch, first-price, second-price).
+   * 
+   * Returns `200 OK` with the list of auctions.
+   */
+  public async getAuctions(
+    _req: Request,
+    res: Response<unknown, { filters: { creatorIds: string[], statuses: AuctionStatus[], types: AuctionType[] } }>
+  ) {
+    const auctions = await auctionService.getAuctions(res.locals.filters);
+
+    res.status(StatusCodes.OK).json({ auctions: await auctionService.formatAuctions(auctions) });
+  }
+  
+  /**
+   * Get stats of the auctions grouped by type and filtered by the validated payload on `res.locals`.
+   * 
+   * `res.locals.filters` is the object containing the filters applied to the search.
+   * 
+   * The auctions can be filtered by:
+   *  - `types`: auction's type (english, dutch, first-price, second-price);
+   *  - `startDate`: auction's start date;
+   *  - `endDate`: auction's end date.
+   * 
+   * Returns `200 OK` with the list of auctions.
+   */
+  public async getAuctionStats(
+    _req: Request,
+    res: Response<unknown, { filters: { types: AuctionType[], startDate: Date, endDate: Date } }>
+  ) {
+    const stats = await auctionService.getAuctionStats(res.locals.filters);
+    res.status(StatusCodes.OK).json(stats);
+  }
+
+  /**
    * Update an auction reserve price from the validated payload on `res.locals`.
    * 
-   * `res.locals.auctionId` is the ID of the auction to update
-   * 
-   * `res.locals.reservePrice` is the new reservePrice
+   * 'res.locals' must contain:
+   *  - `auctionId`: is the ID of the auction to update.
+   *  - `reservePrice`: is the new reservePrice.
    * 
    * Returns `200 OK`.
-   * 
-   * @param _req Unused request object.
-   * @param res Response object.
    */
   public async updateAuctionReservePrice(
     _req: Request,
@@ -69,12 +82,7 @@ class AuctionController {
 
     await auctionService.updateAuctionReservePrice(auctionId, reservePrice);
 
-    res.status(StatusCodes.OK).json({ message: SuccessMesages.ReservePriceUpdatedSuccessfully });
-  }
-
-  public async getAuctionStats(_req: Request, res: Response) {
-    const stats = await auctionService.getAuctionStats(res.locals.filters);
-    res.status(StatusCodes.OK).json(stats);
+    res.status(StatusCodes.OK).json({ });
   }
 }
 

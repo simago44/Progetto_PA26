@@ -101,7 +101,8 @@ function validateCredentials(zodObject: z.ZodObject, form: string) {
     if (!result.success) throw createZodError(result.error, form);
 
     // Overwrite req.body with the safely parsed/sanitized fields
-    res.locals = result.data;
+    res.locals.username = result.data.username;
+    res.locals.password = result.data.password;
 
     next();
   };

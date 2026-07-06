@@ -17,13 +17,11 @@ import auctionService from "../services/auctionService.ts";
 import { deleteStaleUsers } from "../integrations/auth0.ts";
 import bidService from "../services/bidService.ts";
 
-const AUCTIONS_MUL = 5;
-const MIN_AUCTIONS = 1 * AUCTIONS_MUL
-const MAX_AUCTIONS = 3 * AUCTIONS_MUL
+const MIN_AUCTIONS = 5;
+const MAX_AUCTIONS = 20;
 
-const BIDS_MUL = 3;
-const MIN_BIDS = 1 * BIDS_MUL;
-const MAX_BIDS = 4 * BIDS_MUL;
+const MIN_BIDS = 5;
+const MAX_BIDS = 20;
 
 const SeedUserSchema = z.object({
   userId: z.string(),
@@ -32,8 +30,8 @@ const SeedUserSchema = z.object({
 });
 const UsersSeedSchema = z.array(SeedUserSchema);
 
-function loadUsersByRole(): Record<RoleName, { userId: string; username: string; }[]> {
-  const raw = readFileSync(env.USERS_BY_ROLE_SEED_PATH, "utf-8");
+function loadUsersByRole(path: string): Record<RoleName, { userId: string; username: string; }[]> {
+  const raw = readFileSync(path, "utf-8");
   const users = UsersSeedSchema.parse(JSON.parse(raw));
 
   const usersByRole = Object.fromEntries(
@@ -275,7 +273,7 @@ export async function initDb() {
 
   await sequelize.sync({ force: true });
 
-  const usersByRole = loadUsersByRole();
+  const usersByRole = loadUsersByRole(env.USERS_BY_ROLE_SEED_PATH);
 
   //Generates statics users only in the DataBase
   await generateUsersArray(usersByRole, RoleName.Admin);

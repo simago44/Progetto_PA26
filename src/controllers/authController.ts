@@ -1,25 +1,42 @@
 import type { Request, Response } from "express";
 import authService from "../services/authService.ts";
 import { StatusCodes } from "http-status-codes";
-import { SuccessMesages } from "../factory/messageStrings.ts";
 
 class AuthController {
-  public async signup(_req: Request, res: Response) {
-    const username = res.locals.username as string;
-    const password = res.locals.password as string;
+  /**
+   * Create an user from validated payload on `res.locals`.
+   * 
+   * 'res.locals' must contain:
+   *  - `username`: the username of the user.
+   *  - `password`: the password of the user.
+   * 
+   * Returns `201 Created` with the ID of the created user.
+   */
+  public async signup(
+    _req: Request,
+    res: Response<unknown, { username: string, password: string }>
+  ) {
+    const userId = await authService.signup(res.locals.username, res.locals.password);
 
-    const userId = await authService.signup(username, password);
-
-    res.status(StatusCodes.CREATED).json({ message: SuccessMesages.UserCreatedSyccessfully({ userId }) });
+    res.status(StatusCodes.CREATED).json({ id: userId });
   };
 
-  public async login(_req: Request, res: Response) {
-    const username = res.locals.username as string;
-    const password = res.locals.password as string;
+  /**
+   * Generate an access token for a user from validated payload on `res.locals`.
+   * 
+   * 'res.locals' must contain:
+   *  - `username`: the username of the user.
+   *  - `password`: the password of the user.
+   * 
+   * Returns `200 OK` with the ID of the logged user and the relative access token.
+   */
+  public async login(
+    _req: Request,
+    res: Response<unknown, { username: string, password: string }>
+  ) {
+    const { userId, accessToken } = await authService.login(res.locals.username, res.locals.password);
 
-    const { userId, accessToken } = await authService.login(username, password);
-
-    res.status(StatusCodes.OK).json({ userId, accessToken });
+    res.status(StatusCodes.OK).json({ id: userId, accessToken });
   };
 }
 

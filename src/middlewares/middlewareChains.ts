@@ -4,18 +4,15 @@ import { validateBidMiddleware, validateGetAuctionBids } from "./bidMiddleware.t
 import { Auth0Permission } from "../enums/enums.ts";
 import { resolveUserIdParam, validateAuctionReportFilters, validateTopUpWallet, validateWalletReportFilters } from "./userMiddlewares.ts";
 
+// Auction
 export const createAuctionMiddlewares = [
   checkJwtAuthorization,
   checkPermission(Auth0Permission.createAuction),
   validateAuctionMiddleware
 ];
 
-export const getAuctionsMiddlewares = [validateGetAuctionsMiddleware];
-
-export const updateAuctionReservePriceMiddlewares = [
-  checkJwtAuthorization,
-  checkPermission(Auth0Permission.updateAuction),
-  validateUpdateReservePriceMiddleware
+export const getAuctionsMiddlewares = [
+  validateGetAuctionsMiddleware
 ];
 
 export const getAuctionStatsMiddlewares = [
@@ -24,20 +21,40 @@ export const getAuctionStatsMiddlewares = [
   validateGetAuctionStatsMiddleware
 ];
 
-export const signupMiddlewares = [validateSignup];
+export const updateAuctionReservePriceMiddlewares = [
+  checkJwtAuthorization,
+  checkPermission(Auth0Permission.updateAuction),
+  validateUpdateReservePriceMiddleware
+];
 
-export const loginMiddlewares = [validateSignup];
 
+// Auth
+export const signupMiddlewares = [
+  validateSignup
+];
+
+export const loginMiddlewares = [
+  validateSignup
+];
+
+
+// Bid
+export const createBidMiddlewares = [
+  checkJwtAuthorization,
+  checkPermission(Auth0Permission.createBid),
+  validateBidMiddleware,
+];
+
+export const getAuctionBidsMiddlewares = [
+  validateGetAuctionBids
+];
+
+
+// User
 export const getWalletMiddlewares = [
   checkJwtAuthorization,
   resolveUserIdParam,
   checkSelfOrAllPermission(Auth0Permission.readCurrentUserWallet, Auth0Permission.readWallets),
-];
-
-export const topUpWalletMiddlewares = [
-  checkJwtAuthorization,
-  checkPermission(Auth0Permission.updateWallets),
-  validateTopUpWallet
 ];
 
 export const getAuctionsReportMiddlewares = [
@@ -54,12 +71,8 @@ export const getWalletReportMiddlewares = [
   validateWalletReportFilters,
 ];
 
-export const createBidMiddlewares = [
+export const topUpWalletMiddlewares = [
   checkJwtAuthorization,
-  checkPermission(Auth0Permission.createBid),
-  validateBidMiddleware,
-];
-
-export const getAuctionBidsMiddlewares = [
-  validateGetAuctionBids
+  checkPermission(Auth0Permission.updateWallets),
+  validateTopUpWallet
 ];

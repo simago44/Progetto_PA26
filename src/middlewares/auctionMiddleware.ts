@@ -90,7 +90,7 @@ export function validateGetAuctionsMiddleware(req: Request, res: Response, next:
   const result = getAuctionsSchema.safeParse(data);
   if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
 
-  res.locals = result.data;
+  res.locals.filters = result.data;
   next();
 }
 
@@ -101,7 +101,8 @@ export function validateUpdateReservePriceMiddleware(req: Request, res: Response
   const result = updateReservePriceMiddleware.safeParse({ auctionId, reservePrice });
   if (!result.success) throw createZodError(result.error, "validateUpdateReservePrice");
 
-  res.locals = result.data;
+  res.locals.auctionId = result.data.auctionId;
+  res.locals.reservePrice = result.data.reservePrice;
   next();
 }
 

@@ -7,50 +7,6 @@ const router = Router();
 /**
  * @openapi
  * /auctions/{auctionId}/bids:
- *   get:
- *     summary: List bids for an auction
- *     description: Returns all bids placed on the given auction.
- *     tags:
- *       - Bids
- *     parameters:
- *       - in: path
- *         name: auctionId
- *         required: true
- *         schema:
- *           type: number
- *         description: ID of the auction.
- *     responses:
- *       200:
- *         description: Bids retrieved successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 bids:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: number
- *                       userId:
- *                         type: string
- *                       auctionId:
- *                         type: number
- *                       bidPrice:
- *                         type: number
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *       404:
- *         description: Auction not found.
- */
-router.get("/:auctionId/bids", getAuctionBidsMiddlewares, bidController.getAuctionBids);
-
-/**
- * @openapi
- * /auctions/{auctionId}/bids:
  *   post:
  *     summary: Create a bid on an auction
  *     description: Places a new bid on the given auction from the validated request payload.
@@ -92,5 +48,49 @@ router.get("/:auctionId/bids", getAuctionBidsMiddlewares, bidController.getAucti
  *         description: Auction not found.
  */
 router.post("/:auctionId/bids", createBidMiddlewares, bidController.createBid);
+
+/**
+ * @openapi
+ * /auctions/{auctionId}/bids:
+ *   get:
+ *     summary: List bids for an auction
+ *     description: Returns all bids placed on the given auction.
+ *     tags:
+ *       - Bids
+ *     parameters:
+ *       - in: path
+ *         name: auctionId
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: ID of the auction.
+ *     responses:
+ *       200:
+ *         description: Bids retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 bids:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       userId:
+ *                         type: string
+ *                       auctionId:
+ *                         type: number
+ *                       bidPrice:
+ *                         type: number
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       404:
+ *         description: Auction not found.
+ */
+router.get("/:auctionId/bids", getAuctionBidsMiddlewares, bidController.getAuctionBids);
 
 export default router;

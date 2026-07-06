@@ -121,6 +121,22 @@ router.get("/", getAuctionsMiddlewares, auctionController.getAuctions);
 
 /**
  * @openapi
+ * /auctions/stats:
+ *   get:
+ *     summary: Get auction statistics
+ *     description: Returns aggregate statistics about auctions, optionally filtered.
+ *     tags:
+ *       - Auctions
+ *     responses:
+ *       200:
+ *         description: Auction statistics retrieved successfully.
+ *       403:
+ *         description: Not authorized to view auction statistics.
+ */
+router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionStats);
+
+/**
+ * @openapi
  * /auctions/{auctionId}/reserve-price:
  *   put:
  *     summary: Update an auction's reserve price
@@ -161,21 +177,5 @@ router.get("/", getAuctionsMiddlewares, auctionController.getAuctions);
  *         description: Auction not found.
  */
 router.put("/:auctionId/reserve-price", updateAuctionReservePriceMiddlewares, auctionController.updateAuctionReservePrice);
-
-/**
- * @openapi
- * /auctions/stats:
- *   get:
- *     summary: Get auction statistics
- *     description: Returns aggregate statistics about auctions, optionally filtered.
- *     tags:
- *       - Auctions
- *     responses:
- *       200:
- *         description: Auction statistics retrieved successfully.
- *       403:
- *         description: Not authorized to view auction statistics.
- */
-router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionStats);
 
 export default router;

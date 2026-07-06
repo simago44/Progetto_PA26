@@ -38,50 +38,6 @@ router.get("/:userId/wallet", getWalletMiddlewares, userController.getWallet);
 
 /**
  * @openapi
- * /users/{userId}/wallet:
- *   put:
- *     summary: Top up a user's wallet
- *     description: Adds tokens to the given user's wallet.
- *     tags:
- *       - Users
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the user.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - tokens
- *             properties:
- *               tokens:
- *                 type: number
- *                 description: Number of tokens to add to the wallet.
- *     responses:
- *       200:
- *         description: Wallet updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *       403:
- *         description: Not authorized to top up this wallet.
- *       404:
- *         description: User not found.
- */
-router.put("/:userId/wallet", topUpWalletMiddlewares, userController.topUpWallet);
-
-/**
- * @openapi
  * /users/{userId}/auctions-report:
  *   get:
  *     summary: Get a user's auctions report
@@ -136,5 +92,49 @@ router.get("/:userId/auctions-report", getAuctionsReportMiddlewares, userControl
  *         description: User not found.
  */
 router.get("/:userId/wallet-report", getWalletReportMiddlewares, userController.getWalletReport);
+
+/**
+ * @openapi
+ * /users/{userId}/wallet:
+ *   put:
+ *     summary: Top up a user's wallet
+ *     description: Adds tokens to the given user's wallet.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tokens
+ *             properties:
+ *               tokens:
+ *                 type: number
+ *                 description: Number of tokens to add to the wallet.
+ *     responses:
+ *       200:
+ *         description: Wallet updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       403:
+ *         description: Not authorized to top up this wallet.
+ *       404:
+ *         description: User not found.
+ */
+router.put("/:userId/wallet", topUpWalletMiddlewares, userController.topUpWallet);
 
 export default router;

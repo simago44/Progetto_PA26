@@ -3,6 +3,36 @@ import type { Request, Response, NextFunction } from "express";
 import { createZodError, Errors } from "../factory/errorFactory.ts";
 import { AuctionType } from "../enums/enums.ts";
 
+export const topUpWalletSchema = z.object({
+  tokens: z.number().positive()
+});
+
+const auctionReportFiltersSchema = z.object({
+  participantId: z.string(),
+  won: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
+  types: z.array(z.enum(AuctionType)).optional(),
+  startDate: z.coerce.date().optional().default(new Date(0)),
+  endDate: z.coerce.date().optional().default(() => new Date()).refine(
+    (date) => date <= new Date(),
+    { message: "endDate cannot be in the future" }
+  ),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "endDate must be after startDate",
+  path: ["endDate"],
+});
+
+const walletReportFiltersSchema = z.object({
+  startDate: z.coerce.date().optional().default(new Date(0)),
+  endDate: z.coerce.date().optional().default(() => new Date()).refine(
+    (date) => date <= new Date(),
+    { message: "endDate cannot be in the future" }
+  ),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "endDate must be after startDate",
+  path: ["endDate"],
+});
+
+
 export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
   if (!req.params.userId) throw new Errors.MalformedPayloadError();
 
@@ -11,10 +41,6 @@ export function resolveUserIdParam(req: Request, res: Response, next: NextFuncti
 
   next();
 };
-
-export const topUpWalletSchema = z.object({
-  tokens: z.number().positive()
-});
 
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
   res.locals.userId = req.params.userId;
@@ -28,24 +54,12 @@ export function validateTopUpWallet(req: Request, res: Response, next: NextFunct
   next();
 }
 
-const auctionReportFiltersQuerySchema = z.object({
-  won: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
-  types: z.array(z.enum(AuctionType)).optional(),
-  startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional().default(() => new Date()).refine(
-    (date) => date <= new Date(),
-    { message: "endDate cannot be in the future" }
-  ),
-}).refine((data) => data.endDate >= data.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
-});
-
 export function validateAuctionReportFilters(req: Request, res: Response, next: NextFunction) {
-  const data = req.query;
-  if (typeof data.types === "string") data.types = data.types.split(',');
+  const filters = req.query;
+  filters.participantId = res.locals.userId;
+  if (typeof filters.types === "string") filters.types = filters.types.split(',');
   
-  const result = auctionReportFiltersQuerySchema.safeParse(data);
+  const result = auctionReportFiltersSchema.safeParse(filters);
   if (!result.success) throw createZodError(result.error, "validateAuctionReportFilters");
 
   res.locals.filters = result.data;
@@ -53,21 +67,11 @@ export function validateAuctionReportFilters(req: Request, res: Response, next: 
   next();
 }
 
-const walletReportFiltersQuerySchema = z.object({
-  startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional().default(() => new Date()).refine(
-    (date) => date <= new Date(),
-    { message: "endDate cannot be in the future" }
-  ),
-}).refine((data) => data.endDate >= data.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
-});
-
 export function validateWalletReportFilters(req: Request, res: Response, next: NextFunction) {
-  const data = req.query;
+  const filters = req.query;
+  filters.participantId = res.locals.userId;
   
-  const result = walletReportFiltersQuerySchema.safeParse(data);
+  const result = walletReportFiltersSchema.safeParse(filters);
   if (!result.success) throw createZodError(result.error, "validateWalletReportFilters");
 
   res.locals.filters = result.data;

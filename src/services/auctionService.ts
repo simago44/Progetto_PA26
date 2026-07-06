@@ -100,9 +100,12 @@ class AuctionService {
     return this.formatAuctions(auctions);
   }
 
-  public async getWalletReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
-    filters.won = true;
-    const where = this.buildFilters(filters);
+  public async getWalletReport(filters: { participantId: string, startDate: Date, endDate: Date }) {
+    const auctionFilters = {
+      ...filters,
+      won: true
+    }
+    const where = this.buildFilters(auctionFilters);
     return await auctionRepository.getTotalFinalPrice(where);
   }
 
