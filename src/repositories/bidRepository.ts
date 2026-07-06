@@ -67,14 +67,6 @@ class BidRepository {
     const bids = await this.findAuctionBids(auctionId);
     return bids.length > 0;
   }
-
-  public async getUserBidsOfInProgessAuctions(userId: string): Promise<Bid[]> {
-    const openAuctions = await auctionRepository.getFiltered({ statuses: [AuctionStatus.InProgress] });
-    const bidsPerAuction = await Promise.all(
-      openAuctions.map(auction => this.findAuctionBids(auction.id)) // already cached, per-auction
-    );
-    return bidsPerAuction.flat().filter(bid => bid.userId === userId);
-  }
 }
 
 const bidRepository = new BidRepository();

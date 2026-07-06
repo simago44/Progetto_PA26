@@ -15,6 +15,16 @@ import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUti
 import z from "zod";
 import { readFileSync } from "node:fs";
 import auctionService from "../services/auctionService.ts";
+import { deleteStaleUsers } from "../integrations/auth0.ts";
+import type { Bid } from "../models/relationships.ts";
+
+const AUCTIONS_MUL = 5;
+const MIN_AUCTIONS = 1 * AUCTIONS_MUL
+const MAX_AUCTIONS = 3 * AUCTIONS_MUL
+
+const BIDS_MUL = 5;
+const MIN_BIDS = 1 * BIDS_MUL;
+const MAX_BIDS = 4 * BIDS_MUL;
 
 const SeedUserSchema = z.object({
   userId: z.string(),
@@ -59,19 +69,20 @@ export async function generateUsersArray(
 function computeDatesForStatus(
   status: AuctionStatus
 ): { startsAt: Date; endsAt: Date; } {
+  const yesterdayDate = faker.date.between({ from: addInterval(new Date(), - 10*24*HOURS), to: addInterval(new Date(), - 10*MINUTES) })
   const tomorrowDate = faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) });
   const tomorrowDate2 = addInterval(tomorrowDate, faker.number.int({ min: 3, max: 10 }) * HOURS);
-  const now = addInterval(new Date(), 1 * SECONDS);
-  const now2 = addInterval(now, 1 * SECONDS);
+  // we give 20 seconds to put some bids
+  const endedEndsAt = addInterval(new Date(), 20 * SECONDS);
 
-  const startsAt = status === AuctionStatus.NotStarted ? tomorrowDate : now;
   switch (status) {
     case AuctionStatus.NotStarted:
+      return { startsAt: tomorrowDate, endsAt: tomorrowDate2 };
     case AuctionStatus.InProgress:
-      return { startsAt, endsAt: tomorrowDate2 };
+      return { startsAt: yesterdayDate, endsAt: tomorrowDate2 };
     case AuctionStatus.Ended:
     default:
-      return { startsAt, endsAt: now2 };
+      return { startsAt: yesterdayDate, endsAt: endedEndsAt };
   }
 }
 
@@ -101,16 +112,18 @@ function computeDutchParams(status: AuctionStatus): {
   return { startsAt, reservePrice, startPrice, decrementPrice, decrementInterval };
 }
 
-export async function generateAuctionsArray(length: number, creatorsArray: User[]) {
+export async function generateAuctionsArray(min_auctions: number, max_auctions: number, creatorsArray: User[]) {
   const types = Object.values(AuctionType);
   const statuses = Object.values(AuctionStatus);
   const array: Auction[] = [];
 
-  for (let type of types) {
-    for (let status of statuses) {
+  for (const type of types) {
+    for (const status of statuses) {
+      const length = faker.number.int({ min: min_auctions, max: max_auctions });
       for (let i = 0; i < length; i++) {
         const index = faker.number.int({ min: 0, max: creatorsArray.length - 1 });
         if (!creatorsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for creatorId" });
+
         const creatorId = creatorsArray[index].id;
         const basePayload = {
           creatorId,
@@ -127,6 +140,7 @@ export async function generateAuctionsArray(length: number, creatorsArray: User[
               ...basePayload,
               ...computeDatesForStatus(status),
               minimumIncrement: faker.number.int({ min: 1, max: 10 }),
+              delayBeforeEnding: AuctionConstants.defaultDelayBeforeEnding
             };
             break;
 
@@ -148,20 +162,61 @@ export async function generateAuctionsArray(length: number, creatorsArray: User[
             break;
         }
 
-        const result = AuctionSchema.safeParse(payload);
+        array.push(await auctionService.createAuction(payload));
 
-        if (!result.success) {
-          const error = createZodError(result.error, 'initDb');
-          logger.error(`[${error.name}(${error.status})] ${error.message}`);
-          logger.error(result.error);
-          continue;
-        }
-
-        array.push(await auctionService.createAuction(result.data));
       }
     }
   }
   return array;
+}
+
+export async function generateBidsArray(min_bids: number, max_bids: number, auctions: Auction[], participantsArray: User[]) {
+  for (const auction of auctions) {
+    // can't bid, the auction isn't started
+    if (auction.startsAt > new Date()) continue;
+
+    const length = faker.number.int({ min: min_bids, max: max_bids });
+    
+    switch (auction.type) {
+      case AuctionType.English: {
+        for (let i = 0; i < length; i++) {
+          // incremental bids
+        }
+        break;
+      }
+
+      case AuctionType.Dutch: {
+        // one bid or nothing
+        const toBid = faker.number.binary
+        if (!toBid) continue;
+        
+        const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
+        if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+        const participantId = participantsArray[index].id;
+
+        // TODO: price
+        const bidPrice = 0;
+
+        const bid: CreationAttributes<Bid> = {
+          userId: participantId,
+          auctionId: auction.id,
+          bidPrice: bidPrice
+        }
+
+        // one single valid bid
+        //await auctionService.createAuction(bid);
+
+        break;
+      }
+
+      case AuctionType.FirstPrice:
+      case AuctionType.SecondPrice: {
+        // one bid per participant
+        // for
+        break;
+      }
+    }
+  }
 }
 
 export async function initDb() {
@@ -181,8 +236,10 @@ export async function initDb() {
   const bidParticipants = await generateUsersArray(usersByRole, RoleName.BidParticipant);
 
   //Generates auctions
-  const auctions = await generateAuctionsArray(1, bidCreators);
+  const auctions = await generateAuctionsArray(MIN_AUCTIONS, MAX_AUCTIONS, bidCreators);
 
-  //Generates bids
-  return;
+  //Generates auctions
+  //await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
+
+  deleteStaleUsers();
 }

@@ -57,11 +57,6 @@ Auction.init(
       type: DataTypes.DATE,
       allowNull: false,
       validate: {
-        isAfterNow(startsAt: Date) {
-          if (startsAt <= new Date()) {
-            throw new Error("startsAt must be in the future");
-          }
-        },
         isBeforeendsAt(this: Auction, startsAt: Date) {
           if (this.endsAt && startsAt >= this.endsAt) {
             throw new Error("startsAt must be before endsAt");

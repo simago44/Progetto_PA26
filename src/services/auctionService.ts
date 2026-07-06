@@ -157,6 +157,28 @@ class AuctionService {
       : AuctionStatus.NotStarted;
   }
 
+  public async getEnglishCurrentBidPrice(auction: Auction): Promise<number> {
+      if (auction.type != AuctionType.English) throw new Errors.InvariantViolationError({ message: `Wrong auction type ${auction.type} in getEnglishCurrentBidPrice` });
+      if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
+     
+      const winningBid = await this.getWinningBid(auction.id);
+      if (winningBid == null) return auction.reservePrice;
+      return winningBid.bidPrice + auction.minimumIncrement;
+  }
+
+  public getDutchCurrentBidPrice(auction: Auction): number {
+      if (auction.type != AuctionType.Dutch) throw new Errors.InvariantViolationError({ message: `Wrong auction type ${auction.type} in getDutchCurrentBidPrice` });
+      if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
+      if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
+      if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
+     
+      const timeElapsed = new Date().getTime() - auction.startsAt.getTime();
+      const intervals = Math.floor(timeElapsed/auction.decrementInterval);
+
+      const currentPrice = auction.startPrice - auction.decrementPrice*intervals;
+      return currentPrice < auction.reservePrice ? auction.reservePrice : currentPrice;
+  }
+
   public async getMsToEnd(auction: Auction): Promise<number> {
     const winningBid = await this.getWinningBid(auction.id);
 

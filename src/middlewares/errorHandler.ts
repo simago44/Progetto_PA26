@@ -10,7 +10,6 @@ import { StatusCodes } from "http-status-codes";
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
-  console.error("ciao")
   // Catch json parsing errors
   if (err instanceof SyntaxError && 'status' in err &&
       err.status === StatusCodes.BAD_REQUEST && 'body' in err

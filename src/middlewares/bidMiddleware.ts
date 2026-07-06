@@ -5,7 +5,7 @@ import z from "zod";
 const BidSchema = z.object({
   userId: z.string(),
   auctionId: z.string(),
-  bidPrice: z.int().min(1)
+  bidPrice: z.int().min(1).optional()
 })
 
 /** Middleware which validates the bid in the request body */

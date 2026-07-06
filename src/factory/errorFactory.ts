@@ -89,7 +89,9 @@ export const Errors = buildErrors({
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
   InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
   InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation },
-  AuctionHasAlreadyAbBidError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionHasAlreadyABid }
+  AuctionHasAlreadyAbBidError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionHasAlreadyABid },
+  BidCantHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice},
+  BidMustHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice}
 });
 
 export function createZodError(error: ZodError, form: string): AppError {
