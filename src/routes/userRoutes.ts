@@ -9,7 +9,7 @@ const router = Router();
  * /users/{userId}/wallet:
  *   get:
  *     summary: Get a user's wallet balance
- *     description: Returns the current token balance for the given user's wallet.
+ *     description: Returns the available token balance for the specified user.
  *     tags:
  *       - Users
  *     parameters:
@@ -18,7 +18,7 @@ const router = Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the user.
+ *         description: The ID of the user.
  *     responses:
  *       200:
  *         description: Wallet balance retrieved successfully.
@@ -29,8 +29,11 @@ const router = Router();
  *               properties:
  *                 tokens:
  *                   type: number
+ *                   description: The user's available tokens.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to view this wallet.
+ *         description: User is not authorized to view this wallet.
  *       404:
  *         description: User not found.
  */
@@ -41,7 +44,7 @@ router.get("/:userId/wallet", getWalletMiddlewares, userController.getWallet);
  * /users/{userId}/auctions-report:
  *   get:
  *     summary: Get a user's auctions report
- *     description: Returns a report of auctions the given user participated in, optionally filtered.
+ *     description: Returns a report of auctions in which the user participated.
  *     tags:
  *       - Users
  *     parameters:
@@ -50,12 +53,37 @@ router.get("/:userId/wallet", getWalletMiddlewares, userController.getWallet);
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the user.
+ *         description: The ID of the user.
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter auctions starting from this date.
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter auctions ending before this date.
+ *       - in: query
+ *         name: won
+ *         schema:
+ *           type: boolean
+ *         description: Filter only won or lost auctions.
  *     responses:
  *       200:
  *         description: Auctions report retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to view this report.
+ *         description: User is not authorized to view this report.
  *       404:
  *         description: User not found.
  */
@@ -66,7 +94,7 @@ router.get("/:userId/auctions-report", getAuctionsReportMiddlewares, userControl
  * /users/{userId}/wallet-report:
  *   get:
  *     summary: Get a user's wallet spending report
- *     description: Returns the total spending for the given user's wallet, optionally filtered.
+ *     description: Returns the total amount spent by the user on won auctions within the selected period.
  *     tags:
  *       - Users
  *     parameters:
@@ -75,7 +103,21 @@ router.get("/:userId/auctions-report", getAuctionsReportMiddlewares, userControl
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the user.
+ *         description: The ID of the user.
+ *       - in: query
+ *         name: startDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date of the report period.
+ *       - in: query
+ *         name: endDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date of the report period.
  *     responses:
  *       200:
  *         description: Wallet report retrieved successfully.
@@ -86,8 +128,13 @@ router.get("/:userId/auctions-report", getAuctionsReportMiddlewares, userControl
  *               properties:
  *                 total:
  *                   type: number
+ *                   description: Total amount spent.
+ *       400:
+ *         description: Invalid report filters.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to view this report.
+ *         description: User is not authorized to view this report.
  *       404:
  *         description: User not found.
  */
@@ -98,7 +145,7 @@ router.get("/:userId/wallet-report", getWalletReportMiddlewares, userController.
  * /users/{userId}/wallet:
  *   put:
  *     summary: Top up a user's wallet
- *     description: Adds tokens to the given user's wallet.
+ *     description: Adds tokens to the specified user's wallet.
  *     tags:
  *       - Users
  *     parameters:
@@ -107,7 +154,7 @@ router.get("/:userId/wallet-report", getWalletReportMiddlewares, userController.
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the user.
+ *         description: The ID of the user.
  *     requestBody:
  *       required: true
  *       content:
@@ -119,19 +166,16 @@ router.get("/:userId/wallet-report", getWalletReportMiddlewares, userController.
  *             properties:
  *               tokens:
  *                 type: number
- *                 description: Number of tokens to add to the wallet.
+ *                 description: Number of tokens to add.
  *     responses:
  *       200:
  *         description: Wallet updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
+ *       400:
+ *         description: Invalid top-up amount.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to top up this wallet.
+ *         description: User is not authorized to top up this wallet.
  *       404:
  *         description: User not found.
  */

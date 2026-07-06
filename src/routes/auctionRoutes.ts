@@ -35,7 +35,11 @@ const router = Router();
  *                 type: number
  *               type:
  *                 type: string
- *                 enum: [english, dutch, first-price, second-price]
+ *                 enum:
+ *                   - english
+ *                   - dutch
+ *                   - first-price
+ *                   - second-price
  *               description:
  *                 type: string
  *               minimumIncrement:
@@ -62,11 +66,13 @@ const router = Router();
  *               type: object
  *               properties:
  *                 id:
- *                   type: number
+ *                   type: integer
  *       400:
  *         description: Invalid auction payload.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to create auctions.
+ *         description: User is not allowed to create auctions.
  */
 router.post("/", createAuctionMiddlewares, auctionController.createAuction);
 
@@ -75,7 +81,7 @@ router.post("/", createAuctionMiddlewares, auctionController.createAuction);
  * /auctions:
  *   get:
  *     summary: List auctions
- *     description: Returns auctions, optionally filtered by creator, status, and type.
+ *     description: Returns auctions filtered by the provided criteria.
  *     tags:
  *       - Auctions
  *     parameters:
@@ -85,37 +91,47 @@ router.post("/", createAuctionMiddlewares, auctionController.createAuction);
  *           type: array
  *           items:
  *             type: string
- *         description: Filter by one or more creator IDs.
+ *         style: form
+ *         explode: true
+ *         description: Filter auctions by creator IDs.
  *       - in: query
  *         name: statuses
  *         schema:
  *           type: array
  *           items:
  *             type: string
- *             enum: [not-started, in-progress, ended]
- *         description: Filter by one or more auction statuses.
+ *             enum:
+ *               - not-started
+ *               - in-progress
+ *               - ended
+ *         style: form
+ *         explode: true
+ *         description: Filter auctions by status.
  *       - in: query
  *         name: types
  *         schema:
  *           type: array
  *           items:
  *             type: string
- *             enum: [english, dutch, first-price, second-price]
- *         description: Filter by one or more auction types.
+ *             enum:
+ *               - english
+ *               - dutch
+ *               - first-price
+ *               - second-price
+ *         style: form
+ *         explode: true
+ *         description: Filter auctions by type.
  *     responses:
  *       200:
  *         description: Auctions retrieved successfully.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 count:
- *                   type: number
- *                 auctions:
- *                   type: array
- *                   items:
- *                     type: object
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Invalid filter parameters.
  */
 router.get("/", getAuctionsMiddlewares, auctionController.getAuctions);
 
@@ -124,14 +140,53 @@ router.get("/", getAuctionsMiddlewares, auctionController.getAuctions);
  * /auctions/stats:
  *   get:
  *     summary: Get auction statistics
- *     description: Returns aggregate statistics about auctions, optionally filtered.
+ *     description: Returns aggregate statistics grouped by auction type.
  *     tags:
  *       - Auctions
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date of the statistics period.
+ *       - in: query
+ *         name: endDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date of the statistics period.
+ *       - in: query
+ *         name: types
+ *         required: true
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum:
+ *               - english
+ *               - dutch
+ *               - first-price
+ *               - second-price
+ *         style: form
+ *         explode: true
  *     responses:
  *       200:
  *         description: Auction statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Invalid statistics filters.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to view auction statistics.
+ *         description: User is not authorized to view statistics.
  */
 router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionStats);
 
@@ -140,7 +195,7 @@ router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionSta
  * /auctions/{auctionId}/reserve-price:
  *   put:
  *     summary: Update an auction's reserve price
- *     description: Updates the reserve price of the given auction.
+ *     description: Updates the reserve price of an existing auction.
  *     tags:
  *       - Auctions
  *     parameters:
@@ -148,7 +203,7 @@ router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionSta
  *         name: auctionId
  *         required: true
  *         schema:
- *           type: number
+ *           type: integer
  *         description: ID of the auction.
  *     requestBody:
  *       required: true
@@ -164,18 +219,14 @@ router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionSta
  *     responses:
  *       200:
  *         description: Reserve price updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
+ *       400:
+ *         description: Invalid reserve price.
+ *       401:
+ *         description: User authentication required.
  *       403:
- *         description: Not authorized to update this auction.
+ *         description: User is not authorized to update this auction.
  *       404:
  *         description: Auction not found.
- */
-router.put("/:auctionId/reserve-price", updateAuctionReservePriceMiddlewares, auctionController.updateAuctionReservePrice);
+ */router.put("/:auctionId/reserve-price", updateAuctionReservePriceMiddlewares, auctionController.updateAuctionReservePrice);
 
 export default router;

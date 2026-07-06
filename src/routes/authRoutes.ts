@@ -9,7 +9,7 @@ const router = Router();
  * /signup:
  *   post:
  *     summary: Register a new user
- *     description: Registers a new user on Auth0 and assigns the default user role.
+ *     description: Creates a new user account and assigns the default bid participant role.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -24,9 +24,11 @@ const router = Router();
  *             properties:
  *               username:
  *                 type: string
+ *                 description: The username of the new user.
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: The user's password.
  *     responses:
  *       201:
  *         description: User created successfully.
@@ -35,10 +37,13 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 userId:
  *                   type: string
+ *                   description: The ID of the created user.
  *       400:
  *         description: Invalid signup payload.
+ *       409:
+ *         description: Username already exists.
  */
 router.post('/signup', signupMiddlewares, authController.signup);
 
@@ -47,7 +52,7 @@ router.post('/signup', signupMiddlewares, authController.signup);
  * /login:
  *   post:
  *     summary: Log in a user
- *     description: Authenticates a user via Auth0 Resource Owner Password Grant and returns an access token on success.
+ *     description: Authenticates a user and returns an access token.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -62,9 +67,11 @@ router.post('/signup', signupMiddlewares, authController.signup);
  *             properties:
  *               username:
  *                 type: string
+ *                 description: The username of the user.
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: The user's password.
  *     responses:
  *       200:
  *         description: Authentication succeeded.
@@ -75,11 +82,14 @@ router.post('/signup', signupMiddlewares, authController.signup);
  *               properties:
  *                 userId:
  *                   type: string
+ *                   description: The ID of the authenticated user.
  *                 accessToken:
  *                   type: string
+ *                   description: The JWT access token.
+ *       400:
+ *         description: Invalid login payload.
  *       401:
  *         description: Invalid credentials.
- */
-router.post('/login', loginMiddlewares, authController.login);
+ */router.post('/login', loginMiddlewares, authController.login);
 
 export default router;
