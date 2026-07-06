@@ -84,7 +84,7 @@ function computeDatesForStatus(
   }
 }
 
-function computeDutchParams(status: AuctionStatus): {
+function computeDutchParams(status: AuctionStatus, reservePrice: number): {
   startsAt: Date;
   reservePrice: number;
   startPrice: number;
@@ -95,11 +95,6 @@ function computeDutchParams(status: AuctionStatus): {
 
   //duration minima 1 minuto
   const duration = Math.max(endsAt.getTime() - startsAt.getTime(), 1 * MINUTES);
-
-  const reservePrice = faker.number.int({
-    min: AuctionConstants.minReservePrice,
-    max: AuctionConstants.minReservePrice + 500,
-  });
 
   //maximum steps 1 for seconds
   const totalSteps = faker.number.int({ min: 1, max: duration / MINUTES });
@@ -123,11 +118,16 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
         if (!creatorsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for creatorId" });
 
         const creatorId = creatorsArray[index].id;
+        const reservePrice = faker.number.int({
+          min: AuctionConstants.minReservePrice,
+          max: AuctionConstants.minReservePrice + 3000,
+        });
+
         const basePayload = {
           creatorId,
-          reservePrice: AuctionConstants.minReservePrice,
           description: faker.commerce.productDescription(),
           type,
+          reservePrice
         };
 
         let payload: CreationAttributes<Auction>;
@@ -145,7 +145,7 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
           case AuctionType.Dutch: {
             payload = {
               ...basePayload,
-              ...computeDutchParams(status),
+              ...computeDutchParams(status, reservePrice),
             };
             break;
           }

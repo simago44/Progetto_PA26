@@ -3,6 +3,7 @@ import env from "../core/config.ts";
 import userRepository from "../repositories/userRepository.ts";
 import logger from "../core/logger.ts";
 import { RoleName, type Role } from "../enums/enums.ts";
+import { Errors } from "../factory/errorFactory.ts";
 
 export const managementClient = new ManagementClient({
   domain: env.AUTH0_DOMAIN,
@@ -21,7 +22,11 @@ async function fetchRoles(): Promise<Record<RoleName, Role>> {
   return Object.fromEntries(
     Object.values(RoleName).map((name) => {
       const found = data.find((r) => r.name === name);
-      if (!found?.id) throw new Error(`Auth0 role not found: ${name}`);
+      if (!found?.id) {
+        //throw new Error(`Auth0 role not found: ${name}`);
+        logger.error(`Auth0 role not found: ${name}`);
+        throw new Errors.InternalServerError();
+      }
       return [name, { name, id: found.id }];
     })
   ) as Record<RoleName, Role>;

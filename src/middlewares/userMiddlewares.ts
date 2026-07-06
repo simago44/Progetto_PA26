@@ -22,6 +22,7 @@ const auctionReportFiltersSchema = z.object({
 });
 
 const walletReportFiltersSchema = z.object({
+  participantId: z.string(),
   startDate: z.coerce.date().optional().default(new Date(0)),
   endDate: z.coerce.date().optional().default(() => new Date()).refine(
     (date) => date <= new Date(),

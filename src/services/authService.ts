@@ -4,6 +4,13 @@ import { getAuthenticationToken } from "../integrations/auth0.ts";
 import userRepository from "../repositories/userRepository.ts";
 
 class AuthService {
+  /**
+   * Registers a new user in Auth0 and the application database.
+   * @param username The username of the new user.
+   * @param password The user password.
+   * @returns The ID of the created user.
+   * @throws {AppError} If the user cannot be created in Auth0 or in the database.
+   */
   public async signup(username: string, password: string): Promise<string> {
     let userId: string;
     try {
@@ -21,6 +28,14 @@ class AuthService {
     }
   }
 
+  /**
+   * Authenticates a user and retrieves an access token.
+   * @param username The username of the user.
+   * @param password The user password.
+   * @returns The user ID and authentication access token.
+   * @throws {WrongCredentialsError} If the username does not exist.
+   * @throws {AppError} If the user cannot be created in Auth0 or in the database.
+   */
   public async login(username: string, password: string): Promise<{ userId: string; accessToken: string; }> {
     // check that username exists in db!
     const user = await userRepository.findByUsername(username);

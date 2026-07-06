@@ -22,6 +22,11 @@ export interface AuctionFilters {
 }
 
 class AuctionService {
+  /**
+   * Builds Sequelize filters for auctions by status.
+   * @param status The auction status.
+   * @returns The Sequelize filters for the given auction status.
+   */
   public buildStatusFilters(status: AuctionStatus): WhereOptions {
     const now = new Date();
 
@@ -43,6 +48,11 @@ class AuctionService {
     }
   }
 
+  /**
+   * Builds Sequelize filters from auction filter options.
+   * @param filters The auction filters to apply.
+   * @returns The Sequelize filters matching the provided options.
+   */
   public buildFilters(filters: AuctionFilters): WhereOptions {
     const andConditions: WhereOptions[] = [];
 
@@ -90,32 +100,52 @@ class AuctionService {
     return where;
   }
 
+  /**
+   * Creates a new Auction.
+   * @param data The Auction creation attributes.
+   * @returns The created Auction instance.
+   */
   public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
     return auctionRepository.create(data);
   }
 
+  /**
+   * Retrieves auctions matching the provided filters.
+   * @param filters The auction filters to apply.
+   * @returns A list of matching Auction instances.
+   */
   public async getAuctions(filters: AuctionFilters) {
     return await auctionRepository.findAll(this.buildFilters(filters));
   }
 
-  public async getEndTime(auction: Auction): Promise<Date> {
-    const msToEnd = await this.getMsToEnd(auction);
-    return addInterval(new Date(), msToEnd);
-  }
-
+  /**
+   * Formats auctions by adding calculated fields and removing unnecessary attributes.
+   * @param auctions The auctions to format.
+   * @returns A list of formatted auctions.
+   */
   public async formatAuctions(auctions: Auction[]): Promise<Record<string, unknown>[]> {
     return Promise.all(
       auctions.map(async (auction) => {
-        const endsAt = await this.getEndTime(auction);
+        const endsAt = await this.getEndsAt(auction);
         return omit(omitBy({ ...auction.dataValues, endsAt, status: auction.status }, isNil), ["createdAt", "updatedAt"]);
       })
     );
   }
 
+  /**
+   * Retrieves and formats auctions matching the provided filters.
+   * @param filters The auction filters to apply.
+   * @returns A list of formatted auctions.
+   */
   public async getFilteredAuctions(filters: Pick<AuctionFilters, 'creatorIds' | 'types' | 'statuses'>) {
     return await this.formatAuctions(await this.getAuctions(filters));
   }
 
+  /**
+   * Computes auction statistics grouped by auction type.
+   * @param filters The required auction filters for statistics calculation.
+   * @returns Statistics for each auction type.
+   */
   public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {
     const finalFilters = this.buildFilters(filters);
     const participantsPerAuction = await auctionRepository.getParticipantsPerAuction(finalFilters);
@@ -142,12 +172,23 @@ class AuctionService {
     return stats;
   }
 
+  /**
+   * Calculates the current bid price of an English auction.
+   * @param auction The English auction instance.
+   * @returns The current bid price.
+   */
   public async getEnglishCurrentBidPrice(auction: EnglishAuction): Promise<number> {
-    const winningBid = await this.getWinningBid(auction.id);
-    if (winningBid == null) return auction.reservePrice;
-    return winningBid.bidPrice + auction.minimumIncrement;
+    const highestBid = await this.getWinningBid(auction.id);
+    // if there is not bid, the current price is the reservePrice
+    if (highestBid == null) return auction.reservePrice;
+    return highestBid.bidPrice + auction.minimumIncrement;
   }
 
+  /**
+   * Calculates the current bid price of a Dutch auction.
+   * @param auction The Dutch auction instance.
+   * @returns The current bid price.
+   */
   public getDutchCurrentBidPrice(auction: DutchAuction): number {
     const timeElapsed = new Date().getTime() - auction.startsAt.getTime();
     const intervals = Math.floor(timeElapsed / auction.decrementInterval);
@@ -159,8 +200,9 @@ class AuctionService {
   /**
    * Validates that an Auction has all the fields required by its specific type,
    * and narrows it to the corresponding discriminated type.
-   *
-   * @throws {Error} If a required field for the auction's type is missing
+   * @param auction The Auction instance to validate.
+   * @returns The auction narrowed to its specific type.
+   * @throws {InvariantViolationError} If a required field for the auction's type is missing.
    */
   public toTypedAuction(auction: Auction): TypedAuction {
     switch (auction.type) {
@@ -185,7 +227,11 @@ class AuctionService {
     }
   }
 
-  // Returns the ms until/from the end of the auction
+  /**
+   * Calculates the end time of an auction based on its type and current bids.
+   * @param rawAuction The Auction instance to evaluate.
+   * @returns The calculated auction end time.
+   */
   public async getEndsAt(rawAuction: Auction): Promise<Date> {
     const auction = this.toTypedAuction(rawAuction);
     const winningBid = await this.getWinningBid(auction.id);
@@ -225,11 +271,21 @@ class AuctionService {
     }
   }
 
+  /**
+   * Calculates the remaining time until an auction ends.
+   * @param auction The Auction instance.
+   * @returns The number of milliseconds until the auction ends.
+   */
   public async getMsToEnd(auction: Auction): Promise<number> {
     const endsAt = await this.getEndsAt(auction);
     return endsAt.getTime() - new Date().getTime();
   }
 
+  /**
+   * Retrieves the winning bid and its final price for an auction.
+   * @param auctionId The auction ID.
+   * @returns The winning bid with its final price, or `null` if no bids exist.
+   */
   public async getWinningBid(auctionId: number): Promise<{ bid: Bid; bidPrice: number; } | null> {
     const bids = await bidRepository.findAuctionBids(auctionId);
     // descending order based on bidPrice
@@ -247,6 +303,11 @@ class AuctionService {
     return { bid, bidPrice: finalPrice };
   }
 
+  /**
+   * Closes an auction if it has reached its end time.
+   * @param auction The Auction instance to close.
+   * @returns `true` if the auction was closed, `false` otherwise.
+   */
   public async closeAuction(auction: Auction): Promise<boolean> {
     // if it was already closed or is not ended yet, we return
     const endsAt = await this.getEndsAt(auction);
@@ -274,13 +335,23 @@ class AuctionService {
     return true;
   };
 
+  /**
+   * Updates the reserve price of an auction.
+   * @param auctionId The auction ID.
+   * @param reservePrice The new reserve price.
+   * @throws {AuctionNotFoundError} If the auction does not exist.
+   * @throws {AuctionTypeNotSupportedError} If the auction type does not support reserve price updates.
+   * @throws {AuctionEndedError} If the auction has already ended.
+   * @throws {ReservePriceTooHighError} If the new reserve price is greater than or equal to the current reserve price.
+   * @throws {AuctionHasAlreadyBidError} If the auction already has bids.
+   */
   public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
     switch (auction.type) {
       case AuctionType.English:
-        if (auction.status == AuctionStatus.Ended) throw new Error("The auction has ended");
+        if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
         if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
         if (await bidRepository.auctionHasBids(auction.id)) throw new Errors.AuctionHasAlreadyAbBidError();
 
