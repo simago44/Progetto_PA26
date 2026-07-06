@@ -186,37 +186,48 @@ class AuctionService {
   }
 
   // Returns the ms until/from the end of the auction
-  public async getMsToEnd(rawAuction: Auction): Promise<number> {
+  public async getEndsAt(rawAuction: Auction): Promise<Date> {
     const auction = this.toTypedAuction(rawAuction);
     const winningBid = await this.getWinningBid(auction.id);
 
     switch (auction.type) {
       case AuctionType.English: {
-        if (winningBid == null) return auction.endsAt.getTime() - new Date().getTime();
+        // if we don't have any bids, the end time is endsAt
+        if (winningBid == null) return auction.endsAt;
 
+        // otherwise we can calculate endsAt by getting the max between
+        // endsAt and winningBid + delayBeforeEnding
         const lastBidDeadline = addInterval(winningBid.bid.createdAt, auction.delayBeforeEnding);
-        const finishTime = lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
-
-        return finishTime.getTime() - new Date().getTime();
+        return lastBidDeadline > auction.endsAt ? lastBidDeadline : auction.endsAt;
       }
 
       case AuctionType.Dutch: {
-        if (winningBid) return winningBid.bid.createdAt.getTime() - new Date().getTime();
+        // if we don't have any bids, the end time is endsAt
+        if (winningBid) return winningBid.bid.createdAt;
 
+        // Here we calculate endsAt by first getting the needed decrement steps
+        // to reach the reservePrice
+        // Then, by multiplying the decrementInterval with the steps, we calculate the necessary time
+        // to reach reservePrice
+        // endsAt is startAt + time to reach reservePrice
         const priceRange = auction.startPrice - auction.reservePrice;
         // We use ceil because the last step will be less than the minimum price
         const decrementsNeeded = Math.ceil(priceRange / auction.decrementPrice);
         const decrementInterval = auction.decrementInterval;
         const duration = decrementsNeeded * decrementInterval;
-        const finishTime = addInterval(auction.startsAt, duration);
-
-        return finishTime.getTime() - new Date().getTime();
+        return addInterval(auction.startsAt, duration);
       }
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
-        return auction.endsAt.getTime() - new Date().getTime();
+        // For closed auctions endsAt is static
+        return auction.endsAt;
     }
+  }
+
+  public async getMsToEnd(auction: Auction): Promise<number> {
+    const endsAt = await this.getEndsAt(auction);
+    return endsAt.getTime() - new Date().getTime();
   }
 
   public async getWinningBid(auctionId: number): Promise<{ bid: Bid; bidPrice: number; } | null> {
@@ -236,9 +247,10 @@ class AuctionService {
     return { bid, bidPrice: finalPrice };
   }
 
-  public async closeAuction(auction: Auction, msToEnd: number): Promise<void> {
+  public async closeAuction(auction: Auction): Promise<boolean> {
     // if it was already closed or is not ended yet, we return
-    if (auction.status == AuctionStatus.Ended || msToEnd > 0) return;
+    const endsAt = await this.getEndsAt(auction);
+    if (auction.status == AuctionStatus.Ended || endsAt > new Date()) return false;
 
     logger.debug(`Closing auction: ${auction.id}`);
 
@@ -258,6 +270,8 @@ class AuctionService {
     } else {
       await auctionRepository.closeAuction(auction.id, null);
     }
+
+    return true;
   };
 
   public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {

@@ -61,7 +61,7 @@ class BidService {
     const createdBid = await bidRepository.save(bid);
 
     //If the auction is dutch must be closed when the first bid arrives
-    if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction, 0);
+    if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction);
 
     return createdBid;
   }
@@ -80,8 +80,8 @@ class BidService {
 
   public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User): Promise<void> {
     const auction = auctionService.toTypedAuction(rawAuction);
-    const auctionMsToEnd = await auctionService.getMsToEnd(auction);
-    if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
+    const auctionEndsAt = await auctionService.getEndsAt(auction);
+    if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError();
 
     switch (auction.type) {
       case AuctionType.English: {

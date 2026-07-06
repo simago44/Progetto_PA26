@@ -19,14 +19,11 @@ new Worker(queueName, async job => {
       const auction = await Auction.findByPk(auctionId);
       if (auction == null) return;
 
-      const msToEnd = await auctionService.getMsToEnd(auction);
       if (auction.status == AuctionStatus.Ended) break;
-      if (msToEnd > 0) {
-        createCloseAuctionJob(auction);
-        break;
-      }
 
-      await auctionService.closeAuction(auction, msToEnd);
+      const closed = await auctionService.closeAuction(auction);
+      if (!closed) createCloseAuctionJob(auction);
+
       break;
     }
   }
