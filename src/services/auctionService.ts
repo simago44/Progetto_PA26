@@ -95,7 +95,7 @@ class AuctionService {
   }
 
   public async getAuctions(filters: AuctionFilters) {
-    return await auctionRepository.getFiltered(this.buildFilters(filters));
+    return await auctionRepository.findAll(this.buildFilters(filters));
   }
 
   public async getEndTime(auction: Auction): Promise<Date> {

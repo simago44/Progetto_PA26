@@ -49,7 +49,7 @@ class UserService {
 
   public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
     const where = auctionService.buildFilters(filters);
-    const auctions = await auctionRepository.getUserAuctions(filters.participantId, where);
+    const auctions = await auctionRepository.findUserAuctions(filters.participantId, where);
     return auctionService.formatAuctions(auctions);
   }
 
