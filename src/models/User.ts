@@ -16,7 +16,7 @@ export class User extends Model<
 
 > {
   declare id: string;
-  declare tokens: CreationOptional<number|null>;
+  declare tokens: CreationOptional<number | null>;
   declare username: string;
 
   declare bids?: NonAttribute<Bid[]>;

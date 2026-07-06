@@ -58,7 +58,7 @@ export function validateAuctionReportFilters(req: Request, res: Response, next: 
   const filters = req.query;
   filters.participantId = res.locals.userId;
   if (typeof filters.types === "string") filters.types = filters.types.split(',');
-  
+
   const result = auctionReportFiltersSchema.safeParse(filters);
   if (!result.success) throw createZodError(result.error, "validateAuctionReportFilters");
 
@@ -70,7 +70,7 @@ export function validateAuctionReportFilters(req: Request, res: Response, next: 
 export function validateWalletReportFilters(req: Request, res: Response, next: NextFunction) {
   const filters = req.query;
   filters.participantId = res.locals.userId;
-  
+
   const result = walletReportFiltersSchema.safeParse(filters);
   if (!result.success) throw createZodError(result.error, "validateWalletReportFilters");
 

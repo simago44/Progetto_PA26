@@ -4,6 +4,7 @@ import type { ZodError } from "zod";
 import type { Auction } from "../models/Auction.ts";
 import { UniqueConstraintError, ValidationError } from "sequelize";
 import logger from "../core/logger.ts";
+import { AuthApiError } from "auth0";
 
 /**
  * Base error class for all application errors.
@@ -90,8 +91,8 @@ export const Errors = buildErrors({
   InsufficientTokensError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.InsufficientTokens },
   InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation },
   AuctionHasAlreadyAbBidError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.AuctionHasAlreadyABid },
-  BidCantHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice},
-  BidMustHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice}
+  BidCantHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice },
+  BidMustHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice }
 });
 
 export function createZodError(error: ZodError, form: string): AppError {
@@ -141,6 +142,10 @@ export function createSequelizeError(error: unknown, form: string): AppError {
  * @param error - The error thrown by the Auth0 SDK
  */
 export function createAuth0Error(error: unknown): AppError {
+  if (error instanceof AuthApiError) {
+    return new AppError(Number(error.statusCode), error.error_description, error.name);
+  }
+
   if (typeof error === "object" && error !== null && "statusCode" in error && "body" in error) {
     const err = error as { statusCode: unknown; body?: { message?: string }; constructor?: { name?: string } };
     return new AppError(Number(err.statusCode), err.body?.message ?? "Unknown error", err.constructor?.name ?? "Auth0Error");

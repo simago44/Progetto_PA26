@@ -21,7 +21,7 @@ class UserRepository {
     ]);
   }
 
-  public async create({ userId, username, tokens }: { userId: string, username: string, tokens: number|null }): Promise<User> {
+  public async create({ userId, username, tokens }: { userId: string, username: string, tokens: number | null }): Promise<User> {
     const user = await User.create({ id: userId, username, tokens });
     await this.cacheUser(user);
     return user;

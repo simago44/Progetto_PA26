@@ -42,7 +42,7 @@ class AuctionController {
     const auctions = await auctionService.getFilteredAuctions(res.locals.filters);
     res.status(StatusCodes.OK).json({ auctions });
   }
-  
+
   /**
    * Get stats of the auctions grouped by type and filtered by the validated payload on `res.locals`.
    * 
@@ -77,7 +77,7 @@ class AuctionController {
     res: Response<unknown, { auctionId: number, reservePrice: number }>
   ) {
     await auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.reservePrice);
-    res.status(StatusCodes.OK).json({ });
+    res.status(StatusCodes.OK).json({});
   }
 }
 

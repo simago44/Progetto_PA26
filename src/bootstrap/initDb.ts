@@ -14,7 +14,6 @@ import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUti
 import z from "zod";
 import { readFileSync } from "node:fs";
 import auctionService from "../services/auctionService.ts";
-import { deleteStaleUsers } from "../integrations/auth0.ts";
 import bidService from "../services/bidService.ts";
 
 const MIN_AUCTIONS = 5;
@@ -244,7 +243,7 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
           const bidPrice = faker.number.int({ min: auction.reservePrice, max: userTokens });
           */
 
-          const bidPrice = faker.number.int({ min: auction.reservePrice, max: auction.reservePrice*5 });
+          const bidPrice = faker.number.int({ min: auction.reservePrice, max: auction.reservePrice * 5 });
 
           const bid = {
             userId: participant.id,
@@ -286,5 +285,5 @@ export async function initDb() {
   //Generates auctions
   await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
 
-  await deleteStaleUsers();
+  //await deleteStaleUsers();
 }

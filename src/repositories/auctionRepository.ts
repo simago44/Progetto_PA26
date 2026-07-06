@@ -75,7 +75,7 @@ class AuctionRepository {
     return await Auction.sum('finalPrice', { where }) ?? 0;
   }
 
-  public async getParticipantsPerAuction(where: WhereOptions): Promise<{ type: AuctionType, participantCount: number}[]> {
+  public async getParticipantsPerAuction(where: WhereOptions): Promise<{ type: AuctionType, participantCount: number }[]> {
     const participantsPerAuction = await Auction.findAll({
       where,
       attributes: [

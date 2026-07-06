@@ -75,7 +75,7 @@ class UserController {
     res: Response<unknown, { userId: string, tokens: number }>
   ) {
     await userService.topUpWallet(res.locals.userId, res.locals.tokens);
-    res.status(StatusCodes.OK).json({ });
+    res.status(StatusCodes.OK).json({});
   }
 }
 

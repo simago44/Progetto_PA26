@@ -12,7 +12,7 @@ import { StatusCodes } from "http-status-codes";
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
   // Catch json parsing errors
   if (err instanceof SyntaxError && 'status' in err &&
-      err.status === StatusCodes.BAD_REQUEST && 'body' in err
+    err.status === StatusCodes.BAD_REQUEST && 'body' in err
   ) {
     err = new AppError(err.status, err.message, err.name);
   }
@@ -24,12 +24,12 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   } else {
     logger.debug(`[${error.name}(${error.status})] ${error.message}`);
   }
-  
+
   const responseObject: { name: string, error: string, details?: unknown } = {
     name: error.name,
     error: error.message
   };
-  
+
   if (error.details) responseObject.details = error.details;
 
   res.status(error.status).json(responseObject)
