@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import bidService from "../services/bidService.ts";
 import type { CreationAttributes } from "sequelize";
 import type { Bid } from "../models/Bid.ts";
+import bidService from "../services/bidService.ts";
 
 class BidController {
   /**

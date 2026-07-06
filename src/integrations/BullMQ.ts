@@ -4,6 +4,7 @@ import { Auction } from '../models/Auction.ts';
 import auctionRepository from '../repositories/auctionRepository.ts';
 import auctionService from '../services/auctionService.ts';
 import { closeAuctionJobName, queueName } from '../constants/constants.ts';
+import { AuctionStatus } from '../enums/enums.ts';
 
 export const connection = createNodeRedisClient(redis);
 
@@ -19,7 +20,7 @@ new Worker(queueName, async job => {
       if (auction == null) return;
 
       const msToEnd = await auctionService.getMsToEnd(auction);
-      if (auction.endedAt) break;
+      if (auction.status == AuctionStatus.Ended) break;
       if (msToEnd > 0) {
         createCloseAuctionJob(auction);
         break;
@@ -46,7 +47,7 @@ export async function createCloseAuctionJob(auction: Auction): Promise<void> {
 export async function initBullMQ(): Promise<void> {
   const auctions = await auctionRepository.findAll();
   auctions.forEach(async (auction) => {
-    if (auction.endedAt) return;
+    if (auction.status == AuctionStatus.Ended) return;
 
     createCloseAuctionJob(auction);
   });

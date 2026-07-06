@@ -8,7 +8,7 @@ import type { Bid } from "../models/Bid.ts";
 import userRepository from "../repositories/userRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factory/errorFactory.ts";
-import { Auction } from "../models/Auction.ts";
+import { Auction, type DutchAuction, type EnglishAuction, type FirstPriceAuction, type SecondPriceAuction, type TypedAuction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 
 export interface AuctionFilters {
@@ -22,7 +22,7 @@ export interface AuctionFilters {
 }
 
 class AuctionService {
-  private buildStatusFilters(status: AuctionStatus): WhereOptions {
+  public buildStatusFilters(status: AuctionStatus): WhereOptions {
     const now = new Date();
 
     switch (status) {
@@ -43,7 +43,7 @@ class AuctionService {
     }
   }
 
-  private buildFilters(filters: AuctionFilters): WhereOptions {
+  public buildFilters(filters: AuctionFilters): WhereOptions {
     const andConditions: WhereOptions[] = [];
 
     if (filters.creatorIds) {
@@ -90,23 +90,30 @@ class AuctionService {
     return where;
   }
 
-  public async getAuctions(filters: Pick<AuctionFilters, 'creatorIds' | 'types' | 'statuses'>) {
+  public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
+    return auctionRepository.create(data);
+  }
+
+  public async getAuctions(filters: AuctionFilters) {
     return await auctionRepository.getFiltered(this.buildFilters(filters));
   }
 
-  public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
-    const where = this.buildFilters(filters);
-    const auctions = await auctionRepository.getUserAuctions(filters.participantId, where);
-    return this.formatAuctions(auctions);
+  public async getEndTime(auction: Auction): Promise<Date> {
+    const msToEnd = await this.getMsToEnd(auction);
+    return addInterval(new Date(), msToEnd);
   }
 
-  public async getWalletReport(filters: { participantId: string, startDate: Date, endDate: Date }) {
-    const auctionFilters = {
-      ...filters,
-      won: true
-    }
-    const where = this.buildFilters(auctionFilters);
-    return await auctionRepository.getTotalFinalPrice(where);
+  public async formatAuctions(auctions: Auction[]): Promise<Record<string, unknown>[]> {
+    return Promise.all(
+      auctions.map(async (auction) => {
+        const endsAt = await this.getEndTime(auction);
+        return omit(omitBy({ ...auction.dataValues, endsAt, status: auction.status }, isNil), ["createdAt", "updatedAt"]);
+      })
+    );
+  }
+
+  public async getFilteredAuctions(filters: Pick<AuctionFilters, 'creatorIds' | 'types' | 'statuses'>) {
+    return await this.formatAuctions(await this.getAuctions(filters));
   }
 
   public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {
@@ -135,61 +142,56 @@ class AuctionService {
     return stats;
   }
 
-  public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
-    return auctionRepository.create(data);
+  public async getEnglishCurrentBidPrice(auction: EnglishAuction): Promise<number> {
+    const winningBid = await this.getWinningBid(auction.id);
+    if (winningBid == null) return auction.reservePrice;
+    return winningBid.bidPrice + auction.minimumIncrement;
   }
 
-  public async formatAuctions(auctions: Auction[]): Promise<Record<string, unknown>[]> {
-    return Promise.all(
-      auctions.map(async (auction) => {
-        const endsAt = await this.getEndTime(auction);
-        return omit(omitBy({ ...auction.dataValues, endsAt }, isNil), ["createdAt", "updatedAt"]);
-      })
-    );
+  public getDutchCurrentBidPrice(auction: DutchAuction): number {
+    const timeElapsed = new Date().getTime() - auction.startsAt.getTime();
+    const intervals = Math.floor(timeElapsed / auction.decrementInterval);
+
+    const currentPrice = auction.startPrice - auction.decrementPrice * intervals;
+    return currentPrice < auction.reservePrice ? auction.reservePrice : currentPrice;
   }
 
-  public async getEndTime(auction: Auction): Promise<Date> {
-    const msToEnd = await this.getMsToEnd(auction);
-    return addInterval(new Date(), msToEnd);
+  /**
+   * Validates that an Auction has all the fields required by its specific type,
+   * and narrows it to the corresponding discriminated type.
+   *
+   * @throws {Error} If a required field for the auction's type is missing
+   */
+  public toTypedAuction(auction: Auction): TypedAuction {
+    switch (auction.type) {
+      case AuctionType.English:
+        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
+        if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
+        if (auction.delayBeforeEnding == null) throw createAuctionMissingFieldError(auction, 'delayBeforeEnding');
+        return auction as EnglishAuction;
+
+      case AuctionType.Dutch:
+        if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
+        if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
+        if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
+        return auction as DutchAuction;
+
+      case AuctionType.FirstPrice:
+        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
+        return auction as FirstPriceAuction;
+      case AuctionType.SecondPrice:
+        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
+        return auction as SecondPriceAuction;
+    }
   }
 
-  public getAuctionStatus(auction: Auction): AuctionStatus {
-    if (auction.endedAt) return AuctionStatus.Ended;
-    return auction.startsAt <= new Date()
-      ? AuctionStatus.InProgress
-      : AuctionStatus.NotStarted;
-  }
-
-  public async getEnglishCurrentBidPrice(auction: Auction): Promise<number> {
-      if (auction.type != AuctionType.English) throw new Errors.InvariantViolationError({ message: `Wrong auction type ${auction.type} in getEnglishCurrentBidPrice` });
-      if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
-     
-      const winningBid = await this.getWinningBid(auction.id);
-      if (winningBid == null) return auction.reservePrice;
-      return winningBid.bidPrice + auction.minimumIncrement;
-  }
-
-  public getDutchCurrentBidPrice(auction: Auction): number {
-      if (auction.type != AuctionType.Dutch) throw new Errors.InvariantViolationError({ message: `Wrong auction type ${auction.type} in getDutchCurrentBidPrice` });
-      if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
-      if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
-      if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
-     
-      const timeElapsed = new Date().getTime() - auction.startsAt.getTime();
-      const intervals = Math.floor(timeElapsed/auction.decrementInterval);
-
-      const currentPrice = auction.startPrice - auction.decrementPrice*intervals;
-      return currentPrice < auction.reservePrice ? auction.reservePrice : currentPrice;
-  }
-
-  public async getMsToEnd(auction: Auction): Promise<number> {
+  // Returns the ms until/from the end of the auction
+  public async getMsToEnd(rawAuction: Auction): Promise<number> {
+    const auction = this.toTypedAuction(rawAuction);
     const winningBid = await this.getWinningBid(auction.id);
 
     switch (auction.type) {
       case AuctionType.English: {
-        if (auction.delayBeforeEnding == null) throw createAuctionMissingFieldError(auction, 'delayBeforeEnding');
-        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
-
         if (winningBid == null) return auction.endsAt.getTime() - new Date().getTime();
 
         const lastBidDeadline = addInterval(winningBid.bid.createdAt, auction.delayBeforeEnding);
@@ -199,10 +201,6 @@ class AuctionService {
       }
 
       case AuctionType.Dutch: {
-        if (auction.decrementPrice == null) throw createAuctionMissingFieldError(auction, 'decrementPrice');
-        if (auction.decrementInterval == null) throw createAuctionMissingFieldError(auction, 'decrementInterval');
-        if (auction.startPrice == null) throw createAuctionMissingFieldError(auction, 'startPrice');
-
         if (winningBid) return winningBid.bid.createdAt.getTime() - new Date().getTime();
 
         const priceRange = auction.startPrice - auction.reservePrice;
@@ -217,8 +215,6 @@ class AuctionService {
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
-        if (auction.endsAt == null) throw createAuctionMissingFieldError(auction, 'endsAt');
-
         return auction.endsAt.getTime() - new Date().getTime();
     }
   }
@@ -242,7 +238,7 @@ class AuctionService {
 
   public async closeAuction(auction: Auction, msToEnd: number): Promise<void> {
     // if it was already closed or is not ended yet, we return
-    if (auction.endedAt || msToEnd > 0) return;
+    if (auction.status == AuctionStatus.Ended || msToEnd > 0) return;
 
     logger.debug(`Closing auction: ${auction.id}`);
 
@@ -264,20 +260,19 @@ class AuctionService {
     }
   };
 
-
   public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {
     const auction = await auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
     switch (auction.type) {
       case AuctionType.English:
-        if (auction.endedAt) throw new Error("The auction has ended");
+        if (auction.status == AuctionStatus.Ended) throw new Error("The auction has ended");
         if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
         if (await bidRepository.auctionHasBids(auction.id)) throw new Errors.AuctionHasAlreadyAbBidError();
 
         break;
       case AuctionType.Dutch:
-        if (auction.endedAt) throw new Errors.AuctionEndedError();
+        if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
         if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
 
         break;

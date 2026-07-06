@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import authService from "../services/authService.ts";
 import { StatusCodes } from "http-status-codes";
+import authService from "../services/authService.ts";
 
 class AuthController {
   /**
@@ -17,7 +17,6 @@ class AuthController {
     res: Response<unknown, { username: string, password: string }>
   ) {
     const userId = await authService.signup(res.locals.username, res.locals.password);
-
     res.status(StatusCodes.CREATED).json({ id: userId });
   };
 
@@ -35,7 +34,6 @@ class AuthController {
     res: Response<unknown, { username: string, password: string }>
   ) {
     const { userId, accessToken } = await authService.login(res.locals.username, res.locals.password);
-
     res.status(StatusCodes.OK).json({ id: userId, accessToken });
   };
 }

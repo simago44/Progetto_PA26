@@ -2,9 +2,10 @@ import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { Errors } from "../factory/errorFactory.ts";
 import type { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
+import auctionRepository from "../repositories/auctionRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
-import auctionService from "./auctionService.ts";
+import auctionService, { type AuctionFilters } from "./auctionService.ts";
 
 class UserService {
   public async getRealUserTokens(user: User): Promise<number> {
@@ -44,6 +45,21 @@ class UserService {
     if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId });
 
     return await this.getRealUserTokens(user);
+  }
+
+  public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
+    const where = auctionService.buildFilters(filters);
+    const auctions = await auctionRepository.getUserAuctions(filters.participantId, where);
+    return auctionService.formatAuctions(auctions);
+  }
+
+  public async getWalletReport(filters: { participantId: string, startDate: Date, endDate: Date }) {
+    const auctionFilters = {
+      ...filters,
+      won: true
+    }
+    const where = auctionService.buildFilters(auctionFilters);
+    return await auctionRepository.getTotalFinalPrice(where);
   }
 
   public async topUpWallet(userId: string, tokens: number): Promise<void> {

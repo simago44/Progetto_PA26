@@ -1,6 +1,6 @@
 import logger from "../core/logger.ts";
 import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
-import { createAuctionMissingFieldError, createSequelizeError, Errors } from "../factory/errorFactory.ts";
+import { createSequelizeError, Errors } from "../factory/errorFactory.ts";
 import type { User } from "../models/User.ts";
 import userRepository from "../repositories/userRepository.ts";
 import env, { NodeEnv } from "../core/config.ts";
@@ -171,7 +171,8 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
 
 export async function generateBidsArray(min_bids: number, max_bids: number, auctions: Auction[], participantsArray: User[]) {
   const shuffledAuctions = [...auctions].sort(() => Math.random() - 0.5);
-  for (const auction of shuffledAuctions) {
+  for (const rawAuction of shuffledAuctions) {
+    const auction = auctionService.toTypedAuction(rawAuction);
     // can't bid, the auction isn't started
     if (auction.startsAt > new Date()) continue;
 
@@ -179,7 +180,6 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
 
     switch (auction.type) {
       case AuctionType.English: {
-        if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
         let currentBidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
 
         for (let i = 0; i < length; i++) {

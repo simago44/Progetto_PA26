@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import userService from "../services/userService.ts";
-import auctionService from "../services/auctionService.ts";
 
 class UserController {
   /**
@@ -36,7 +35,7 @@ class UserController {
     _req: Request,
     res: Response<unknown, { filters: { participantId: string, won: boolean, startDate: Date, endDate: Date } }>
   ) {
-    const auctions = await auctionService.getAuctionReport(res.locals.filters);
+    const auctions = await userService.getAuctionReport(res.locals.filters);
     res.status(StatusCodes.OK).json(auctions);
   }
 
@@ -58,7 +57,7 @@ class UserController {
     _req: Request,
     res: Response<unknown, { filters: { participantId: string, startDate: Date, endDate: Date } }>
   ) {
-    const userSpending = await auctionService.getWalletReport(res.locals.filters);
+    const userSpending = await userService.getWalletReport(res.locals.filters);
     res.status(StatusCodes.OK).json({ total: userSpending });
   }
 

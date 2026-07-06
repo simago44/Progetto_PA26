@@ -10,9 +10,8 @@ import { DataTypes, Model } from "sequelize";
 import sequelize from "../integrations/sequelize.ts";
 import type { User } from "./User.ts";
 import type { Bid } from "./Bid.ts";
-import service from "../services/auctionService.ts";
 import { SECONDS } from "../utils/dateUtils.ts";
-import { AuctionType, type AuctionStatus } from "../enums/enums.ts";
+import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { AuctionConstants } from "../constants/constants.ts";
 
 export class Auction extends Model<
@@ -42,7 +41,8 @@ export class Auction extends Model<
   };
 
   get status(): NonAttribute<AuctionStatus> {
-    return service.getAuctionStatus(this);
+    if (this.endedAt) return AuctionStatus.Ended;
+    return this.startsAt <= new Date() ? AuctionStatus.InProgress : AuctionStatus.NotStarted;
   }
 }
 
@@ -141,3 +141,29 @@ Auction.init(
     sequelize,
   },
 );
+
+export type EnglishAuction = Auction & {
+  type: typeof AuctionType.English;
+  endsAt: Date;
+  minimumIncrement: number;
+  delayBeforeEnding: number;
+};
+
+export type DutchAuction = Auction & {
+  type: typeof AuctionType.Dutch;
+  decrementPrice: number;
+  decrementInterval: number;
+  startPrice: number;
+};
+
+export type FirstPriceAuction = Auction & {
+  type: typeof AuctionType.FirstPrice;
+  endsAt: Date;
+};
+
+export type SecondPriceAuction = Auction & {
+  type: typeof AuctionType.SecondPrice;
+  endsAt: Date;
+};
+
+export type TypedAuction = EnglishAuction | DutchAuction | FirstPriceAuction | SecondPriceAuction;

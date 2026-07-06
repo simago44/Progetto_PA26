@@ -1,5 +1,5 @@
 import type { CreationAttributes } from "sequelize";
-import { createAuctionMissingFieldError, Errors } from "../factory/errorFactory.ts";
+import { Errors } from "../factory/errorFactory.ts";
 import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
@@ -21,7 +21,8 @@ class BidService {
     return formattedAuctions;
   }
 
-  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }, auction: Auction) {
+  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }, rawAuction: Auction) {
+    const auction = auctionService.toTypedAuction(rawAuction);
     switch (auction.type) {
       case AuctionType.English:
         if (bid.bidPrice == null) bid.bidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
@@ -77,14 +78,13 @@ class BidService {
     return this.formatBids(bids);
   }
 
-  public async checkIsBidValid(bid: Bid, auction: Auction, user: User): Promise<void> {
+  public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User): Promise<void> {
+    const auction = auctionService.toTypedAuction(rawAuction);
     const auctionMsToEnd = await auctionService.getMsToEnd(auction);
     if (auctionMsToEnd <= 0) throw new Errors.AuctionEndedError();
 
     switch (auction.type) {
       case AuctionType.English: {
-        if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
-
         const winningBid = await auctionService.getWinningBid(auction.id);
 
         // if no bid is found, we check that the bid is at least equal to the reservePrice

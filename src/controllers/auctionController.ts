@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
-import auctionService from "../services/auctionService.ts";
 import { StatusCodes } from "http-status-codes";
 import type { CreationAttributes } from "sequelize";
 import type { Auction } from "../models/Auction.ts";
 import type { AuctionStatus, AuctionType } from "../enums/enums.ts";
+import auctionService from "../services/auctionService.ts";
 
 class AuctionController {
   /**
@@ -39,9 +39,8 @@ class AuctionController {
     _req: Request,
     res: Response<unknown, { filters: { creatorIds: string[], statuses: AuctionStatus[], types: AuctionType[] } }>
   ) {
-    const auctions = await auctionService.getAuctions(res.locals.filters);
-
-    res.status(StatusCodes.OK).json({ auctions: await auctionService.formatAuctions(auctions) });
+    const auctions = await auctionService.getFilteredAuctions(res.locals.filters);
+    res.status(StatusCodes.OK).json({ auctions });
   }
   
   /**
@@ -77,11 +76,7 @@ class AuctionController {
     _req: Request,
     res: Response<unknown, { auctionId: number, reservePrice: number }>
   ) {
-    const auctionId = res.locals.auctionId;
-    const reservePrice = res.locals.reservePrice;
-
-    await auctionService.updateAuctionReservePrice(auctionId, reservePrice);
-
+    await auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.reservePrice);
     res.status(StatusCodes.OK).json({ });
   }
 }
