@@ -2,12 +2,25 @@ import { createSequelizeError } from "../factory/errorFactory.ts";
 import { Bid } from "../models/Bid.ts";
 import redis from "../integrations/redis.ts";
 import type { CreationAttributes } from "sequelize";
-import auctionRepository from "./auctionRepository.ts";
-import { AuctionStatus } from "../enums/enums.ts";
 
 class BidRepository {
   private auctionBidsKey(auctionId: number): string {
     return `auction:${auctionId}:bids`;
+  }
+
+  private async getCachedBids(auctionId: number): Promise<Bid[] | null> {
+    const cached = await redis.get(this.auctionBidsKey(auctionId));
+    if (cached == null) return null;
+
+    const bids = [];
+    for (const bid of JSON.parse(cached)) {
+      const builtBid = Bid.build(bid);
+      // necessary to save it without errors on unique id
+      // we can't use bulkBuild option isNewRecord because it erases createdAt and other fields 
+      builtBid.isNewRecord = false;
+      bids.push(builtBid);
+    }
+    return bids;
   }
 
   public build(attributes: CreationAttributes<Bid>): Bid {
@@ -21,8 +34,13 @@ class BidRepository {
   public async save(bid: Bid): Promise<Bid> {
     try {
       const created_bid = await bid.save();
+
       // we invalidate cache for the auction
-      await redis.del(this.auctionBidsKey(created_bid.auctionId));
+      const cached_bids = await this.getCachedBids(created_bid.auctionId);
+      if (cached_bids) {
+        cached_bids.push(created_bid);
+        await redis.set(this.auctionBidsKey(created_bid.auctionId), JSON.stringify(cached_bids));
+      }
       return created_bid;
     } catch (err) {
       throw createSequelizeError(err, "createBid");
@@ -40,18 +58,8 @@ class BidRepository {
   }
 
   public async findAuctionBids(auctionId: number): Promise<Bid[]> {
-    const cached = await redis.get(this.auctionBidsKey(auctionId));
-    if (cached) {
-      const bids = [];
-      for (const bid of JSON.parse(cached)) {
-        const builtBid = Bid.build(bid);
-        // necessary to save it without errors on unique id
-        // we can't use bulkBuild option isNewRecord because it erases createdAt and other fields 
-        builtBid.isNewRecord = false;
-        bids.push(builtBid);
-      }
-      return bids;
-    }
+    const cached_bids = await this.getCachedBids(auctionId);
+    if (cached_bids) return cached_bids;
 
     const bids = await Bid.findAll({ where: { auctionId } });
     await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));

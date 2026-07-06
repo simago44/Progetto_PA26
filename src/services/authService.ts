@@ -1,4 +1,4 @@
-import { RoleName } from "../enums/enums.ts";
+import { NewUserTokens, RoleName } from "../enums/enums.ts";
 import { createAuth0Error, createSequelizeError, Errors } from "../factory/errorFactory.ts";
 import { getAuthenticationToken } from "../integrations/auth0.ts";
 import userRepository from "../repositories/userRepository.ts";
@@ -13,7 +13,7 @@ class AuthService {
     }
 
     try {
-      const user = await userRepository.create({ userId, username, role: RoleName.BidParticipant });
+      const user = await userRepository.create({ userId, username, tokens: NewUserTokens[RoleName.BidParticipant] });
       return user.id;
     } catch (err) {
       await userRepository.deleteFromAuth0(userId);

@@ -21,7 +21,7 @@ class BidService {
     return formattedAuctions;
   }
 
-  public async handleBidPriceMissing(bid: Bid, auction: Auction): Promise<Bid> {
+  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }, auction: Auction) {
     switch (auction.type) {
       case AuctionType.English:
         if (bid.bidPrice == null) bid.bidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
@@ -36,10 +36,10 @@ class BidService {
         if (bid.bidPrice == null) throw new Errors.BidMustHavePriceError({ auctionType: auction.type });
         break;
     }
-    return bid;
+    return bid as CreationAttributes<Bid>;
   }
 
-  public async createBid(bidData: CreationAttributes<Bid>): Promise<Bid> {
+  public async createBid(bidData: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }): Promise<Bid> {
     const auctionId: number = bidData.auctionId as number;
     const userId: string = bidData.userId;
 
@@ -50,10 +50,11 @@ class BidService {
     // TODO: if this happens, throw an error and invalidate the token???
     if (!user) throw new Errors.UnauthorizedError(); // should not happen because we validated
 
-    // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
-    let bid: Bid = bidRepository.build(bidData);
+    const data = await this.handleBidPriceMissing(bidData, auction);
 
-    bid = await this.handleBidPriceMissing(bid, auction);
+    // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
+    const bid: Bid = bidRepository.build(data);
+
     await this.checkIsBidValid(bid, auction, user);
 
     const createdBid = await bidRepository.save(bid);

@@ -4,7 +4,7 @@ import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import redis from "../integrations/redis.ts";
 import type { Transaction } from "sequelize";
-import { NewUserTokens, type RoleName } from "../enums/enums.ts";
+import type { RoleName } from "../enums/enums.ts";
 
 class UserRepository {
   private idKey(userId: string): string {
@@ -21,10 +21,8 @@ class UserRepository {
     ]);
   }
 
-  public async create(
-    { userId, username, role }: { userId: string, username: string, role: RoleName; }
-  ): Promise<User> {
-    const user = await User.create({ id: userId, username, tokens: NewUserTokens[role] });
+  public async create({ userId, username, tokens }: { userId: string, username: string, tokens: number|null }): Promise<User> {
+    const user = await User.create({ id: userId, username, tokens });
     await this.cacheUser(user);
     return user;
   }

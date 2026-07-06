@@ -28,7 +28,7 @@ export type Role = {
 export const NewUserTokens: Record<typeof RoleName[keyof typeof RoleName], number | null> = {
   [RoleName.Admin]: null,
   [RoleName.BidCreator]: 0,
-  [RoleName.BidParticipant]: 1000,
+  [RoleName.BidParticipant]: 2000,
 } as const;
 
 export const AuctionType = {

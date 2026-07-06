@@ -1,13 +1,12 @@
 import logger from "../core/logger.ts";
-import { AuctionStatus, AuctionType, RoleName } from "../enums/enums.ts";
-import { createSequelizeError, createZodError, Errors } from "../factory/errorFactory.ts";
+import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
+import { createAuctionMissingFieldError, createSequelizeError, Errors } from "../factory/errorFactory.ts";
 import type { User } from "../models/User.ts";
 import userRepository from "../repositories/userRepository.ts";
 import env, { NodeEnv } from "../core/config.ts";
 import sequelize from "../integrations/sequelize.ts";
 import "../models/relationships.ts";
 import { fakerIT as faker } from "@faker-js/faker";
-import { AuctionSchema } from "../middlewares/auctionMiddleware.ts";
 import { AuctionConstants } from "../constants/constants.ts";
 import type { CreationAttributes } from "sequelize";
 import { Auction } from "../models/Auction.ts";
@@ -16,13 +15,13 @@ import z from "zod";
 import { readFileSync } from "node:fs";
 import auctionService from "../services/auctionService.ts";
 import { deleteStaleUsers } from "../integrations/auth0.ts";
-import type { Bid } from "../models/relationships.ts";
+import bidService from "../services/bidService.ts";
 
 const AUCTIONS_MUL = 5;
 const MIN_AUCTIONS = 1 * AUCTIONS_MUL
 const MAX_AUCTIONS = 3 * AUCTIONS_MUL
 
-const BIDS_MUL = 5;
+const BIDS_MUL = 3;
 const MIN_BIDS = 1 * BIDS_MUL;
 const MAX_BIDS = 4 * BIDS_MUL;
 
@@ -57,7 +56,9 @@ export async function generateUsersArray(
   const array: User[] = [];
   for (const userData of usersByRole[role]) {
     try {
-      array.push(await userRepository.create({ ...userData, role }));
+      let tokens = NewUserTokens[role];
+      if (role == RoleName.BidParticipant && userData.username != 'bid-participant') tokens = 100000;
+      array.push(await userRepository.create({ ...userData, tokens }));
     } catch (err) {
       logger.error(createSequelizeError(err, `generateUsersArray`).stack);
       continue;
@@ -69,7 +70,7 @@ export async function generateUsersArray(
 function computeDatesForStatus(
   status: AuctionStatus
 ): { startsAt: Date; endsAt: Date; } {
-  const yesterdayDate = faker.date.between({ from: addInterval(new Date(), - 10*24*HOURS), to: addInterval(new Date(), - 10*MINUTES) })
+  const yesterdayDate = faker.date.between({ from: addInterval(new Date(), -10 * 24 * HOURS), to: addInterval(new Date(), - 10 * MINUTES) })
   const tomorrowDate = faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) });
   const tomorrowDate2 = addInterval(tomorrowDate, faker.number.int({ min: 3, max: 10 }) * HOURS);
   // we give 20 seconds to put some bids
@@ -132,7 +133,7 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
           type,
         };
 
-        let payload: CreationAttributes<Auction> | null = null;
+        let payload: CreationAttributes<Auction>;
 
         switch (type) {
           case AuctionType.English:
@@ -171,48 +172,94 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
 }
 
 export async function generateBidsArray(min_bids: number, max_bids: number, auctions: Auction[], participantsArray: User[]) {
-  for (const auction of auctions) {
+  const shuffledAuctions = [...auctions].sort(() => Math.random() - 0.5);
+  for (const auction of shuffledAuctions) {
     // can't bid, the auction isn't started
     if (auction.startsAt > new Date()) continue;
 
     const length = faker.number.int({ min: min_bids, max: max_bids });
-    
+
     switch (auction.type) {
       case AuctionType.English: {
+        if (auction.minimumIncrement == null) throw createAuctionMissingFieldError(auction, 'minimumIncrement');
+        let currentBidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
+
         for (let i = 0; i < length; i++) {
-          // incremental bids
+          const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
+          if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+          const participant = participantsArray[index];
+
+          const increment = faker.number.int({ min: auction.minimumIncrement, max: auction.minimumIncrement * 5 });
+          const bidPrice = currentBidPrice + increment;
+
+          const bid = {
+            userId: participant.id,
+            auctionId: auction.id,
+            bidPrice,
+          };
+
+          try {
+            await bidService.createBid(bid);
+            currentBidPrice = bidPrice; // only advance on success
+          } catch {
+            // bid rejected (e.g. insufficient tokens) — skip
+          }
         }
         break;
       }
 
       case AuctionType.Dutch: {
         // one bid or nothing
-        const toBid = faker.number.binary
+        const toBid = faker.datatype.boolean();
         if (!toBid) continue;
-        
+
         const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
         if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
-        const participantId = participantsArray[index].id;
+        const participant = participantsArray[index];
 
-        // TODO: price
-        const bidPrice = 0;
-
-        const bid: CreationAttributes<Bid> = {
-          userId: participantId,
-          auctionId: auction.id,
-          bidPrice: bidPrice
+        const bid = {
+          userId: participant.id,
+          auctionId: auction.id
         }
 
-        // one single valid bid
-        //await auctionService.createAuction(bid);
+        try {
+          await bidService.createBid(bid);
+        } catch {
+          // bid rejected (e.g. insufficient tokens) — skip
+        }
 
         break;
       }
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice: {
-        // one bid per participant
-        // for
+        // one bid per participant with minimum auction.reservePrice (and lower than getRealUserTokens)
+        for (let i = 0; i < length; i++) {
+          const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
+          if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+          const participant = participantsArray[index];
+
+          /*
+          const userTokens = await userService.getRealUserTokens(participant);
+          if (userTokens < auction.reservePrice) continue;
+
+          const bidPrice = faker.number.int({ min: auction.reservePrice, max: userTokens });
+          */
+
+          const bidPrice = faker.number.int({ min: auction.reservePrice, max: auction.reservePrice*5 });
+
+          const bid = {
+            userId: participant.id,
+            auctionId: auction.id,
+            bidPrice,
+          };
+
+          try {
+            await bidService.createBid(bid);
+          } catch {
+            // bid rejected (e.g. insufficient tokens) — skip
+          }
+        }
         break;
       }
     }
@@ -231,7 +278,7 @@ export async function initDb() {
   const usersByRole = loadUsersByRole();
 
   //Generates statics users only in the DataBase
-  const admins = await generateUsersArray(usersByRole, RoleName.Admin);
+  await generateUsersArray(usersByRole, RoleName.Admin);
   const bidCreators = await generateUsersArray(usersByRole, RoleName.BidCreator);
   const bidParticipants = await generateUsersArray(usersByRole, RoleName.BidParticipant);
 
@@ -239,7 +286,7 @@ export async function initDb() {
   const auctions = await generateAuctionsArray(MIN_AUCTIONS, MAX_AUCTIONS, bidCreators);
 
   //Generates auctions
-  //await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
+  await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
 
-  deleteStaleUsers();
+  await deleteStaleUsers();
 }
