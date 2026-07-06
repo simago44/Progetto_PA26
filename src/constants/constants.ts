@@ -9,3 +9,14 @@ export const AuctionConstants = Object.freeze({
   descriptionMaxLenght: 1023,
   minReservePrice: 1
 });
+
+export const swaggerJsdocOptions = Object.freeze({
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Progetto PA26',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.ts'], // files containing annotations as above
+});
