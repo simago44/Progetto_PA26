@@ -15,6 +15,8 @@ import z from "zod";
 import { readFileSync } from "node:fs";
 import auctionService from "../services/auctionService.ts";
 import bidService from "../services/bidService.ts";
+import { clearRedis } from "../integrations/redis.ts";
+import { initBullMQ } from "../integrations/BullMQ.ts";
 
 const MIN_AUCTIONS = 5;
 const MAX_AUCTIONS = 20;
@@ -263,12 +265,13 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
   }
 }
 
-export async function initDb() {
+export async function initDB() {
   //Initialize database
-  if (env.NODE_ENV != NodeEnv.Development) {
-    await sequelize.sync();
-    return;
-  }
+  await sequelize.sync();
+}
+
+export async function seed() {
+  await clearRedis();
 
   await sequelize.sync({ force: true });
 
@@ -284,6 +287,8 @@ export async function initDb() {
 
   //Generates auctions
   await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
+
+  await initBullMQ();
 
   //await deleteStaleUsers();
 }
