@@ -81,7 +81,6 @@ function computeDatesForStatus(
     case AuctionStatus.InProgress:
       return { startsAt: yesterdayDate, endsAt: tomorrowDate2 };
     case AuctionStatus.Ended:
-    default:
       return { startsAt: yesterdayDate, endsAt: endedEndsAt };
   }
 }

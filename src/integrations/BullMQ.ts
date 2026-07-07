@@ -43,9 +43,11 @@ export async function createCloseAuctionJob(auction: Auction): Promise<void> {
 
 export async function initBullMQ(): Promise<void> {
   const auctions = await auctionRepository.findAll();
-  auctions.forEach(async (auction) => {
-    if (auction.status == AuctionStatus.Ended) return;
+  await Promise.all(
+    auctions.map(async (auction) => {
+      if (auction.status === AuctionStatus.Ended) return;
 
-    createCloseAuctionJob(auction);
-  });
+      await createCloseAuctionJob(auction);
+    })
+  );
 }
