@@ -18,11 +18,10 @@ import { Errors } from "./factory/errorFactory.ts";
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerJsdocOptions } from "./constants/constants.ts";
+import { app } from "./app.ts";
 
 await initDB();
 
-// Initialize Express app
-const app = express();
 const PORT = env.NODE_PORT;
 
 // Middleware for parsing json bodies
@@ -45,5 +44,3 @@ app.use((req) => {
 });
 
 app.use(errorHandler);
-
-export { app };
