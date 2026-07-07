@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import env, { NodeEnv } from "../core/config.ts";
+import env from "../core/config.ts";
 import logger from "../core/logger.ts";
 
 const redis = await createClient({

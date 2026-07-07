@@ -3,7 +3,7 @@ import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/en
 import { createSequelizeError, Errors } from "../factory/errorFactory.ts";
 import type { User } from "../models/User.ts";
 import userRepository from "../repositories/userRepository.ts";
-import env, { NodeEnv } from "../core/config.ts";
+import env from "../core/config.ts";
 import sequelize from "../integrations/sequelize.ts";
 import "../models/relationships.ts";
 import { fakerIT as faker } from "@faker-js/faker";
@@ -69,7 +69,7 @@ export async function generateUsersArray(
 function computeDatesForStatus(
   status: AuctionStatus
 ): { startsAt: Date; endsAt: Date; } {
-  const yesterdayDate = faker.date.between({ from: addInterval(new Date(), -10 * 24 * HOURS), to: addInterval(new Date(), - 10 * MINUTES) })
+  const yesterdayDate = faker.date.between({ from: addInterval(new Date(), -10 * 24 * HOURS), to: addInterval(new Date(), - 10 * MINUTES) });
   const tomorrowDate = faker.date.between({ from: tomorrow(), to: addInterval(tomorrow(), 10 * HOURS) });
   const tomorrowDate2 = addInterval(tomorrowDate, faker.number.int({ min: 3, max: 10 }) * HOURS);
   // we give 20 seconds to put some bids
@@ -219,7 +219,7 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
         const bid = {
           userId: participant.id,
           auctionId: auction.id
-        }
+        };
 
         try {
           await bidService.createBid(bid);
