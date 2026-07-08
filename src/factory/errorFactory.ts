@@ -44,14 +44,16 @@ function defineAppErrorClass<T = void>(
   // provided function
   const detailsFn = typeof details === "function" ? (details as DetailsFn<T>) : () => details;
 
-  return class extends AppError {
+  const cls = class extends AppError {
     constructor(...args: CtorArgs<T>) {
       // here params is either void (CtorArgs = []) or an object T (CtorArgs = [T])
       const params = args[0] as T;
-
       super(statusCode, messageFn(params), errorName, detailsFn(params));
     }
   };
+  // we add the name property to use like that: Errors.SomeError.name (for jest mainly)
+  Object.defineProperty(cls, "name", { value: errorName });
+  return cls;
 }
 
 type ErrorSpec<T> = {
