@@ -163,7 +163,7 @@ class BidService {
       }
     }
 
-    const realUserTokens = await userService.getRealUserTokens(user, transaction);
+    const realUserTokens = await userService.getRealUserTokens(user, auction.id, transaction);
     if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
   }
 }

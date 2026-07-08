@@ -8,22 +8,29 @@ import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import auctionService, { type AuctionFilters } from "./auctionService.ts";
 import sequelize from "../integrations/sequelize.ts";
+import type { Auction } from "../models/Auction.ts";
 
 class UserService {
   /**
    * Calculates the user's available tokens after accounting for active bids.
    * @param user The User instance.
+   * @param bidAuctionId The Auction Id of the current bid being created.
    * @param transaction Sequelize transaction to be used.
    * @returns The user's available token balance.
    * @throws {WalletNotFoundError} If the user does not have a wallet.
    */
-  public async getRealUserTokens(user: User, transaction: Transaction | null = null): Promise<number> {
+  public async getRealUserTokens(user: User, bidAuctionId: number | null = null, transaction: Transaction | null = null): Promise<number> {
     if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId: user.id });
 
     const openAuctions = await auctionService.getAuctions({ statuses: [AuctionStatus.InProgress] }, transaction);
     const bidsPerAuction = await Promise.all(
       openAuctions.map(async (auction) => {
-        if (auction.type != AuctionType.English) return bidRepository.findAuctionBids(auction.id, transaction)
+        // If we are bidding again and the bidAuctionId == current auction
+        // then we must not consider the auction in the sum (the old bid
+        // will be replaced by the new bid)
+        if (auction.id == bidAuctionId) return [];
+
+        if (auction.type != AuctionType.English) return bidRepository.findAuctionBids(auction.id, transaction);
 
         // if it's an english auction, we want to get only the winning bid.
         // if the winning bid is not of the current user, we don't need to consider it
