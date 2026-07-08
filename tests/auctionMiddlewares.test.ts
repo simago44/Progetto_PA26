@@ -7,10 +7,14 @@ import {
 } from "../src/middlewares/auctionMiddleware.ts";
 import { AuctionType, AuctionStatus } from "../src/enums/enums.ts";
 import type { Request, Response } from "express";
+import { AuctionConstants } from "../src/constants/constants.ts";
+import { MINUTES } from "../src/utils/dateUtils.ts";
+import { Errors } from "../src/factory/errorFactory.ts";
+import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
 describe("Unit Tests - auctionMiddleware", () => {
   describe("validateAuctionMiddleware", () => {
-    it("should validate a valid English auction and call next", async () => {
+    it("should validate a valid english auction and call next", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
       const endDate = new Date(futureDate);
@@ -36,7 +40,109 @@ describe("Unit Tests - auctionMiddleware", () => {
       validateAuctionMiddleware(req, res, next);
 
       expect(res.locals.auction).toBeDefined();
-      expect(res.locals.auction.creatorId).toBe("creator-123");
+      expect(res.locals.auction).toEqual({
+        ...req.body,
+        creatorId: res.locals.authId,
+        delayBeforeEnding: AuctionConstants.defaultDelayBeforeEnding
+      });
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should validate a valid dutch auction and call next", async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate);
+      endDate.setHours(endDate.getHours() + 2);
+
+      const req = {
+        body: {
+          startsAt: futureDate,
+          reservePrice: 100,
+          description: "This is a valid long enough description for the auction Test",
+          type: AuctionType.Dutch,
+          decrementPrice: 100,
+          decrementInterval: 10 * MINUTES,
+          startPrice: 3000,
+        }
+      } as unknown as Request;
+
+      const res = {
+        locals: { authId: "creator-123" }
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      validateAuctionMiddleware(req, res, next);
+
+      expect(res.locals.auction).toBeDefined();
+      expect(res.locals.auction).toEqual({
+        ...req.body,
+        creatorId: res.locals.authId,
+      });
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should validate a valid first-price auction and call next", async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate);
+      endDate.setHours(endDate.getHours() + 2);
+
+      const req = {
+        body: {
+          startsAt: futureDate,
+          endsAt: endDate,
+          reservePrice: 100,
+          type: AuctionType.FirstPrice,
+          description: "This is a valid long enough description for the auction test."
+        }
+      } as unknown as Request;
+
+      const res = {
+        locals: { authId: "creator-123" }
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      validateAuctionMiddleware(req, res, next);
+
+      expect(res.locals.auction).toBeDefined();
+      expect(res.locals.auction).toEqual({
+        ...req.body,
+        creatorId: res.locals.authId
+      });
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should validate a valid second-price auction and call next", async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate);
+      endDate.setHours(endDate.getHours() + 2);
+
+      const req = {
+        body: {
+          startsAt: futureDate,
+          endsAt: endDate,
+          reservePrice: 100,
+          type: AuctionType.SecondPrice,
+          description: "This is a valid long enough description for the auction test."
+        }
+      } as unknown as Request;
+
+      const res = {
+        locals: { authId: "creator-123" }
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      validateAuctionMiddleware(req, res, next);
+
+      expect(res.locals.auction).toBeDefined();
+      expect(res.locals.auction).toEqual({
+        ...req.body,
+        creatorId: res.locals.authId
+      });
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -54,7 +160,19 @@ describe("Unit Tests - auctionMiddleware", () => {
 
       const next = jest.fn();
 
-      expect(() => validateAuctionMiddleware(req, res, next)).toThrow();
+      expect(() => validateAuctionMiddleware(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateAuctionMiddleware" }),
+          details: expect.objectContaining({
+            startsAt: [expect.any(String)],
+            reservePrice: [expect.any(String)],
+            description: [expect.any(String)],
+            endsAt: [expect.any(String)],
+            minimumIncrement: [expect.any(String)]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -65,7 +183,7 @@ describe("Unit Tests - auctionMiddleware", () => {
         query: {
           creatorIds: "id1,id2",
           statuses: `${AuctionStatus.InProgress},${AuctionStatus.Ended}`,
-          types: `${AuctionType.English}`
+          types: `${AuctionType.English},${AuctionType.FirstPrice}`
         }
       } as unknown as Request;
 
@@ -77,7 +195,7 @@ describe("Unit Tests - auctionMiddleware", () => {
       expect(res.locals.filters).toEqual({
         creatorIds: ["id1", "id2"],
         statuses: [AuctionStatus.InProgress, AuctionStatus.Ended],
-        types: [AuctionType.English]
+        types: [AuctionType.English, AuctionType.FirstPrice]
       });
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -120,7 +238,16 @@ describe("Unit Tests - auctionMiddleware", () => {
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateUpdateReservePriceMiddleware(req, res, next)).toThrow();
+      expect(() => validateUpdateReservePriceMiddleware(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateUpdateReservePrice" }),
+          details: expect.objectContaining({
+            auctionId: [expect.any(String)],
+            reservePrice: [expect.any(String)]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -141,8 +268,12 @@ describe("Unit Tests - auctionMiddleware", () => {
       validateGetAuctionStatsMiddleware(req, res, next);
 
       expect(res.locals.filters.types).toEqual([AuctionType.English, AuctionType.Dutch]);
-      expect(res.locals.filters.startDate).toBeInstanceOf(Date);
-      expect(res.locals.filters.endDate).toBeInstanceOf(Date);
+      expect(res.locals.filters.startDate).toEqual(
+        new Date(Date.parse(String(req.query.startDate)))
+      );
+      expect(res.locals.filters.endDate).toEqual(
+        new Date(Date.parse(String(req.query.endDate)))
+      );
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -157,7 +288,17 @@ describe("Unit Tests - auctionMiddleware", () => {
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateGetAuctionStatsMiddleware(req, res, next)).toThrow();
+      expect(() => validateGetAuctionStatsMiddleware(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateGetAuctionStats" }),
+          details: expect.objectContaining({
+            endDate: [
+              expect.any(String)
+            ]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
