@@ -27,7 +27,7 @@ export function resolveUserIdParam(req: Request, res: Response, next: NextFuncti
 
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
   res.locals.userId = req.params.userId;
-  const tokens = req.body.tokens;
+  const tokens = req.body?.tokens;
 
   const result = topUpWalletSchema.safeParse({ tokens });
   if (!result.success) throw createZodError(result.error, "validateTopUpWallet");

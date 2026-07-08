@@ -13,7 +13,7 @@ export function validateBidMiddleware(req: Request, res: Response, next: NextFun
   const bid = {
     userId: res.locals.authId,
     auctionId: req.params.auctionId,
-    bidPrice: req.body.bidPrice
+    bidPrice: req.body?.bidPrice
   };
 
   const result = BidSchema.safeParse(bid);

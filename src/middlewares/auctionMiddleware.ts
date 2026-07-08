@@ -66,7 +66,7 @@ const updateReservePriceMiddleware = z.object({
 });
 
 export function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {
-  const auction = req.body;
+  const auction = req.body ?? {};
   auction.creatorId = res.locals.authId;
 
   const result = AuctionSchema.safeParse(auction);
@@ -92,7 +92,7 @@ export function validateGetAuctionsMiddleware(req: Request, res: Response, next:
 
 export function validateUpdateReservePriceMiddleware(req: Request, res: Response, next: NextFunction) {
   const auctionId = req.params.auctionId;
-  const reservePrice = req.body.reservePrice;
+  const reservePrice = req.body?.reservePrice;
 
   const result = updateReservePriceMiddleware.safeParse({ auctionId, reservePrice });
   if (!result.success) throw createZodError(result.error, "validateUpdateReservePrice");
