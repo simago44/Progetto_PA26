@@ -14,13 +14,13 @@ class AuthService {
   public async signup(username: string, password: string): Promise<string> {
     let userId: string;
     try {
-      userId = await userRepository.createAuth0User({ username, password, role: RoleName.BidParticipant });
+      userId = await userRepository.createAuth0User({ username, password, role: RoleName.AuctionParticipant });
     } catch (err) {
       throw createAuth0Error(err);
     }
 
     try {
-      const user = await userRepository.create({ userId, username, tokens: NewUserTokens[RoleName.BidParticipant] });
+      const user = await userRepository.create({ userId, username, tokens: NewUserTokens[RoleName.AuctionParticipant] });
       return user.id;
     } catch (err) {
       await userRepository.deleteFromAuth0(userId);

@@ -15,8 +15,8 @@ export type Auth0Permission = (typeof Auth0Permission)[keyof typeof Auth0Permiss
 
 export const RoleName = {
   Admin: "admin",
-  BidCreator: "bid-creator",
-  BidParticipant: "bid-participant",
+  AuctionCreator: "auction-creator",
+  AuctionParticipant: "auction-participant",
 } as const;
 export type RoleName = (typeof RoleName)[keyof typeof RoleName];
 
@@ -27,8 +27,8 @@ export type Role = {
 
 export const NewUserTokens: Record<typeof RoleName[keyof typeof RoleName], number | null> = {
   [RoleName.Admin]: null,
-  [RoleName.BidCreator]: 0,
-  [RoleName.BidParticipant]: 2000,
+  [RoleName.AuctionCreator]: 0,
+  [RoleName.AuctionParticipant]: 2000,
 } as const;
 
 export const AuctionType = {

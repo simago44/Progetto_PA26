@@ -57,7 +57,7 @@ export const signupSchema = z.object({
     .string()
     .trim()
     .min(1, "Username too short")
-    .max(15, "Username too long")
+    .max(20, "Username too long")
     .regex(/^[a-zA-Z0-9@^$_.!`\-#+'~]+$/, "Username contains non valid characters")
     .refine(val => !z.email().safeParse(val).success, "Username can't be an email address")
     .transform(val => val.toLowerCase()),

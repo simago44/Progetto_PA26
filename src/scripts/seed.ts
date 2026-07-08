@@ -56,7 +56,7 @@ export async function generateUsersArray(
   for (const userData of usersByRole[role]) {
     try {
       let tokens = NewUserTokens[role];
-      if (role == RoleName.BidParticipant && userData.username != 'bid-participant') tokens = 100000;
+      if (role == RoleName.AuctionParticipant && userData.username != 'auction-participant') tokens = 100000;
       array.push(await userRepository.create({ ...userData, tokens }));
     } catch (err) {
       logger.error(createSequelizeError(err, `generateUsersArray`).stack);
@@ -279,14 +279,14 @@ export async function seed() {
 
   //Generates statics users only in the DataBase
   await generateUsersArray(usersByRole, RoleName.Admin);
-  const bidCreators = await generateUsersArray(usersByRole, RoleName.BidCreator);
-  const bidParticipants = await generateUsersArray(usersByRole, RoleName.BidParticipant);
+  const auctionCreators = await generateUsersArray(usersByRole, RoleName.AuctionCreator);
+  const auctionParticipants = await generateUsersArray(usersByRole, RoleName.AuctionParticipant);
 
   //Generates auctions
-  const auctions = await generateAuctionsArray(MIN_AUCTIONS, MAX_AUCTIONS, bidCreators);
+  const auctions = await generateAuctionsArray(MIN_AUCTIONS, MAX_AUCTIONS, auctionCreators);
 
   //Generates auctions
-  await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, bidParticipants);
+  await generateBidsArray(MIN_BIDS, MAX_BIDS, auctions, auctionParticipants);
 
   await initBullMQ();
 

@@ -117,7 +117,7 @@
           "response": []
         },
         {
-          "name": "login bid-participant",
+          "name": "login auction-participant",
           "event": [
             {
               "listen": "test",
@@ -126,8 +126,8 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set(\"JWT_TOKEN_BID_PARTICIPANT\", jsonData.accessToken);",
-                  "    pm.collectionVariables.set(\"BID_PARTICIPANT_ID\", jsonData.id);",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN_AUCTION_PARTICIPANT\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"AUCTION_PARTICIPANT_ID\", jsonData.id);",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -141,7 +141,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"{{BID_PARTICIPANT_USERNAME}}\",\n    \"password\": \"{{BID_PARTICIPANT_PASSWORD}}\"\n}",
+              "raw": "{\n    \"username\": \"{{AUCTION_PARTICIPANT_USERNAME}}\",\n    \"password\": \"{{AUCTION_PARTICIPANT_PASSWORD}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -163,7 +163,7 @@
           "response": []
         },
         {
-          "name": "login bid-creator",
+          "name": "login auction-creator",
           "event": [
             {
               "listen": "test",
@@ -172,8 +172,8 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set(\"JWT_TOKEN_BID_CREATOR\", jsonData.accessToken);",
-                  "    pm.collectionVariables.set(\"BID_CREATOR_ID\", jsonData.id);",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN_AUCTION_CREATOR\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"AUCTION_CREATOR_ID\", jsonData.id);",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -187,7 +187,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"{{BID_CREATOR_USERNAME}}\",\n    \"password\": \"{{BID_CREATOR_PASSWORD}}\"\n}",
+              "raw": "{\n    \"username\": \"{{AUCTION_CREATOR_USERNAME}}\",\n    \"password\": \"{{AUCTION_CREATOR_PASSWORD}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -283,7 +283,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "value": "{{JWT_TOKEN_AUCTION_PARTICIPANT}}",
                   "type": "string"
                 }
               ]
@@ -368,7 +368,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "value": "{{JWT_TOKEN_AUCTION_CREATOR}}",
                   "type": "string"
                 }
               ]
@@ -420,7 +420,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "value": "{{JWT_TOKEN_AUCTION_CREATOR}}",
                   "type": "string"
                 }
               ]
@@ -474,7 +474,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "value": "{{JWT_TOKEN_AUCTION_CREATOR}}",
                   "type": "string"
                 }
               ]
@@ -528,7 +528,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "value": "{{JWT_TOKEN_AUCTION_CREATOR}}",
                   "type": "string"
                 }
               ]
@@ -582,7 +582,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_CREATOR}}",
+                  "value": "{{JWT_TOKEN_AUCTION_CREATOR}}",
                   "type": "string"
                 }
               ]
@@ -707,7 +707,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "value": "{{JWT_TOKEN_AUCTION_PARTICIPANT}}",
                   "type": "string"
                 }
               ]
@@ -746,7 +746,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_CREATOR_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_CREATOR_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -754,7 +754,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_CREATOR_ID}}",
+                "{{AUCTION_CREATOR_ID}}",
                 "wallet"
               ]
             }
@@ -786,7 +786,7 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -794,7 +794,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_ID}}",
+                "{{AUCTION_PARTICIPANT_ID}}",
                 "wallet"
               ]
             }
@@ -809,7 +809,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "value": "{{JWT_TOKEN_AUCTION_PARTICIPANT}}",
                   "type": "string"
                 }
               ]
@@ -817,7 +817,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/auctions-report?fromDate=2026-07-05&toDate=2026-07-05",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/auctions-report?fromDate=2026-07-05&toDate=2026-07-05",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -825,7 +825,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_ID}}",
+                "{{AUCTION_PARTICIPANT_ID}}",
                 "auctions-report"
               ],
               "query": [
@@ -850,7 +850,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{JWT_TOKEN_BID_PARTICIPANT}}",
+                  "value": "{{JWT_TOKEN_AUCTION_PARTICIPANT}}",
                   "type": "string"
                 }
               ]
@@ -858,7 +858,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/wallet-report?fromDate=2026-07-03",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet-report?fromDate=2026-07-03",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -866,7 +866,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_ID}}",
+                "{{AUCTION_PARTICIPANT_ID}}",
                 "wallet-report"
               ],
               "query": [
@@ -900,19 +900,19 @@
       "value": ""
     },
     {
-      "key": "JWT_TOKEN_BID_CREATOR",
+      "key": "JWT_TOKEN_AUCTION_CREATOR",
       "value": ""
     },
     {
-      "key": "JWT_TOKEN_BID_PARTICIPANT",
+      "key": "JWT_TOKEN_AUCTION_PARTICIPANT",
       "value": ""
     },
     {
-      "key": "BID_PARTICIPANT_ID",
+      "key": "AUCTION_PARTICIPANT_ID",
       "value": ""
     },
     {
-      "key": "BID_CREATOR_ID",
+      "key": "AUCTION_CREATOR_ID",
       "value": ""
     }
   ]
