@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "73ddc999-1082-41bd-b49f-0261d6b35621",
+    "_postman_id": "8a4f9657-1ba1-4020-b71d-cd0c2fad3535",
     "name": "PA-Agnostinelli-Vagnarelli",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "53270120"
+    "_exporter_id": "33317774"
   },
   "item": [
     {
@@ -141,7 +141,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"bid-participant\",\n    \"password\": \"Password1@\"\n}",
+              "raw": "{\n    \"username\": \"{{BID_PARTICIPANT_USERNAME}}\",\n    \"password\": \"{{BID_PARTICIPANT_PASSWORD}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -187,7 +187,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"bid-creator\",\n    \"password\": \"Password1@\"\n}",
+              "raw": "{\n    \"username\": \"{{BID_CREATOR_USERNAME}}\",\n    \"password\": \"{{BID_CREATOR_PASSWORD}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -233,7 +233,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Password1@\"\n}",
+              "raw": "{\n    \"username\": \"{{ADMIN_USERNAME}}\",\n    \"password\": \"{{ADMIN_PASSWORD}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
