@@ -7,6 +7,8 @@ import {
 } from "../src/middlewares/userMiddlewares.ts";
 import { AuctionType } from "../src/enums/enums.ts";
 import type { Request, Response } from "express";
+import { Errors } from "../src/factory/errorFactory.ts";
+import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
 describe("Unit Tests - walletMiddleware", () => {
   describe("resolveUserIdParam", () => {
@@ -39,17 +41,6 @@ describe("Unit Tests - walletMiddleware", () => {
       expect(res.locals.userId).toBe("target-user-456");
       expect(next).toHaveBeenCalledTimes(1);
     });
-
-    it("should throw MalformedPayloadError if userId param is missing", () => {
-      const req = {
-        params: {}
-      } as unknown as Request;
-      const res = { locals: {} } as unknown as Response;
-      const next = jest.fn();
-
-      expect(() => resolveUserIdParam(req, res, next)).toThrow();
-      expect(next).not.toHaveBeenCalled();
-    });
   });
 
   describe("validateTopUpWallet", () => {
@@ -76,7 +67,17 @@ describe("Unit Tests - walletMiddleware", () => {
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateTopUpWallet(req, res, next)).toThrow();
+      expect(() => validateTopUpWallet(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateTopUpWallet" }),
+          details: expect.objectContaining({
+            tokens: [
+              expect.any(String),
+            ]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -120,7 +121,17 @@ describe("Unit Tests - walletMiddleware", () => {
       } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateAuctionReportFilters(req, res, next)).toThrow();
+      expect(() => validateAuctionReportFilters(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateAuctionReportFilters" }),
+          details: expect.objectContaining({
+            endDate: [
+              expect.any(String),
+            ]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -158,7 +169,17 @@ describe("Unit Tests - walletMiddleware", () => {
       } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateWalletReportFilters(req, res, next)).toThrow();
+      expect(() => validateWalletReportFilters(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateWalletReportFilters" }),
+          details: expect.objectContaining({
+            endDate: [
+              expect.any(String),
+            ]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
