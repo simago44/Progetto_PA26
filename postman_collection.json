@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "220898e6-87e0-4441-8544-dfbb79e4ac7d",
+    "_postman_id": "73ddc999-1082-41bd-b49f-0261d6b35621",
     "name": "PA-Agnostinelli-Vagnarelli",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "33317774"
+    "_exporter_id": "53270120"
   },
   "item": [
     {
@@ -127,6 +127,7 @@
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
                   "    pm.collectionVariables.set(\"JWT_TOKEN_BID_PARTICIPANT\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"BID_PARTICIPANT_ID\", jsonData.id);",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -172,6 +173,7 @@
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
                   "    pm.collectionVariables.set(\"JWT_TOKEN_BID_CREATOR\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"BID_CREATOR_ID\", jsonData.id);",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -217,6 +219,7 @@
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
                   "    pm.collectionVariables.set(\"JWT_TOKEN_ADMIN\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"ADMIN_ID\", jsonData.id);",
                   "});"
                 ],
                 "type": "text/javascript",
@@ -403,9 +406,7 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
-                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  "pm.environment.set('futureDate1', futureDate1);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -661,7 +662,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats?types=english&fromDate=2026-07-08T20:20:50&toDate=2027-07-12&statuses=ended",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -670,6 +671,24 @@
               "path": [
                 "auctions",
                 "stats"
+              ],
+              "query": [
+                {
+                  "key": "types",
+                  "value": "english"
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2026-07-08T20:20:50"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2027-07-12"
+                },
+                {
+                  "key": "statuses",
+                  "value": "ended"
+                }
               ]
             }
           },
@@ -727,7 +746,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_CREATOR_USER_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_CREATOR_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -735,7 +754,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_CREATOR_USER_ID}}",
+                "{{BID_CREATOR_ID}}",
                 "wallet"
               ]
             }
@@ -767,7 +786,7 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -775,7 +794,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_USER_ID}}",
+                "{{BID_PARTICIPANT_ID}}",
                 "wallet"
               ]
             }
@@ -798,7 +817,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report?fromDate=2026-07-03&won=true&types=dutch",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/auctions-report?fromDate=2026-07-05&toDate=2026-07-05",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -806,21 +825,17 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_USER_ID}}",
+                "{{BID_PARTICIPANT_ID}}",
                 "auctions-report"
               ],
               "query": [
                 {
                   "key": "fromDate",
-                  "value": "2026-07-03"
+                  "value": "2026-07-05"
                 },
                 {
-                  "key": "won",
-                  "value": "true"
-                },
-                {
-                  "key": "types",
-                  "value": "dutch"
+                  "key": "toDate",
+                  "value": "2026-07-05"
                 }
               ]
             }
@@ -843,7 +858,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report?fromDate=2026-07-03",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_ID}}/wallet-report?fromDate=2026-07-03",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -851,7 +866,7 @@
               "port": "{{PORT}}",
               "path": [
                 "users",
-                "{{BID_PARTICIPANT_USER_ID}}",
+                "{{BID_PARTICIPANT_ID}}",
                 "wallet-report"
               ],
               "query": [
@@ -890,6 +905,14 @@
     },
     {
       "key": "JWT_TOKEN_BID_PARTICIPANT",
+      "value": ""
+    },
+    {
+      "key": "BID_PARTICIPANT_ID",
+      "value": ""
+    },
+    {
+      "key": "BID_CREATOR_ID",
       "value": ""
     }
   ]
