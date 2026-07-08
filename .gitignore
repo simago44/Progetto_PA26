@@ -135,8 +135,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-package-lock.json
-
 # Postman
 *postman_environment.json
 .prettierrc
