@@ -128,7 +128,21 @@ class AuctionService {
     return Promise.all(
       auctions.map(async (auction) => {
         const endsAt = await this.getEndsAt(auction);
-        return omit(omitBy({ ...auction.dataValues, endsAt, status: auction.status }, isNil), ["createdAt", "updatedAt"]);
+
+        let currentPrice = null;
+        if (auction.status == AuctionStatus.InProgress) {
+          const typedAuction = auctionService.toTypedAuction(auction);
+          switch (typedAuction.type) {
+            case AuctionType.English:
+              currentPrice = await auctionService.getEnglishCurrentBidPrice(typedAuction);
+              break
+            case AuctionType.Dutch:
+              currentPrice = auctionService.getDutchCurrentBidPrice(typedAuction);
+              break;
+          }
+        }
+
+        return omit(omitBy({ ...auction.dataValues, endsAt, status: auction.status, currentPrice }, isNil), ["createdAt", "updatedAt"]);
       })
     );
   }
@@ -180,7 +194,7 @@ class AuctionService {
    * @returns The current bid price.
    */
   public async getEnglishCurrentBidPrice(auction: EnglishAuction, transaction: Transaction | null = null): Promise<number> {
-    const highestBid = await this.getWinningBid(auction.id, transaction);
+    const highestBid = await this.getWinningBid(auction, transaction);
     // if there is not bid, the current price is the reservePrice
     if (highestBid == null) return auction.reservePrice;
     return highestBid.bidPrice + auction.minimumIncrement;
@@ -237,7 +251,7 @@ class AuctionService {
    */
   public async getEndsAt(rawAuction: Auction, transaction: Transaction | null = null): Promise<Date> {
     const auction = this.toTypedAuction(rawAuction);
-    const winningBid = await this.getWinningBid(auction.id, transaction);
+    const winningBid = await this.getWinningBid(auction, transaction);
 
     switch (auction.type) {
       case AuctionType.English: {
@@ -317,8 +331,8 @@ class AuctionService {
    * @param transaction Sequelize transaction to be used.
    * @returns The winning bid with its final price, or `null` if no bids exist.
    */
-  public async getWinningBid(auctionId: number, transaction: Transaction | null = null): Promise<{ bid: Bid; bidPrice: number; } | null> {
-    const bids = await bidRepository.findAuctionBids(auctionId, transaction);
+  public async getWinningBid(auction: Auction, transaction: Transaction | null = null): Promise<{ bid: Bid; bidPrice: number; } | null> {
+    const bids = await bidRepository.findAuctionBids(auction.id, transaction);
     bids.sort((a, b) => b.bidPrice - a.bidPrice);
 
     const higherBid = bids[0];
@@ -327,7 +341,7 @@ class AuctionService {
     if (!higherBid) return null;
 
     const bid = higherBid;
-    const finalPrice = AuctionType.SecondPrice && secondHigherBid ? secondHigherBid.bidPrice : higherBid.bidPrice;
+    const finalPrice = auction.type == AuctionType.SecondPrice && secondHigherBid ? secondHigherBid.bidPrice : higherBid.bidPrice;
 
     return { bid, bidPrice: finalPrice };
   }
@@ -351,7 +365,7 @@ class AuctionService {
 
       logger.debug(`Closing auction: ${auction.id}`);
 
-      const winningBid = await this.getWinningBid(auction.id, t);
+      const winningBid = await this.getWinningBid(auction, t);
 
       if (winningBid) {
         const winnerId = winningBid.bid.userId;

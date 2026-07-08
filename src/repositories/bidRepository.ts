@@ -94,7 +94,8 @@ class BidRepository {
     if (cached_bids) return cached_bids;
 
     const bids = await Bid.findAll({ where: { auctionId }, transaction });
-    await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
+    if (!transaction) await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
+    else await redis.del(this.auctionBidsKey(auctionId));
     return bids;
   }
 

@@ -1,6 +1,5 @@
 import { Queue, Worker, createNodeRedisClient } from 'bullmq';
 import redis from './redis.ts';
-import { Auction } from '../models/Auction.ts';
 import auctionRepository from '../repositories/auctionRepository.ts';
 import auctionService from '../services/auctionService.ts';
 import { closeAuctionJobName, queueName } from '../constants/constants.ts';

@@ -136,7 +136,7 @@ class BidService {
 
     switch (auction.type) {
       case AuctionType.English: {
-        const winningBid = await auctionService.getWinningBid(auction.id, transaction);
+        const winningBid = await auctionService.getWinningBid(auction, transaction);
 
         // if no bid is found, we check that the bid is at least equal to the reservePrice
         // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement

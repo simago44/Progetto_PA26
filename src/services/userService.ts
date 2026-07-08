@@ -28,7 +28,7 @@ class UserService {
         // if it's an english auction, we want to get only the winning bid.
         // if the winning bid is not of the current user, we don't need to consider it
         // in the token decrement
-        const winningBid = await auctionService.getWinningBid(auction.id, transaction);
+        const winningBid = await auctionService.getWinningBid(auction, transaction);
         if (!winningBid || winningBid.bid.userId != user.id) return [];
         return [winningBid.bid];
       }) // already cached, per-auction

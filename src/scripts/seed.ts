@@ -17,7 +17,6 @@ import auctionService from "../services/auctionService.ts";
 import bidService from "../services/bidService.ts";
 import { clearRedis } from "../integrations/redis.ts";
 import { initBullMQ } from "../integrations/BullMQ.ts";
-import type { Bid } from "../models/Bid.ts";
 
 const MIN_AUCTIONS = 5;
 const MAX_AUCTIONS = 20;
@@ -171,7 +170,7 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
 }
 
 export async function generateBidsArray(min_bids: number, max_bids: number, auctions: Auction[], participantsArray: User[]) {
-  const promises: Promise<any>[] = [];
+  const promises: Promise<unknown>[] = [];
 
   // we shuffle the array because we want that every type/status of auction have the
   // same probability of getting a bid (maybe the user tokens can finish)
@@ -209,8 +208,8 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
             }
           }
 
-          promises.push(promise_fun())
         }
+        promises.push(promise_fun())
         break;
       }
 
