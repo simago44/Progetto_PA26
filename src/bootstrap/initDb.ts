@@ -1,6 +1,6 @@
 import logger from "../core/logger.ts";
 import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
-import { createSequelizeError, Errors } from "../factory/errorFactory.ts";
+import { createInternalServerError, createSequelizeError } from "../factory/errorFactory.ts";
 import type { User } from "../models/User.ts";
 import userRepository from "../repositories/userRepository.ts";
 import env from "../core/config.ts";
@@ -116,7 +116,7 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
       const length = faker.number.int({ min: min_auctions, max: max_auctions });
       for (let i = 0; i < length; i++) {
         const index = faker.number.int({ min: 0, max: creatorsArray.length - 1 });
-        if (!creatorsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for creatorId" });
+        if (!creatorsArray[index]) throw createInternalServerError("Invalid value for creatorId");
 
         const creatorId = creatorsArray[index].id;
         const reservePrice = faker.number.int({
@@ -184,7 +184,7 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
 
         for (let i = 0; i < length; i++) {
           const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
-          if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+          if (!participantsArray[index]) throw createInternalServerError("Invalid value for participantId");
           const participant = participantsArray[index];
 
           const increment = faker.number.int({ min: auction.minimumIncrement, max: auction.minimumIncrement * 5 });
@@ -212,7 +212,7 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
         if (!toBid) continue;
 
         const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
-        if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+        if (!participantsArray[index]) throw createInternalServerError("Invalid value for participantId");
         const participant = participantsArray[index];
 
         const bid = {
@@ -234,7 +234,7 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
         // one bid per participant with minimum auction.reservePrice (and lower than getRealUserTokens)
         for (let i = 0; i < length; i++) {
           const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
-          if (!participantsArray[index]) throw new Errors.InvariantViolationError({ message: "Invalid value for participantId" });
+          if (!participantsArray[index]) throw createInternalServerError("Invalid value for participantId");
           const participant = participantsArray[index];
 
           /*

@@ -288,8 +288,6 @@ class AuctionService {
    */
   public async getWinningBid(auctionId: number): Promise<{ bid: Bid; bidPrice: number; } | null> {
     const bids = await bidRepository.findAuctionBids(auctionId);
-    // descending order based on bidPrice
-    // TODO: check tokens?
     bids.sort((a, b) => b.bidPrice - a.bidPrice);
 
     const higherBid = bids[0];

@@ -1,6 +1,6 @@
 import z from "zod";
 import type { Request, Response, NextFunction } from "express";
-import { createZodError, Errors } from "../factory/errorFactory.ts";
+import { createZodError } from "../factory/errorFactory.ts";
 import { AuctionType } from "../enums/enums.ts";
 
 export const topUpWalletSchema = z.object({
@@ -35,8 +35,6 @@ const walletReportFiltersSchema = z.object({
 
 
 export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
-  if (!req.params.userId) throw new Errors.MalformedPayloadError();
-
   const userId = req.params.userId == "self" ? res.locals.authId : req.params.userId;
   res.locals.userId = userId;
 

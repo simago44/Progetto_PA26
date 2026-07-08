@@ -5,6 +5,7 @@ import auctionRepository from '../repositories/auctionRepository.ts';
 import auctionService from '../services/auctionService.ts';
 import { closeAuctionJobName, queueName } from '../constants/constants.ts';
 import { AuctionStatus } from '../enums/enums.ts';
+import { createInternalServerError } from '../factory/errorFactory.ts';
 
 export const connection = createNodeRedisClient(redis);
 
@@ -13,7 +14,7 @@ const auctionQueue = new Queue(queueName, { connection });
 new Worker(queueName, async job => {
   switch (job.name) {
     case closeAuctionJobName: {
-      // TODO
+      if (job.data.auctionId == null) throw createInternalServerError(`BullMQ job { id: '${job.id}', name: ${job.name} } has no job.data.auctionId`);
       const auctionId = job.data.auctionId as string;
 
       const auction = await Auction.findByPk(auctionId);

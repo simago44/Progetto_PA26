@@ -29,13 +29,12 @@ export const ErrorMessages = {
   AuctionTypeNotSupported: ({ type }: { type: AuctionType }) => `This operation is not supported for ${type} auctions`,
   RouteNotFound: ({ path }: { path: string }) => `Route on path '${path}' not found`,
   InsufficientTokens: "Insufficient tokens",
-  InvariantViolation: ({ message }: { message: string }) => message,
   AuctionHasAlreadyABid: "Auction has already a bid",
   BidCantHavePrice: ({ auctionType }: { auctionType: string; }) => `Bid for auction of type '${auctionType}' can't have bidPrice in request`,
   BidMustHavePrice: ({ auctionType }: { auctionType: string; }) => `Bid for auction of type '${auctionType}' must have bidPrice in request`
 };
 
 export const ErrorDetails = {
-  Validation: ({ errors }: { errors: Object; }) => errors,
+  Validation: ({ errors }: { errors: object; }) => errors,
   BidTooLow: ({ minimumBid }: { minimumBid: number; }) => ({ minimumBid })
 };

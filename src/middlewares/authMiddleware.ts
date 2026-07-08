@@ -3,7 +3,6 @@ import type { Request, Response, NextFunction } from 'express';
 import env from '../core/config.ts';
 import { createZodError, Errors } from '../factory/errorFactory.ts';
 import z from 'zod';
-import { ErrorMessages } from '../factory/messageStrings.ts';
 
 const checkJwt = auth({
   issuerBaseURL: `https://${env.AUTH0_DOMAIN}`,

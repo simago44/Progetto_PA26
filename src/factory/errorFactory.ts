@@ -90,7 +90,6 @@ export const Errors = buildErrors({
   AuctionTypeNotSupportedError: { status: StatusCodes.UNPROCESSABLE_ENTITY, message: ErrorMessages.AuctionTypeNotSupported },
   RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
   InsufficientTokensError: { status: StatusCodes.CONFLICT, message: ErrorMessages.InsufficientTokens },
-  InvariantViolationError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InvariantViolation },
   AuctionHasAlreadyAbBidError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionHasAlreadyABid },
   BidCantHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice },
   BidMustHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice }
@@ -161,7 +160,13 @@ export function createAuth0Error(error: unknown): AppError {
 }
 
 export function createAuctionMissingFieldError(auction: Auction, fieldName: string): AppError {
-  return new Errors.InvariantViolationError({ message: `Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'` });
+  return createInternalServerError(`Auction '${auction.id}' of type '${auction.type}' has no '${fieldName}'`);
+}
+
+export function createInternalServerError(message: string) {
+  logger.error(message);
+  // we don't want to leak programming errors;
+  return new Errors.InternalServerError();
 }
 
 export function createReservePriceTooHighError(form: string): AppError {
