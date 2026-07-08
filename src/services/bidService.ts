@@ -132,7 +132,8 @@ class BidService {
   public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User, transaction: Transaction | null = null): Promise<void> {
     const auction = auctionService.toTypedAuction(rawAuction);
     const auctionEndsAt = await auctionService.getEndsAt(auction, transaction);
-    if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError();
+    if (auction.startsAt > new Date()) throw new Errors.AuctionNotStartedError({ auctionId: auction.id });
+    if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError({ auctionId: auction.id });
 
     switch (auction.type) {
       case AuctionType.English: {

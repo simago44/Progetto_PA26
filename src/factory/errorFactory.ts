@@ -85,6 +85,7 @@ export const Errors = buildErrors({
   WrongCredentialsErrors: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.WrongCredentials },
   ValidationError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.Validation, details: ErrorDetails.Validation },
   AuctionEndedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionEnded },
+  AuctionNotStartedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionNotStarted },
   BidTooLowError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
   BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
   AuctionTypeNotSupportedError: { status: StatusCodes.UNPROCESSABLE_ENTITY, message: ErrorMessages.AuctionTypeNotSupported },
@@ -147,7 +148,7 @@ export function createAuth0Error(error: unknown): AppError {
   }
 
   if (typeof error === "object" && error !== null && "statusCode" in error && "body" in error) {
-    const err = error as { statusCode: unknown; body?: { message?: string }; constructor?: { name?: string } };
+    const err = error as { statusCode: unknown; body?: { message?: string; }; constructor?: { name?: string; }; };
     return new AppError(Number(err.statusCode), err.body?.message ?? "Unknown error", err.constructor?.name ?? "Auth0Error");
   }
 

@@ -1,7 +1,7 @@
 import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import { isNil, omit, omitBy } from "lodash-es";
-import { addInterval, HOURS } from "../utils/dateUtils.ts";
+import { addInterval } from "../utils/dateUtils.ts";
 import logger from "../core/logger.ts";
 import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
@@ -133,7 +133,7 @@ class AuctionService {
           switch (typedAuction.type) {
             case AuctionType.English:
               currentPrice = await auctionService.getEnglishCurrentBidPrice(typedAuction);
-              break
+              break;
             case AuctionType.Dutch:
               currentPrice = auctionService.getDutchCurrentBidPrice(typedAuction);
               break;
@@ -404,14 +404,14 @@ class AuctionService {
 
       switch (auction.type) {
         case AuctionType.English:
-          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError({ auctionId: auction.id });
           if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
           // Because it's useless to lower the reservePrice when there is already a bid that it's higher than it.
           if (await bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyAbBidError();
 
           break;
         case AuctionType.Dutch:
-          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError({ auctionId: auction.id });
           // It's useless to check for bids because the auction has bids only if it's ended.
           if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
 

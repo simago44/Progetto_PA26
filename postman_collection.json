@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "8a4f9657-1ba1-4020-b71d-cd0c2fad3535",
+    "_postman_id": "b6aa88a0-124f-4d94-8a34-96249611f555",
     "name": "PA-Agnostinelli-Vagnarelli",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "33317774"
+    "_exporter_id": "53270120"
   },
   "item": [
     {
@@ -300,7 +300,7 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/20/bids",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -308,7 +308,7 @@
               "port": "{{PORT}}",
               "path": [
                 "auctions",
-                "20",
+                "1",
                 "bids"
               ]
             }
@@ -429,7 +429,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"minimumPrice\": 150,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "raw": "{\r\n    \"type\": \"dutch\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"startPrice\": 500,\r\n    \"decrementPrice\": 50,\r\n    \"decrementInterval\": 120000,\r\n    \"description\": \"dieci caratteri\",\r\n    \"reservePrice\": 100\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -483,7 +483,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "raw": "{\r\n    \"type\": \"first-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"description\": \"dieci caratteri\",\r\n    \"reservePrice\": 100\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -537,7 +537,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"startPrice\": 500,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+              "raw": "{\r\n    \"type\": \"second-price\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"description\": \"dieci caratteri\",\r\n    \"reservePrice\": 100\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -623,7 +623,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions?statuses=in-progress&types=english",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -635,11 +635,19 @@
               "query": [
                 {
                   "key": "statuses",
-                  "value": "in-progress"
+                  "value": "in-progress",
+                  "disabled": true
                 },
                 {
                   "key": "types",
-                  "value": "english"
+                  "value": "english",
+                  "disabled": true
+                },
+                {
+                  "key": "creatorIds",
+                  "value": "{{AUCTION_CREATOR_ID}}",
+                  "type": "text",
+                  "disabled": true
                 }
               ]
             }
@@ -662,7 +670,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats?types=english&fromDate=2026-07-08T20:20:50&toDate=2027-07-12&statuses=ended",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -675,19 +683,18 @@
               "query": [
                 {
                   "key": "types",
-                  "value": "english"
+                  "value": "english",
+                  "disabled": true
                 },
                 {
                   "key": "fromDate",
-                  "value": "2026-07-08T20:20:50"
+                  "value": "2026-07-08T20:20:50",
+                  "disabled": true
                 },
                 {
                   "key": "toDate",
-                  "value": "2027-07-12"
-                },
-                {
-                  "key": "statuses",
-                  "value": "ended"
+                  "value": "2027-07-12",
+                  "disabled": true
                 }
               ]
             }
@@ -817,7 +824,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/auctions-report?fromDate=2026-07-05&toDate=2026-07-05",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/auctions-report",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -831,11 +838,25 @@
               "query": [
                 {
                   "key": "fromDate",
-                  "value": "2026-07-05"
+                  "value": "2026-07-05",
+                  "disabled": true
                 },
                 {
                   "key": "toDate",
-                  "value": "2026-07-05"
+                  "value": "2026-07-05",
+                  "disabled": true
+                },
+                {
+                  "key": "won",
+                  "value": "true",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "types",
+                  "value": "english",
+                  "type": "text",
+                  "disabled": true
                 }
               ]
             }
@@ -858,7 +879,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet-report?fromDate=2026-07-03",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet-report",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -872,7 +893,13 @@
               "query": [
                 {
                   "key": "fromDate",
-                  "value": "2026-07-03"
+                  "value": "2026-07-03",
+                  "disabled": true
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-07-10T23:59",
+                  "disabled": true
                 }
               ]
             }
@@ -913,6 +940,10 @@
     },
     {
       "key": "AUCTION_CREATOR_ID",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_ID",
       "value": ""
     }
   ]

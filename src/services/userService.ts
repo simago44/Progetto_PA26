@@ -8,7 +8,6 @@ import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import auctionService, { type AuctionFilters } from "./auctionService.ts";
 import sequelize from "../integrations/sequelize.ts";
-import type { Auction } from "../models/Auction.ts";
 
 class UserService {
   /**
@@ -78,7 +77,7 @@ class UserService {
   public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'fromDate' | 'toDate'>>) {
     const user = await userRepository.findByPk(filters.participantId);
     if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
-    
+
     const where = auctionService.buildFilters(filters);
     const auctions = await auctionRepository.findUserAuctions(filters.participantId, where);
     return auctionService.formatAuctions(auctions);
@@ -90,14 +89,14 @@ class UserService {
    * @returns The total final price of won auctions.
    * @throws {UserNotFoundError} If the user does not exist.
    */
-  public async getWalletReport(filters: { participantId: string, fromDate: Date, toDate: Date }) {
+  public async getWalletReport(filters: { participantId: string, fromDate: Date, toDate: Date; }) {
     const user = await userRepository.findByPk(filters.participantId);
     if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
-    
+
     const auctionFilters = {
       ...filters,
       won: true
-    }
+    };
     const where = auctionService.buildFilters(auctionFilters);
     return await auctionRepository.getTotalFinalPrice(where);
   }
