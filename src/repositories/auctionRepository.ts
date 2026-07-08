@@ -1,6 +1,6 @@
 import { Auction } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import { col, fn, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
+import { col, fn, Transaction, type CreationAttributes, type FindOptions, type WhereOptions } from "sequelize";
 import redis from "../integrations/redis.ts";
 import type { AuctionType } from "../enums/enums.ts";
 
@@ -30,11 +30,12 @@ class AuctionRepository {
   /**
    * Persists an Auction and updates the cache.
    * @param auction The Auction instance to persist.
+   * @param transaction Sequelize transaction to be used.
    * @returns The saved Auction instance.
    */
-  public async save(auction: Auction): Promise<Auction> {
+  public async save(auction: Auction, transaction: Transaction | null = null): Promise<Auction> {
     try {
-      const created_auction = await auction.save();
+      const created_auction = await auction.save({ transaction });
       await redis.set(this.idKey(auction.id), JSON.stringify(created_auction));
       return auction;
     } catch (err) {
@@ -56,19 +57,22 @@ class AuctionRepository {
   /**
    * Finds an Auction by its primary key (cache-first).
    * @param auctionId The auction ID.
+   * @param options Sequelize FindOptions (transaction/locks) to be used.
    * @returns The Auction if found, `null` otherwise.
    */
-  public async findByPk(auctionId: number): Promise<Auction | null> {
-    const cached = await redis.get(this.idKey(auctionId));
-    if (cached) {
-      const auction = Auction.build(JSON.parse(cached));
-      // necessary to save it without errors on unique id
-      // we can't use build option isNewRecord because it erases createdAt and other fields 
-      auction.isNewRecord = false;
-      return auction;
+  public async findByPk(auctionId: number, options: FindOptions = {}): Promise<Auction | null> {
+    if (!options.transaction && !options.lock) {
+      const cached = await redis.get(this.idKey(auctionId));
+      if (cached) {
+        const auction = Auction.build(JSON.parse(cached));
+        // necessary to save it without errors on unique id
+        // we can't use build option isNewRecord because it erases createdAt and other fields 
+        auction.isNewRecord = false;
+        return auction;
+      }
     }
 
-    const auction = await Auction.findByPk(auctionId);
+    const auction = await Auction.findByPk(auctionId, options);
     if (auction) await redis.set(this.idKey(auction.id), JSON.stringify(auction));
     return auction;
   }
@@ -78,8 +82,8 @@ class AuctionRepository {
    * @param where Optional Sequelize filters.
    * @returns List of matching auctions.
    */
-  public async findAll(where: WhereOptions = {}): Promise<Auction[]> {
-    return Auction.findAll({ where });
+  public async findAll(where: WhereOptions = {}, transaction: Transaction | null = null): Promise<Auction[]> {
+    return Auction.findAll({ where, transaction });
   }
 
   /**
@@ -142,13 +146,13 @@ class AuctionRepository {
    * Closes an auction and clears its cache entry.
    * @param auctionId The auction ID.
    * @param winningBid Winning bid data or `null` if none.
-   * @param transaction Optional Sequelize transaction.
+   * @param transaction Sequelize transaction to be used.
    */
-  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number; } | null, transaction?: Transaction): Promise<void> {
+  public async closeAuction(auctionId: number, winningBid: { winnerId: string, finalPrice: number; } | null, transaction: Transaction | null = null): Promise<void> {
     try {
       await Auction.update(
         { endedAt: new Date(), winnerId: winningBid?.winnerId ?? null, finalPrice: winningBid?.finalPrice ?? null },
-        { where: { id: auctionId }, transaction: transaction ?? null },
+        { where: { id: auctionId }, transaction },
       );
     } catch (err) {
       throw createSequelizeError(err, "closeAuction");

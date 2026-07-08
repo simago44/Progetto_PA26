@@ -1,7 +1,7 @@
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import { Bid } from "../models/Bid.ts";
 import redis from "../integrations/redis.ts";
-import type { CreationAttributes } from "sequelize";
+import type { CreationAttributes, Transaction } from "sequelize";
 
 class BidRepository {
   /**
@@ -49,18 +49,15 @@ class BidRepository {
   /**
    * Persists a Bid and updates the cache.
    * @param auction The Bid instance to persist.
+   * @param transaction Optional Sequelize transaction.
    * @returns The saved Bid instance.
    */
-  public async save(bid: Bid): Promise<Bid> {
+  public async save(bid: Bid, transaction: Transaction | null = null): Promise<Bid> {
     try {
-      const created_bid = await bid.save();
+      const created_bid = await bid.save({ transaction });
 
       // we invalidate cache for the auction
-      const cached_bids = await this.getCachedBids(created_bid.auctionId);
-      if (cached_bids) {
-        cached_bids.push(created_bid);
-        await redis.set(this.auctionBidsKey(created_bid.auctionId), JSON.stringify(cached_bids));
-      }
+      await redis.del(this.auctionBidsKey(created_bid.auctionId));
       return created_bid;
     } catch (err) {
       throw createSequelizeError(err, "createBid");
@@ -78,7 +75,7 @@ class BidRepository {
     return bid;
   }
 
- /**
+  /**
    * Finds all bids from the database.
    * @returns A list of all Bid instances.
    */
@@ -89,25 +86,27 @@ class BidRepository {
   /**
    * Finds all bids for a specific auction.
    * @param auctionId The auction ID.
+   * @param transaction Optional Sequelize transaction.
    * @returns List of Bid instances for the auction.
    */
-  public async findAuctionBids(auctionId: number): Promise<Bid[]> {
+  public async findAuctionBids(auctionId: number, transaction: Transaction | null = null): Promise<Bid[]> {
     const cached_bids = await this.getCachedBids(auctionId);
     if (cached_bids) return cached_bids;
 
-    const bids = await Bid.findAll({ where: { auctionId } });
+    const bids = await Bid.findAll({ where: { auctionId }, transaction });
     await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
     return bids;
   }
 
-/**
+  /**
    * Checks whether a user has placed any bids in an auction.
    * @param auctionId The auction ID.
    * @param userId The user ID.
+   * @param transaction Optional Sequelize transaction.
    * @returns `true` if the user has at least one bid in the auction, `false` otherwise.
    */
-  public async userHasBidsInAuction(auctionId: number, userId: string): Promise<boolean> {
-    const bids = await this.findAuctionBids(auctionId);
+  public async userHasBidsInAuction(auctionId: number, userId: string, transaction: Transaction | null = null): Promise<boolean> {
+    const bids = await this.findAuctionBids(auctionId, transaction);
     return bids.some(b => b.userId === userId);
   }
 
@@ -116,8 +115,8 @@ class BidRepository {
    * @param auctionId The auction ID.
    * @returns `true` if the auction has at least one bid, `false` otherwise.
    */
-  public async auctionHasBids(auctionId: number): Promise<boolean> {
-    const bids = await this.findAuctionBids(auctionId);
+  public async auctionHasBids(auctionId: number, transaction: Transaction | null = null): Promise<boolean> {
+    const bids = await this.findAuctionBids(auctionId, transaction);
     return bids.length > 0;
   }
 }

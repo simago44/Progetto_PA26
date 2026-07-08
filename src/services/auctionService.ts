@@ -1,4 +1,4 @@
-import { Op, type CreationAttributes, type WhereOptions } from "sequelize";
+import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import auctionRepository from "../repositories/auctionRepository.ts";
 import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval, HOURS } from "../utils/dateUtils.ts";
@@ -112,10 +112,11 @@ class AuctionService {
   /**
    * Retrieves auctions matching the provided filters.
    * @param filters The auction filters to apply.
+   * @param transaction Sequelize transaction to be used.
    * @returns A list of matching Auction instances.
    */
-  public async getAuctions(filters: AuctionFilters) {
-    return await auctionRepository.findAll(this.buildFilters(filters));
+  public async getAuctions(filters: AuctionFilters, transaction: Transaction | null = null) {
+    return await auctionRepository.findAll(this.buildFilters(filters), transaction);
   }
 
   /**
@@ -175,10 +176,11 @@ class AuctionService {
   /**
    * Calculates the current bid price of an English auction.
    * @param auction The English auction instance.
+   * @param transaction Sequelize transaction to be used.
    * @returns The current bid price.
    */
-  public async getEnglishCurrentBidPrice(auction: EnglishAuction): Promise<number> {
-    const highestBid = await this.getWinningBid(auction.id);
+  public async getEnglishCurrentBidPrice(auction: EnglishAuction, transaction: Transaction | null = null): Promise<number> {
+    const highestBid = await this.getWinningBid(auction.id, transaction);
     // if there is not bid, the current price is the reservePrice
     if (highestBid == null) return auction.reservePrice;
     return highestBid.bidPrice + auction.minimumIncrement;
@@ -230,11 +232,12 @@ class AuctionService {
   /**
    * Calculates the end time of an auction based on its type and current bids.
    * @param rawAuction The Auction instance to evaluate.
+   * @param transaction Sequelize transaction to be used.
    * @returns The calculated auction end time.
    */
-  public async getEndsAt(rawAuction: Auction): Promise<Date> {
+  public async getEndsAt(rawAuction: Auction, transaction: Transaction | null = null): Promise<Date> {
     const auction = this.toTypedAuction(rawAuction);
-    const winningBid = await this.getWinningBid(auction.id);
+    const winningBid = await this.getWinningBid(auction.id, transaction);
 
     switch (auction.type) {
       case AuctionType.English: {
@@ -274,20 +277,48 @@ class AuctionService {
   /**
    * Calculates the remaining time until an auction ends.
    * @param auction The Auction instance.
+   */
+  public async getMsToEnd(auction: Auction): Promise<number>;
+
+  /**
+   * Calculates the remaining time until an auction ends.
+   * @param auctionId The Auction ID.
+   */
+  public async getMsToEnd(auctionId: number): Promise<number>;
+
+  /**
+   * Calculates the remaining time until an auction ends.
    * @returns The number of milliseconds until the auction ends.
    */
-  public async getMsToEnd(auction: Auction): Promise<number> {
+  public async getMsToEnd(auctionOrId: Auction | number): Promise<number> {
+    let auction: Auction;
+
+    if (typeof auctionOrId === "number") {
+      const foundAuction = await Auction.findByPk(auctionOrId);
+
+      if (foundAuction == null) {
+        throw new Errors.AuctionNotFoundError({
+          auctionId: auctionOrId,
+        });
+      }
+
+      auction = foundAuction;
+    } else {
+      auction = auctionOrId;
+    }
+
     const endsAt = await this.getEndsAt(auction);
-    return endsAt.getTime() - new Date().getTime();
+    return endsAt.getTime() - Date.now();
   }
 
   /**
    * Retrieves the winning bid and its final price for an auction.
    * @param auctionId The auction ID.
+   * @param transaction Sequelize transaction to be used.
    * @returns The winning bid with its final price, or `null` if no bids exist.
    */
-  public async getWinningBid(auctionId: number): Promise<{ bid: Bid; bidPrice: number; } | null> {
-    const bids = await bidRepository.findAuctionBids(auctionId);
+  public async getWinningBid(auctionId: number, transaction: Transaction | null = null): Promise<{ bid: Bid; bidPrice: number; } | null> {
+    const bids = await bidRepository.findAuctionBids(auctionId, transaction);
     bids.sort((a, b) => b.bidPrice - a.bidPrice);
 
     const higherBid = bids[0];
@@ -304,31 +335,41 @@ class AuctionService {
   /**
    * Closes an auction if it has reached its end time.
    * @param auction The Auction instance to close.
+   * @param transaction Sequelize transaction to be used.
    * @returns `true` if the auction was closed, `false` otherwise.
    */
-  public async closeAuction(auction: Auction): Promise<boolean> {
-    // if it was already closed or is not ended yet, we return
-    const endsAt = await this.getEndsAt(auction);
-    if (auction.status == AuctionStatus.Ended || endsAt > new Date()) return false;
+  public async closeAuction(auctionId: number, transaction: Transaction | null = null): Promise<boolean> {
+    // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
+    const run_transaction = async (t: Transaction) => {
+      // create lock on auction
+      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
-    logger.debug(`Closing auction: ${auction.id}`);
+      // if it was already closed or is not ended yet, we return
+      const endsAt = await this.getEndsAt(auction, t);
+      if (auction.status == AuctionStatus.Ended || endsAt > new Date()) return false;
 
-    const winningBid = await this.getWinningBid(auction.id);
+      logger.debug(`Closing auction: ${auction.id}`);
 
-    if (winningBid) {
-      const winnerId = winningBid.bid.userId;
-      const finalPrice = winningBid.bidPrice;
+      const winningBid = await this.getWinningBid(auction.id, t);
 
-      await sequelize.transaction(async (t) => {
+      if (winningBid) {
+        const winnerId = winningBid.bid.userId;
+        const finalPrice = winningBid.bidPrice;
+
         await auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);
         // remove tokens from winner
         await userRepository.decrementTokens(winnerId, finalPrice, t);
         // and add tokens to auction creator
         await userRepository.incrementTokens(auction.creatorId, finalPrice, t);
-      });
-    } else {
-      await auctionRepository.closeAuction(auction.id, null);
-    }
+
+      } else {
+        await auctionRepository.closeAuction(auction.id, null, t);
+      }
+    };
+
+    if (transaction) await run_transaction(transaction);
+    else await sequelize.transaction(run_transaction);
 
     return true;
   };
@@ -344,28 +385,33 @@ class AuctionService {
    * @throws {AuctionHasAlreadyBidError} If the auction already has bids.
    */
   public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {
-    const auction = await auctionRepository.findByPk(auctionId);
-    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+    // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
+    await sequelize.transaction(async (t: Transaction) => {
+      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
-    switch (auction.type) {
-      case AuctionType.English:
-        if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
-        if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
-        if (await bidRepository.auctionHasBids(auction.id)) throw new Errors.AuctionHasAlreadyAbBidError();
+      switch (auction.type) {
+        case AuctionType.English:
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
+          if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
+          // Because it's useless to lower the reservePrice when there is already a bid that it's higher than it.
+          if (await bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyAbBidError();
 
-        break;
-      case AuctionType.Dutch:
-        if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
-        if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
+          break;
+        case AuctionType.Dutch:
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError();
+          // It's useless to check for bids because the auction has bids only if it's ended.
+          if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
 
-        break;
-      case AuctionType.FirstPrice:
-      case AuctionType.SecondPrice:
-        throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
-    }
+          break;
+        case AuctionType.FirstPrice:
+        case AuctionType.SecondPrice:
+          throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
+      }
 
-    auction.reservePrice = reservePrice;
-    await auctionRepository.save(auction);
+      auction.reservePrice = reservePrice;
+      await auctionRepository.save(auction, t);
+    });
   }
 }
 

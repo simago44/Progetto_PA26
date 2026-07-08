@@ -15,27 +15,22 @@ new Worker(queueName, async job => {
   switch (job.name) {
     case closeAuctionJobName: {
       if (job.data.auctionId == null) throw createInternalServerError(`BullMQ job { id: '${job.id}', name: ${job.name} } has no job.data.auctionId`);
-      const auctionId = job.data.auctionId as string;
+      const auctionId = job.data.auctionId as number;
 
-      const auction = await Auction.findByPk(auctionId);
-      if (auction == null) return;
-
-      if (auction.status == AuctionStatus.Ended) break;
-
-      const closed = await auctionService.closeAuction(auction);
-      if (!closed) createCloseAuctionJob(auction);
+      const closed = await auctionService.closeAuction(auctionId);
+      if (!closed) createCloseAuctionJob(auctionId);
 
       break;
     }
   }
 }, { connection });
 
-export async function createCloseAuctionJob(auction: Auction): Promise<void> {
-  await auctionQueue.remove(`close-auction-${auction.id}`);
-  await auctionQueue.add(closeAuctionJobName, { auctionId: auction.id }, {
-    delay: await auctionService.getMsToEnd(auction),
+export async function createCloseAuctionJob(auctionId: number): Promise<void> {
+  await auctionQueue.remove(`close-auction-${auctionId}`);
+  await auctionQueue.add(closeAuctionJobName, { auctionId: auctionId }, {
+    delay: await auctionService.getMsToEnd(auctionId),
     attempts: 3,
-    jobId: `close-auction-${auction.id}`,
+    jobId: `close-auction-${auctionId}`,
     backoff: { type: 'exponential', delay: 2000 },
     removeOnComplete: true,
     removeOnFail: true
@@ -48,7 +43,7 @@ export async function initBullMQ(): Promise<void> {
     auctions.map(async (auction) => {
       if (auction.status === AuctionStatus.Ended) return;
 
-      await createCloseAuctionJob(auction);
+      await createCloseAuctionJob(auction.id);
     })
   );
 }

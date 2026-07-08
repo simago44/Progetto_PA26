@@ -1,4 +1,4 @@
-import type { CreationAttributes } from "sequelize";
+import type { CreationAttributes, Transaction } from "sequelize";
 import { Errors } from "../factory/errorFactory.ts";
 import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
@@ -10,6 +10,7 @@ import auctionService from "./auctionService.ts";
 import { omit } from "lodash-es";
 import userService from "./userService.ts";
 import { AuctionType } from "../enums/enums.ts";
+import sequelize from "../integrations/sequelize.ts";
 
 class BidService {
   /**
@@ -30,15 +31,20 @@ class BidService {
    * Handles missing bid prices according to the auction type.
    * @param bid The bid creation attributes.
    * @param rawAuction The auction associated with the bid.
+   * @param transaction Sequelize transaction to be used.
    * @returns The bid attributes with a valid bid price.
    * @throws {BidCantHavePriceError} If a Dutch auction bid contains a bid price.
    * @throws {BidMustHavePriceError} If a first-price or second-price auction bid does not contain a bid price.
    */
-  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null; }, rawAuction: Auction) {
+  public async handleBidPriceMissing(
+    bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null; },
+    rawAuction: Auction,
+    transaction: Transaction | null = null
+  ) {
     const auction = auctionService.toTypedAuction(rawAuction);
     switch (auction.type) {
       case AuctionType.English:
-        if (bid.bidPrice == null) bid.bidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
+        if (bid.bidPrice == null) bid.bidPrice = await auctionService.getEnglishCurrentBidPrice(auction, transaction);
         break;
       case AuctionType.Dutch: {
         if (bid.bidPrice != null) throw new Errors.BidCantHavePriceError({ auctionType: auction.type });
@@ -68,25 +74,29 @@ class BidService {
     const auctionId: number = bidData.auctionId as number;
     const userId: string = bidData.userId;
 
-    const auction = await auctionRepository.findByPk(auctionId);
-    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+    // We use transaction with UPDATE lock to prevent multiple bid creations simultaneously
+    // and to prevent other queries relative to the auctionId/userId during the bid creation.
+    return sequelize.transaction(async (t) => {
+      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
-    const user = await userRepository.findByPk(userId);
-    // should not happen because we validated the JWT token. We throw a generic error
-    if (!user) throw new Errors.UnauthorizedError();
+      const user = await userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
+      // should not happen because we validated the JWT token. We throw a generic error
+      if (!user) throw new Errors.UnauthorizedError();
 
-    const data = await this.handleBidPriceMissing(bidData, auction);
+      const data = await this.handleBidPriceMissing(bidData, auction, t);
 
-    const bid: Bid = bidRepository.build(data);
+      const bid: Bid = bidRepository.build(data);
 
-    await this.checkIsBidValid(bid, auction, user);
+      await this.checkIsBidValid(bid, auction, user, t);
 
-    const createdBid = await bidRepository.save(bid);
+      const createdBid = await bidRepository.save(bid, t);
 
-    //If the auction is dutch must be closed when the first bid arrives
-    if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction);
+      //If the auction is dutch must be closed when the first bid arrives
+      if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction.id, t);
 
-    return createdBid;
+      return createdBid;
+    });
   }
 
   /**
@@ -113,19 +123,20 @@ class BidService {
    * @param bid The Bid instance to validate.
    * @param rawAuction The auction associated with the bid.
    * @param user The user placing the bid.
+   * @param transaction Sequelize transaction to be used.
    * @throws {AuctionEndedError} If the auction has already ended.
    * @throws {BidTooLowError} If the bid price is below the minimum allowed price.
    * @throws {BidAlreadyPlacedError} If the user has already placed a bid in the auction.
    * @throws {InsufficientTokensError} If the user does not have enough tokens.
    */
-  public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User): Promise<void> {
+  public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User, transaction: Transaction | null = null): Promise<void> {
     const auction = auctionService.toTypedAuction(rawAuction);
-    const auctionEndsAt = await auctionService.getEndsAt(auction);
+    const auctionEndsAt = await auctionService.getEndsAt(auction, transaction);
     if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError();
 
     switch (auction.type) {
       case AuctionType.English: {
-        const winningBid = await auctionService.getWinningBid(auction.id);
+        const winningBid = await auctionService.getWinningBid(auction.id, transaction);
 
         // if no bid is found, we check that the bid is at least equal to the reservePrice
         // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement
@@ -146,13 +157,13 @@ class BidService {
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice: {
-        const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id);
+        const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id, transaction);
         if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
         break;
       }
     }
 
-    const realUserTokens = await userService.getRealUserTokens(user);
+    const realUserTokens = await userService.getRealUserTokens(user, transaction);
     if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
   }
 }

@@ -3,7 +3,7 @@ import { User } from "../models/User.ts";
 import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import redis from "../integrations/redis.ts";
-import type { Transaction } from "sequelize";
+import type { FindOptions, Transaction } from "sequelize";
 import type { RoleName } from "../enums/enums.ts";
 
 class UserRepository {
@@ -47,7 +47,7 @@ class UserRepository {
     await this.cacheUser(user);
     return user;
   }
-  
+
   /**
    * Creates a user in Auth0 and assigns a role.
    * @param username The username.
@@ -74,19 +74,22 @@ class UserRepository {
   /**
    * Finds a User by ID.
    * @param userId The user ID.
+   * @param transaction Sequelize transaction to be used.
    * @returns The User instance if found, `null` otherwise.
    */
-  public async findByPk(userId: string): Promise<User | null> {
-    const cached = await redis.get(this.idKey(userId));
-    if (cached) {
-      const user = User.build(JSON.parse(cached));
-      // necessary to save it without errors on unique id
-      // we can't use build option isNewRecord because it erases createdAt and other fields 
-      user.isNewRecord = false;
-      return user;
+  public async findByPk(userId: string, options: FindOptions = {}): Promise<User | null> {
+    if (!options.transaction && !options.lock) {
+      const cached = await redis.get(this.idKey(userId));
+      if (cached) {
+        const user = User.build(JSON.parse(cached));
+        // necessary to save it without errors on unique id
+        // we can't use build option isNewRecord because it erases createdAt and other fields 
+        user.isNewRecord = false;
+        return user;
+      }
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId, options);
     if (user) await this.cacheUser(user);
     return user;
 
@@ -126,14 +129,14 @@ class UserRepository {
    * Increments a user's token balance.
    * @param userId The user ID.
    * @param tokens The number of tokens to add.
-   * @param transaction Optional Sequelize transaction.
+   * @param transaction Sequelize transaction to be used.
    */
-  public async incrementTokens(userId: string, tokens: number, transaction?: Transaction): Promise<void> {
+  public async incrementTokens(userId: string, tokens: number, transaction: Transaction | null = null): Promise<void> {
     try {
       await User.increment("tokens", {
         by: tokens,
         where: { id: userId },
-        transaction: transaction ?? null
+        transaction
       });
     } catch (err) {
       throw createSequelizeError(err, "incrementTokens");
@@ -147,14 +150,14 @@ class UserRepository {
    * Decrements a user's token balance.
    * @param userId The user ID.
    * @param tokens The number of tokens to remove.
-   * @param transaction Optional Sequelize transaction.
+   * @param transaction Sequelize transaction to be used.
    */
-  public async decrementTokens(userId: string, tokens: number, transaction?: Transaction): Promise<void> {
+  public async decrementTokens(userId: string, tokens: number, transaction: Transaction | null = null): Promise<void> {
     try {
       await User.decrement("tokens", {
         by: tokens,
         where: { id: userId },
-        transaction: transaction ?? null
+        transaction
       });
     } catch (err) {
       throw createSequelizeError(err, "decrementTokens");
@@ -179,7 +182,7 @@ class UserRepository {
       throw createSequelizeError(err, "deleteUser");
     }
   }
-  
+
   /**
    * Deletes a user from Auth0.
    * @param userId The Auth0 user ID.

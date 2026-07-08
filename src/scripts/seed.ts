@@ -17,6 +17,7 @@ import auctionService from "../services/auctionService.ts";
 import bidService from "../services/bidService.ts";
 import { clearRedis } from "../integrations/redis.ts";
 import { initBullMQ } from "../integrations/BullMQ.ts";
+import type { Bid } from "../models/Bid.ts";
 
 const MIN_AUCTIONS = 5;
 const MAX_AUCTIONS = 20;
@@ -109,7 +110,7 @@ function computeDutchParams(status: AuctionStatus, reservePrice: number): {
 export async function generateAuctionsArray(min_auctions: number, max_auctions: number, creatorsArray: User[]) {
   const types = Object.values(AuctionType);
   const statuses = Object.values(AuctionStatus);
-  const array: Auction[] = [];
+  const promises: Promise<Auction>[] = [];
 
   for (const type of types) {
     for (const status of statuses) {
@@ -161,15 +162,19 @@ export async function generateAuctionsArray(min_auctions: number, max_auctions: 
             break;
         }
 
-        array.push(await auctionService.createAuction(payload));
-
+        promises.push(auctionService.createAuction(payload));
       }
     }
   }
-  return array;
+
+  return Promise.all(promises);
 }
 
 export async function generateBidsArray(min_bids: number, max_bids: number, auctions: Auction[], participantsArray: User[]) {
+  const promises: Promise<any>[] = [];
+
+  // we shuffle the array because we want that every type/status of auction have the
+  // same probability of getting a bid (maybe the user tokens can finish)
   const shuffledAuctions = [...auctions].sort(() => Math.random() - 0.5);
   for (const rawAuction of shuffledAuctions) {
     const auction = auctionService.toTypedAuction(rawAuction);
@@ -180,28 +185,31 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
 
     switch (auction.type) {
       case AuctionType.English: {
-        let currentBidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
+        const promise_fun = async () => {
+          let currentBidPrice = await auctionService.getEnglishCurrentBidPrice(auction);
+          for (let i = 0; i < length; i++) {
+            const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
+            if (!participantsArray[index]) throw createInternalServerError("Invalid value for participantId");
+            const participant = participantsArray[index];
 
-        for (let i = 0; i < length; i++) {
-          const index = faker.number.int({ min: 0, max: participantsArray.length - 1 });
-          if (!participantsArray[index]) throw createInternalServerError("Invalid value for participantId");
-          const participant = participantsArray[index];
+            const increment = faker.number.int({ min: auction.minimumIncrement, max: auction.minimumIncrement * 5 });
+            const bidPrice = currentBidPrice + increment;
 
-          const increment = faker.number.int({ min: auction.minimumIncrement, max: auction.minimumIncrement * 5 });
-          const bidPrice = currentBidPrice + increment;
+            const bid = {
+              userId: participant.id,
+              auctionId: auction.id,
+              bidPrice
+            };
 
-          const bid = {
-            userId: participant.id,
-            auctionId: auction.id,
-            bidPrice,
-          };
-
-          try {
-            await bidService.createBid(bid);
-            currentBidPrice = bidPrice; // only advance on success
-          } catch {
-            // bid rejected (e.g. insufficient tokens) — skip
+            try {
+              await bidService.createBid(bid);
+              currentBidPrice = bidPrice;
+            } catch {
+              // bid rejected (e.g. insufficient tokens)
+            }
           }
+
+          promises.push(promise_fun())
         }
         break;
       }
@@ -220,11 +228,10 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
           auctionId: auction.id
         };
 
-        try {
-          await bidService.createBid(bid);
-        } catch {
-          // bid rejected (e.g. insufficient tokens) — skip
-        }
+        promises.push(bidService.createBid(bid).catch(() => {
+          // bid rejected (e.g. insufficient tokens)
+          return null;
+        }));
 
         break;
       }
@@ -252,16 +259,16 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
             bidPrice,
           };
 
-          try {
-            await bidService.createBid(bid);
-          } catch {
-            // bid rejected (e.g. insufficient tokens) — skip
-          }
+          promises.push(bidService.createBid(bid).catch(() => {
+            // bid rejected (e.g. insufficient tokens)
+            return null;
+          }));
         }
         break;
       }
     }
   }
+  return Promise.all(promises);
 }
 
 export async function seed() {

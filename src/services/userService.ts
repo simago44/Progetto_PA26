@@ -1,3 +1,4 @@
+import type { Transaction } from "sequelize";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { Errors } from "../factory/errorFactory.ts";
 import type { Bid } from "../models/Bid.ts";
@@ -6,26 +7,28 @@ import auctionRepository from "../repositories/auctionRepository.ts";
 import bidRepository from "../repositories/bidRepository.ts";
 import userRepository from "../repositories/userRepository.ts";
 import auctionService, { type AuctionFilters } from "./auctionService.ts";
+import sequelize from "../integrations/sequelize.ts";
 
 class UserService {
   /**
    * Calculates the user's available tokens after accounting for active bids.
    * @param user The User instance.
+   * @param transaction Sequelize transaction to be used.
    * @returns The user's available token balance.
    * @throws {WalletNotFoundError} If the user does not have a wallet.
    */
-  public async getRealUserTokens(user: User): Promise<number> {
+  public async getRealUserTokens(user: User, transaction: Transaction | null = null): Promise<number> {
     if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId: user.id });
 
-    const openAuctions = await auctionService.getAuctions({ statuses: [AuctionStatus.InProgress] });
+    const openAuctions = await auctionService.getAuctions({ statuses: [AuctionStatus.InProgress] }, transaction);
     const bidsPerAuction = await Promise.all(
       openAuctions.map(async (auction) => {
-        if (auction.type != AuctionType.English) return bidRepository.findAuctionBids(auction.id)
+        if (auction.type != AuctionType.English) return bidRepository.findAuctionBids(auction.id, transaction)
 
         // if it's an english auction, we want to get only the winning bid.
         // if the winning bid is not of the current user, we don't need to consider it
         // in the token decrement
-        const winningBid = await auctionService.getWinningBid(auction.id);
+        const winningBid = await auctionService.getWinningBid(auction.id, transaction);
         if (!winningBid || winningBid.bid.userId != user.id) return [];
         return [winningBid.bid];
       }) // already cached, per-auction
@@ -100,12 +103,15 @@ class UserService {
    * @throws {WalletNotFoundError} If the user does not have a wallet.
    */
   public async topUpWallet(userId: string, tokens: number): Promise<void> {
-    const user = await userRepository.findByPk(userId);
-    if (!user) throw new Errors.UserNotFoundError({ userId });
+    // Transaction and lock needed to prevent other queries relative to the userId during the wallet update.
+    await sequelize.transaction(async (t: Transaction) => {
+      const user = await userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
+      if (!user) throw new Errors.UserNotFoundError({ userId });
 
-    if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId });
+      if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId });
 
-    await userRepository.incrementTokens(userId, tokens);
+      await userRepository.incrementTokens(userId, tokens, t);
+    });
   }
 }
 
