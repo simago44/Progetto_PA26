@@ -68,7 +68,7 @@ class UserService {
    * @param filters The auction report filters.
    * @returns A list of formatted auctions.
    */
-  public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'startDate' | 'endDate'>>) {
+  public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'fromDate' | 'toDate'>>) {
     const user = await userRepository.findByPk(filters.participantId);
     if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
     
@@ -83,7 +83,7 @@ class UserService {
    * @returns The total final price of won auctions.
    * @throws {UserNotFoundError} If the user does not exist.
    */
-  public async getWalletReport(filters: { participantId: string, startDate: Date, endDate: Date }) {
+  public async getWalletReport(filters: { participantId: string, fromDate: Date, toDate: Date }) {
     const user = await userRepository.findByPk(filters.participantId);
     if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
     

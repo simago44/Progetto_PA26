@@ -145,14 +145,14 @@ router.get("/", getAuctionsMiddlewares, auctionController.getAuctions);
  *       - Auctions
  *     parameters:
  *       - in: query
- *         name: startDate
+ *         name: fromDate
  *         required: true
  *         schema:
  *           type: string
  *           format: date
  *         description: Start date of the statistics period.
  *       - in: query
- *         name: endDate
+ *         name: toDate
  *         required: true
  *         schema:
  *           type: string

@@ -26,14 +26,14 @@ class UserController {
    * The auctions can be filtered by:
    *  - `participantId`: the user's ID whose bids are being retrieved;
    *  - `won`: if the participantId won or not the auction;
-   *  - `startDate`: auction's start date;
-   *  - `endDate`: auction's end date.
+   *  - `fromDate`: auction's start date;
+   *  - `toDate`: auction's end date.
    * 
    * Returns `200 OK` with the list of auctions the user participated to.
    */
   public async getAuctionsReport(
     _req: Request,
-    res: Response<unknown, { filters: { participantId: string, won: boolean, startDate: Date, endDate: Date } }>
+    res: Response<unknown, { filters: { participantId: string, won: boolean, fromDate: Date, toDate: Date } }>
   ) {
     const auctions = await userService.getAuctionReport(res.locals.filters);
     res.status(StatusCodes.OK).json(auctions);
@@ -48,14 +48,14 @@ class UserController {
    * 
    * The auctions can be filtered by:
    *  - `participantId`: the user's ID whose bids are being retrieved;
-   *  - `startDate`: auction's start date;
-   *  - `endDate`: auction's end date.
+   *  - `fromDate`: auction's start date;
+   *  - `toDate`: auction's end date.
    * 
    * Returns `200 OK` with the total spending in the date interval.
    */
   public async getWalletReport(
     _req: Request,
-    res: Response<unknown, { filters: { participantId: string, startDate: Date, endDate: Date } }>
+    res: Response<unknown, { filters: { participantId: string, fromDate: Date, toDate: Date } }>
   ) {
     const userSpending = await userService.getWalletReport(res.locals.filters);
     res.status(StatusCodes.OK).json({ total: userSpending });

@@ -17,13 +17,13 @@ describe("Unit Tests - auctionMiddleware", () => {
     it("should validate a valid english auction and call next", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      const endDate = new Date(futureDate);
-      endDate.setHours(endDate.getHours() + 2);
+      const toDate = new Date(futureDate);
+      toDate.setHours(toDate.getHours() + 2);
 
       const req = {
         body: {
           startsAt: futureDate,
-          endsAt: endDate,
+          endsAt: toDate,
           reservePrice: 100,
           type: AuctionType.English,
           minimumIncrement: 10,
@@ -51,8 +51,8 @@ describe("Unit Tests - auctionMiddleware", () => {
     it("should validate a valid dutch auction and call next", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      const endDate = new Date(futureDate);
-      endDate.setHours(endDate.getHours() + 2);
+      const toDate = new Date(futureDate);
+      toDate.setHours(toDate.getHours() + 2);
 
       const req = {
         body: {
@@ -85,13 +85,13 @@ describe("Unit Tests - auctionMiddleware", () => {
     it("should validate a valid first-price auction and call next", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      const endDate = new Date(futureDate);
-      endDate.setHours(endDate.getHours() + 2);
+      const toDate = new Date(futureDate);
+      toDate.setHours(toDate.getHours() + 2);
 
       const req = {
         body: {
           startsAt: futureDate,
-          endsAt: endDate,
+          endsAt: toDate,
           reservePrice: 100,
           type: AuctionType.FirstPrice,
           description: "This is a valid long enough description for the auction test."
@@ -117,13 +117,13 @@ describe("Unit Tests - auctionMiddleware", () => {
     it("should validate a valid second-price auction and call next", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      const endDate = new Date(futureDate);
-      endDate.setHours(endDate.getHours() + 2);
+      const toDate = new Date(futureDate);
+      toDate.setHours(toDate.getHours() + 2);
 
       const req = {
         body: {
           startsAt: futureDate,
-          endsAt: endDate,
+          endsAt: toDate,
           reservePrice: 100,
           type: AuctionType.SecondPrice,
           description: "This is a valid long enough description for the auction test."
@@ -257,8 +257,8 @@ describe("Unit Tests - auctionMiddleware", () => {
       const req = {
         query: {
           types: "english,dutch",
-          startDate: "2026-01-01",
-          endDate: "2026-12-31"
+          fromDate: "2026-01-01",
+          toDate: "2026-12-31"
         }
       } as unknown as Request;
 
@@ -268,20 +268,20 @@ describe("Unit Tests - auctionMiddleware", () => {
       validateGetAuctionStatsMiddleware(req, res, next);
 
       expect(res.locals.filters.types).toEqual([AuctionType.English, AuctionType.Dutch]);
-      expect(res.locals.filters.startDate).toEqual(
-        new Date(Date.parse(String(req.query.startDate)))
+      expect(res.locals.filters.fromDate).toEqual(
+        new Date(Date.parse(String(req.query.fromDate)))
       );
-      expect(res.locals.filters.endDate).toEqual(
-        new Date(Date.parse(String(req.query.endDate)))
+      expect(res.locals.filters.toDate).toEqual(
+        new Date(Date.parse(String(req.query.toDate)))
       );
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw an error if endDate is before startDate", async () => {
+    it("should throw an error if toDate is before fromDate", async () => {
       const req = {
         query: {
-          startDate: "2026-12-31",
-          endDate: "2026-01-01"
+          fromDate: "2026-12-31",
+          toDate: "2026-01-01"
         }
       } as unknown as Request;
 
@@ -293,7 +293,7 @@ describe("Unit Tests - auctionMiddleware", () => {
           name: Errors.ValidationError.name,
           message: ErrorMessages.Validation({ form: "validateGetAuctionStats" }),
           details: expect.objectContaining({
-            endDate: [
+            toDate: [
               expect.any(String)
             ]
           })

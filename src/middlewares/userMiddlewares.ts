@@ -2,37 +2,21 @@ import z from "zod";
 import type { Request, Response, NextFunction } from "express";
 import { createZodError } from "../factory/errorFactory.ts";
 import { AuctionType } from "../enums/enums.ts";
+import { dateRangeSchema } from "./commonSchemas.ts";
 
 export const topUpWalletSchema = z.object({
   tokens: z.number().positive()
 });
 
-const auctionReportFiltersSchema = z.object({
+const auctionReportFiltersSchema = dateRangeSchema.extend({
   participantId: z.string(),
   won: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
-  types: z.array(z.enum(AuctionType)).optional(),
-  startDate: z.coerce.date().default(new Date(0)),
-  endDate: z.coerce.date().default(() => new Date()).refine(
-    (date) => date <= new Date(),
-    { message: "endDate cannot be in the future" }
-  ),
-}).refine((data) => data.endDate >= data.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
+  types: z.array(z.enum(AuctionType)).optional()
 });
 
-const walletReportFiltersSchema = z.object({
-  participantId: z.string(),
-  startDate: z.coerce.date().default(new Date(0)),
-  endDate: z.coerce.date().default(() => new Date()).refine(
-    (date) => date <= new Date(),
-    { message: "endDate cannot be in the future" }
-  ),
-}).refine((data) => data.endDate >= data.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
+const walletReportFiltersSchema = dateRangeSchema.extend({
+  participantId: z.string()
 });
-
 
 export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
   const userId = req.params.userId == "self" ? res.locals.authId : req.params.userId;

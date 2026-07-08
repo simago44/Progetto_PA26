@@ -622,7 +622,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions?statuses=ended",
+              "raw": "http://{{HOST}}:{{PORT}}/auctions?statuses=in-progress&types=english",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -634,7 +634,11 @@
               "query": [
                 {
                   "key": "statuses",
-                  "value": "ended"
+                  "value": "in-progress"
+                },
+                {
+                  "key": "types",
+                  "value": "english"
                 }
               ]
             }
@@ -794,7 +798,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report?startDate=2026-07-03&won=true&types=dutch",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/auctions-report?fromDate=2026-07-03&won=true&types=dutch",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -807,7 +811,7 @@
               ],
               "query": [
                 {
-                  "key": "startDate",
+                  "key": "fromDate",
                   "value": "2026-07-03"
                 },
                 {
@@ -839,7 +843,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report?startDate=2026-07-03",
+              "raw": "http://{{HOST}}:{{PORT}}/users/{{BID_PARTICIPANT_USER_ID}}/wallet-report?fromDate=2026-07-03",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
@@ -852,7 +856,7 @@
               ],
               "query": [
                 {
-                  "key": "startDate",
+                  "key": "fromDate",
                   "value": "2026-07-03"
                 }
               ]

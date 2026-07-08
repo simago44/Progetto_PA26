@@ -15,8 +15,8 @@ export interface AuctionFilters {
   creatorIds?: string[];
   statuses?: AuctionStatus[];
   types?: AuctionType[];
-  startDate?: Date;
-  endDate?: Date;
+  fromDate?: Date;
+  toDate?: Date;
   won?: boolean;
   participantId?: string; // If the user participated to the auction
 }
@@ -75,24 +75,22 @@ class AuctionService {
           : { [Op.or]: [{ [Op.ne]: filters.participantId }, { [Op.is]: null }] },
       });
     }
-    if (filters.startDate) {
-      /** auction have NOT to be: (ended before startDate)
-      * --> auction have to be: (not ended or ended before startDate) */
-      filters.startDate.setHours(0, 0, 0, 0);
+    if (filters.fromDate) {
+      /** auction have NOT to be: (ended before fromDate)
+      * --> auction have to be: (not ended or ended before fromDate) */
       andConditions.push({
         [Op.or]: [
-          { endedAt: { [Op.gte]: filters.startDate } },
+          { endedAt: { [Op.gte]: filters.fromDate } },
           { endedAt: { [Op.is]: null } },
         ],
       });
     }
-    if (filters.endDate) {
-      /** auction have NOT to be: (started after endDate)
-      * --> auction have to be: (started before endDate) 
-      * I need to add one day because endDate have not the time
+    if (filters.toDate) {
+      /** auction have NOT to be: (started after toDate)
+      * --> auction have to be: (started before toDate)
+      * I need to add one day because toDate have not the time
       * so the comparison is wrong */
-      filters.endDate.setHours(0, 0, 0, 0);
-      andConditions.push({ startsAt: { [Op.lt]: addInterval(filters.endDate, 24 * HOURS) } });
+      andConditions.push({ startsAt: { [Op.lt]: addInterval(filters.toDate, 24 * HOURS) } });
     }
 
     const where: WhereOptions = { [Op.and]: andConditions };
@@ -161,7 +159,7 @@ class AuctionService {
    * @param filters The required auction filters for statistics calculation.
    * @returns Statistics for each auction type.
    */
-  public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'startDate' | 'endDate' | 'types'>>) {
+  public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'fromDate' | 'toDate' | 'types'>>) {
     const finalFilters = this.buildFilters(filters);
     const participantsPerAuction = await auctionRepository.getParticipantsPerAuction(finalFilters);
 

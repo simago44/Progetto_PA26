@@ -50,14 +50,14 @@ class AuctionController {
    * 
    * The auctions can be filtered by:
    *  - `types`: auction's type (english, dutch, first-price, second-price);
-   *  - `startDate`: auction's start date;
-   *  - `endDate`: auction's end date.
+   *  - `fromDate`: auction's start date;
+   *  - `toDate`: auction's end date.
    * 
    * Returns `200 OK` with the list of auctions.
    */
   public async getAuctionStats(
     _req: Request,
-    res: Response<unknown, { filters: { types: AuctionType[], startDate: Date, endDate: Date } }>
+    res: Response<unknown, { filters: { types: AuctionType[], fromDate: Date, toDate: Date } }>
   ) {
     const stats = await auctionService.getAuctionStats(res.locals.filters);
     res.status(StatusCodes.OK).json(stats);

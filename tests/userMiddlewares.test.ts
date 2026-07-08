@@ -10,7 +10,7 @@ import type { Request, Response } from "express";
 import { Errors } from "../src/factory/errorFactory.ts";
 import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
-describe("Unit Tests - walletMiddleware", () => {
+describe("Unit Tests - userMiddleware", () => {
   describe("resolveUserIdParam", () => {
     it("should resolve 'self' to res.locals.authId and call next", () => {
       const req = {
@@ -88,8 +88,8 @@ describe("Unit Tests - walletMiddleware", () => {
         query: {
           won: "true",
           types: `${AuctionType.English},${AuctionType.Dutch}`,
-          startDate: "2026-01-01",
-          endDate: "2026-06-01"
+          fromDate: "2026-01-01",
+          toDate: "2026-06-01"
         }
       } as unknown as Request;
       const res = {
@@ -102,18 +102,18 @@ describe("Unit Tests - walletMiddleware", () => {
       expect(res.locals.filters.participantId).toBe("user-123");
       expect(res.locals.filters.won).toBe(true);
       expect(res.locals.filters.types).toEqual([AuctionType.English, AuctionType.Dutch]);
-      expect(res.locals.filters.startDate).toBeInstanceOf(Date);
-      expect(res.locals.filters.endDate).toBeInstanceOf(Date);
+      expect(res.locals.filters.fromDate).toBeInstanceOf(Date);
+      expect(res.locals.filters.toDate).toBeInstanceOf(Date);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw an error if endDate is in the future", () => {
+    it("should throw an error if fromDate is in the future", () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 5);
 
       const req = {
         query: {
-          endDate: futureDate.toISOString()
+          fromDate: futureDate.toISOString()
         }
       } as unknown as Request;
       const res = {
@@ -126,7 +126,7 @@ describe("Unit Tests - walletMiddleware", () => {
           name: Errors.ValidationError.name,
           message: ErrorMessages.Validation({ form: "validateAuctionReportFilters" }),
           details: expect.objectContaining({
-            endDate: [
+            toDate: [
               expect.any(String),
             ]
           })
@@ -140,8 +140,8 @@ describe("Unit Tests - walletMiddleware", () => {
     it("should parse query parameters, populate filters object, and call next", () => {
       const req = {
         query: {
-          startDate: "2026-01-01",
-          endDate: "2026-05-01"
+          fromDate: "2026-01-01",
+          toDate: "2026-05-01"
         }
       } as unknown as Request;
       const res = {
@@ -152,16 +152,16 @@ describe("Unit Tests - walletMiddleware", () => {
       validateWalletReportFilters(req, res, next);
 
       expect(res.locals.filters.participantId).toBe("user-789");
-      expect(res.locals.filters.startDate).toBeInstanceOf(Date);
-      expect(res.locals.filters.endDate).toBeInstanceOf(Date);
+      expect(res.locals.filters.fromDate).toBeInstanceOf(Date);
+      expect(res.locals.filters.toDate).toBeInstanceOf(Date);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw an error if endDate is before startDate", () => {
+    it("should throw an error if toDate is before fromDate", () => {
       const req = {
         query: {
-          startDate: "2026-12-31",
-          endDate: "2026-01-01"
+          fromDate: "2026-12-31",
+          toDate: "2026-01-01"
         }
       } as unknown as Request;
       const res = {
@@ -174,7 +174,7 @@ describe("Unit Tests - walletMiddleware", () => {
           name: Errors.ValidationError.name,
           message: ErrorMessages.Validation({ form: "validateWalletReportFilters" }),
           details: expect.objectContaining({
-            endDate: [
+            toDate: [
               expect.any(String),
             ]
           })

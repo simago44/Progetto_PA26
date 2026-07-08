@@ -4,6 +4,7 @@ import z from 'zod';
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { AuctionConstants } from "../constants/constants.ts";
 import { MINUTES } from "../utils/dateUtils.ts";
+import { dateRangeSchema } from "./commonSchemas.ts";
 
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
@@ -55,13 +56,8 @@ const getAuctionsSchema = z.object({
   types: z.array(z.enum(AuctionType)).optional()
 });
 
-const getAuctionStatsSchema = z.object({
-  types: z.array(z.enum(AuctionType)).optional(),
-  startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional(),
-}).refine((data) => !data.endDate || data.endDate >= data.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
+const getAuctionStatsSchema = dateRangeSchema.extend({
+  types: z.array(z.enum(AuctionType)).optional()
 });
 
 const updateReservePriceMiddleware = z.object({

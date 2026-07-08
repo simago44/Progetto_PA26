@@ -55,13 +55,13 @@ router.get("/:userId/wallet", getWalletMiddlewares, userController.getWallet);
  *           type: string
  *         description: The ID of the user.
  *       - in: query
- *         name: startDate
+ *         name: fromDate
  *         schema:
  *           type: string
  *           format: date
  *         description: Filter auctions starting from this date.
  *       - in: query
- *         name: endDate
+ *         name: toDate
  *         schema:
  *           type: string
  *           format: date
@@ -105,14 +105,14 @@ router.get("/:userId/auctions-report", getAuctionsReportMiddlewares, userControl
  *           type: string
  *         description: The ID of the user.
  *       - in: query
- *         name: startDate
+ *         name: fromDate
  *         required: true
  *         schema:
  *           type: string
  *           format: date
  *         description: Start date of the report period.
  *       - in: query
- *         name: endDate
+ *         name: toDate
  *         required: true
  *         schema:
  *           type: string

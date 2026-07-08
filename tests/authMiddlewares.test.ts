@@ -85,12 +85,15 @@ describe("Unit Tests - authMiddleware", () => {
   });
 
   describe("checkJwtAuthorization", () => {
-    it("should call next with UnauthorizedError if jwt validation fails with UnauthorizedError", () => {
-      const req = {} as unknown as Request;
+    it("should call next with UnauthorizedError if jwt validation fails with UnauthorizedError", async () => {
+      const req = {
+        is: jest.fn().mockReturnValue(false),
+      } as unknown as Request;
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      checkJwtAuthorization(req, res, next);
+      // needed because it's an async middleware
+      await checkJwtAuthorization(req, res, next);
 
       expect(next).toHaveBeenCalledTimes(1);
     });
