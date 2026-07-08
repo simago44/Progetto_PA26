@@ -33,7 +33,7 @@ const configSchema = z.object({
   AUTH0_CLIENT_ID: z.string(),
   AUTH0_CLIENT_SECRET: z.string(),
   AUTH0_CONNECTION: z.string(),
-  ENABLE_LOG_FILE: z.coerce.boolean().default(true),
+  ENABLE_LOG_FILE: z.enum(["true", "false", "0", "1"]).transform((val) => val === 'true' || val === '1').default(true),
   LOG_DIR: z.string().default("./logs"),
   LOG_FILENAME_PREFIX: z.string().default("express"),
   CONSOLE_LOG_LEVEL: logLevel.default("debug"),

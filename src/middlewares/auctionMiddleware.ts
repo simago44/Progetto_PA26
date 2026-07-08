@@ -19,7 +19,7 @@ const EnglishAuctionSchema = BaseAuctionSchema.extend({
   type: z.literal(AuctionType.English),
   endsAt: z.coerce.date(),
   minimumIncrement: z.int().min(1),
-  delayBeforeEnding: z.int().min(0).optional().default(AuctionConstants.defaultDelayBeforeEnding)
+  delayBeforeEnding: z.int().min(0).default(AuctionConstants.defaultDelayBeforeEnding)
 }).refine((data) => data.endsAt > data.startsAt, {
   message: "endsAt must be after startsAt",
   path: ["endsAt"],

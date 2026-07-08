@@ -11,8 +11,8 @@ const auctionReportFiltersSchema = z.object({
   participantId: z.string(),
   won: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
   types: z.array(z.enum(AuctionType)).optional(),
-  startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional().default(() => new Date()).refine(
+  startDate: z.coerce.date().default(new Date(0)),
+  endDate: z.coerce.date().default(() => new Date()).refine(
     (date) => date <= new Date(),
     { message: "endDate cannot be in the future" }
   ),
@@ -23,8 +23,8 @@ const auctionReportFiltersSchema = z.object({
 
 const walletReportFiltersSchema = z.object({
   participantId: z.string(),
-  startDate: z.coerce.date().optional().default(new Date(0)),
-  endDate: z.coerce.date().optional().default(() => new Date()).refine(
+  startDate: z.coerce.date().default(new Date(0)),
+  endDate: z.coerce.date().default(() => new Date()).refine(
     (date) => date <= new Date(),
     { message: "endDate cannot be in the future" }
   ),
