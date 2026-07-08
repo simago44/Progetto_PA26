@@ -7,6 +7,8 @@ import {
   validateLogin
 } from "../src/middlewares/authMiddleware.ts";
 import type { Request, Response } from "express";
+import { Errors } from "../src/factory/errorFactory.ts";
+import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
 describe("Unit Tests - authMiddleware", () => {
   describe("checkPermission", () => {
@@ -30,7 +32,9 @@ describe("Unit Tests - authMiddleware", () => {
       const res = {} as unknown as Response;
       const next = jest.fn();
 
-      expect(() => checkPermission("read:users")(req, res, next)).toThrow();
+      expect(() => checkPermission("read:users")(req, res, next)).toThrow(
+        new Errors.ForbiddenError()
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -73,7 +77,9 @@ describe("Unit Tests - authMiddleware", () => {
       } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => checkSelfOrAllPermission("manage:self", "manage:all")(req, res, next)).toThrow();
+      expect(() => checkSelfOrAllPermission("manage:self", "manage:all")(req, res, next)).toThrow(
+        new Errors.ForbiddenError()
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -118,7 +124,44 @@ describe("Unit Tests - authMiddleware", () => {
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateSignup(req, res, next)).toThrow();
+      expect(() => validateSignup(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "signup" }),
+          details: expect.objectContaining({
+            password: [
+              expect.any(String)
+            ]
+          })
+        })
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+    
+    it("should throw four errors if password doesn't meet any criteria", () => {
+      const req = {
+        body: {
+          username: "ValidUser",
+          password: "a"
+        }
+      } as unknown as Request;
+      const res = { locals: {} } as unknown as Response;
+      const next = jest.fn();
+
+      expect(() => validateSignup(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "signup" }),
+          details: expect.objectContaining({
+            password: [
+              expect.any(String),
+              expect.any(String),
+              expect.any(String),
+              expect.any(String)
+            ]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
@@ -150,7 +193,9 @@ describe("Unit Tests - authMiddleware", () => {
       const res = { locals: {} } as unknown as Response;
       const next = jest.fn();
 
-      expect(() => validateLogin(req, res, next)).toThrow();
+      expect(() => validateLogin(req, res, next)).toThrow(
+        new Errors.WrongCredentialsErrors()
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });
