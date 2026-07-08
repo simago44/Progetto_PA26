@@ -272,7 +272,7 @@ describe("Unit Tests - auctionMiddleware", () => {
         new Date(Date.parse(String(req.query.fromDate)))
       );
       expect(res.locals.filters.toDate).toEqual(
-        new Date(Date.parse(String(req.query.toDate)))
+        new Date(Date.parse(String(req.query.toDate).concat("T23:59:59.999Z")))
       );
       expect(next).toHaveBeenCalledTimes(1);
     });

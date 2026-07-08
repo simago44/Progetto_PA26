@@ -90,7 +90,7 @@ class AuctionService {
       * --> auction have to be: (started before toDate)
       * I need to add one day because toDate have not the time
       * so the comparison is wrong */
-      andConditions.push({ startsAt: { [Op.lt]: addInterval(filters.toDate, 24 * HOURS) } });
+      andConditions.push({ startsAt: { [Op.lt]: filters.toDate } });
     }
 
     const where: WhereOptions = { [Op.and]: andConditions };
