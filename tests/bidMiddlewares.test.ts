@@ -1,7 +1,8 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import { validateGetAuctionBids, validateBidMiddleware } from "../src/middlewares/bidMiddleware.ts";
-import { StatusCodes } from "http-status-codes";
 import type { Request, Response } from "express";
+import { Errors } from "../src/factory/errorFactory.ts";
+import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
 describe("Unit Tests - bidMiddleware", () => {
   describe("validateGetAuctionBids", () => {
@@ -16,7 +17,7 @@ describe("Unit Tests - bidMiddleware", () => {
 
       const next = jest.fn();
 
-      await validateGetAuctionBids(req, res, next);
+      validateGetAuctionBids(req, res, next);
 
       expect(res.locals.auctionId).toBe("12345");
       expect(next).toHaveBeenCalledTimes(1);
@@ -37,7 +38,7 @@ describe("Unit Tests - bidMiddleware", () => {
 
       const next = jest.fn();
 
-      await validateBidMiddleware(req, res, next);
+      validateBidMiddleware(req, res, next);
 
       expect(res.locals.bid).toEqual({
         userId: "user-999",
@@ -60,7 +61,15 @@ describe("Unit Tests - bidMiddleware", () => {
 
       const next = jest.fn();
 
-      await expect(validateBidMiddleware(req, res, next)).rejects.toThrow();
+      expect(() => validateBidMiddleware(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "validateBidMiddleware" }),
+          details: expect.objectContaining({
+            bidPrice: [expect.any(String)]
+          })
+        })
+      );
       expect(next).not.toHaveBeenCalled();
     });
   });

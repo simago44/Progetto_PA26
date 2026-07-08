@@ -34,7 +34,7 @@ class BidService {
    * @throws {BidCantHavePriceError} If a Dutch auction bid contains a bid price.
    * @throws {BidMustHavePriceError} If a first-price or second-price auction bid does not contain a bid price.
    */
-  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }, rawAuction: Auction) {
+  public async handleBidPriceMissing(bid: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null; }, rawAuction: Auction) {
     const auction = auctionService.toTypedAuction(rawAuction);
     switch (auction.type) {
       case AuctionType.English:
@@ -64,7 +64,7 @@ class BidService {
    * @throws {BidAlreadyPlacedError} If the user has already placed a bid in the auction.
    * @throws {InsufficientTokensError} If the user does not have enough tokens.
    */
-  public async createBid(bidData: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null }): Promise<Bid> {
+  public async createBid(bidData: Omit<CreationAttributes<Bid>, 'bidPrice'> & { bidPrice?: number | null; }): Promise<Bid> {
     const auctionId: number = bidData.auctionId as number;
     const userId: string = bidData.userId;
 
@@ -73,11 +73,10 @@ class BidService {
 
     const user = await userRepository.findByPk(userId);
     // should not happen because we validated the JWT token. We throw a generic error
-    if (!user) throw new Errors.UnauthorizedError(); 
+    if (!user) throw new Errors.UnauthorizedError();
 
     const data = await this.handleBidPriceMissing(bidData, auction);
 
-    // TODO: validation of bid based on auction and user (tokens, auction closed, ecc)
     const bid: Bid = bidRepository.build(data);
 
     await this.checkIsBidValid(bid, auction, user);
