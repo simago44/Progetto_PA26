@@ -42,5 +42,3 @@ Auction.belongsTo(User, {
     name: "winnerId",
   },
 });
-
-export { User, Bid, Auction };

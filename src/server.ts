@@ -4,11 +4,13 @@
  */
 import logger from "./core/logger.ts";
 import env from "./core/config.ts";
-import { initDB } from "./bootstrap/initDb.ts";
 import "./integrations/BullMQ.ts";
 import { app } from "./app.ts";
+import { initSequelize } from "./integrations/sequelize.ts";
+// Necessary to initialize sequelize models relationships
+import "./models/relationships.ts";
 
-await initDB();
+await initSequelize();
 
 const PORT = env.NODE_PORT;
 

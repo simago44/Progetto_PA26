@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "test:watch": "jest --watch",
     "build": "tsc",
     "dev": "nodemon --legacy-watch src/server.ts",
     "start": "node dist/server.js",

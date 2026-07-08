@@ -1,0 +1,17 @@
+services:
+  db:
+    restart: always
+    ports: !reset []      # don't expose Postgres to the host in prod
+
+  redis:
+    restart: always
+    ports: !reset []      # same for Redis
+    
+  node:
+    build:
+      target: prod
+    restart: always
+    volumes: !reset []   # strip dev bind-mounts, run the built image as-is
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: ""    # clear the ESM test flag, not needed in prod

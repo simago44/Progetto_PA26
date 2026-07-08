@@ -31,7 +31,9 @@ services:
       - ${REDIS_PORT}:${REDIS_PORT}
 
   node:
-    build: .
+    build: 
+      context: .
+      target: dev
     restart: unless-stopped
     env_file:
       - .env

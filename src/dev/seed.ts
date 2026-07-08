@@ -264,11 +264,6 @@ export async function generateBidsArray(min_bids: number, max_bids: number, auct
   }
 }
 
-export async function initDB() {
-  //Initialize database
-  await sequelize.sync();
-}
-
 export async function seed() {
   await clearRedis();
 
@@ -291,3 +286,6 @@ export async function seed() {
 
   //await deleteStaleUsers();
 }
+
+await seed();
+process.exit();
