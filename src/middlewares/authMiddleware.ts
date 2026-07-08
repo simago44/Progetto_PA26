@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import env from '../core/config.ts';
 import { createZodError, Errors } from '../factory/errorFactory.ts';
 import z from 'zod';
+import { ErrorMessages } from '../factory/messageStrings.ts';
 
 const checkJwt = auth({
   issuerBaseURL: `https://${env.AUTH0_DOMAIN}`,
@@ -78,38 +79,48 @@ export const loginSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(1, "Invalid username or password")
-    .max(255, "Invalid username or password")
+    .min(1)
+    .max(255)
     .transform(val => val.toLowerCase()),
 
   password: z
     .string()
-    .min(1, "Invalid username or password")
-    .max(1000, "Invalid username or password")
+    .min(1)
+    .max(1000)
 });
 
 /**
- * Creates a validation middleware for the given Zod schema.
+ * Creates a validation/sanitization middleware for signup
  * On success, overwrites `req.body` with the sanitized and transformed data.
- * On failure, passes a `MalformedPayload` AppError to `next()`.
+ * On failure, throws a `MalformedPayloadError`.
  * 
  * @param zodObject - The Zod schema to validate against
  */
-function validateCredentials(zodObject: z.ZodObject, form: string) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const result = zodObject.safeParse(req.body);
-    if (!result.success) throw createZodError(result.error, form);
+export function validateSignup(req: Request, res: Response, next: NextFunction) {
+  const result = signupSchema.safeParse(req.body);
+  if (!result.success) throw createZodError(result.error, "signup");
 
-    // Overwrite req.body with the safely parsed/sanitized fields
-    res.locals.username = result.data.username;
-    res.locals.password = result.data.password;
+  // Overwrite req.body with the safely parsed/sanitized fields
+  res.locals.username = result.data.username;
+  res.locals.password = result.data.password;
 
-    next();
-  };
-}
+  next();
+};
 
-/** Middleware that validates and sanitizes the signup request body. */
-export const validateSignup = validateCredentials(signupSchema, "signup");
+/**
+ * Creates a validation/sanitization middleware for login
+ * On success, overwrites `req.body` with the sanitized and transformed data.
+ * On failure, throws `WrongCredentialsError`.
+ * 
+ * @param zodObject - The Zod schema to validate against
+ */
+export function validateLogin(req: Request, res: Response, next: NextFunction) {
+  const result = loginSchema.safeParse(req.body);
+  if (!result.success) throw new Errors.WrongCredentialsErrors();
 
-/** Middleware that validates and sanitizes the login request body. */
-export const validateLogin = validateCredentials(loginSchema, "login");
+  // Overwrite req.body with the safely parsed/sanitized fields
+  res.locals.username = result.data.username;
+  res.locals.password = result.data.password;
+
+  next();
+};

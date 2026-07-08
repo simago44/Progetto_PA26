@@ -36,6 +36,6 @@ export const ErrorMessages = {
 };
 
 export const ErrorDetails = {
-  Validation: ({ errors }: { errors: Record<string, string[]>; }) => errors,
+  Validation: ({ errors }: { errors: Object; }) => errors,
   BidTooLow: ({ minimumBid }: { minimumBid: number; }) => ({ minimumBid })
 };
