@@ -89,21 +89,21 @@ The system provides three types of users:
 
 
 ## 2. Technology stack
- - **Node.js**: JavaScript runtime environment
- - **TypeScript**: Static typing for the codebase
- - **Express**: Web framework for the REST API backend
- - **Sequelize**: ORM for PostgreSQL
- - **Zod**: Schema validation and type inference
- - **Auth0**: JWT-based authentication and authorization
- - **Redis**: In-memory store used for query caching
- - **BullMQ**: Redis-backed job queue used for auction settlement/closing
- - **Jest**: Unit and integration testing framework
- - **Winston**: Structured application logging
- - **Awilix**: Dependency injection container
- - **ESLint**: Static code analysis / linting
- - **Swagger**: OpenAPI documentation for the API
- - **Docker & Docker Compose**: Containerization and local orchestration
- - **Postman**: Manual/exploratory API testing
+ - **Node.js**: JavaScript runtime environment;
+ - **TypeScript**: Static typing for the codebase;
+ - **Express**: Web framework for the REST API backend;
+ - **Sequelize**: ORM for PostgreSQL;
+ - **Zod**: Schema validation and type inference;
+ - **Auth0**: JWT-based authentication and authorization;
+ - **Redis**: In-memory store used for query caching;
+ - **BullMQ**: Redis-backed job queue used for auction closing;
+ - **Jest**: Unit and integration testing framework;
+ - **Winston**: Structured application logging;
+ - **Awilix**: Dependency injection container;
+ - **ESLint**: Static code analysis / linting;
+ - **Swagger**: OpenAPI documentation for the API;
+ - **Docker & Docker Compose**: Containerization and local orchestration;
+ - **Postman**: Manual/exploratory API testing.
 
 ## 3. Design and UML
 
@@ -153,21 +153,21 @@ Route: `PUT /api/v1/auctions/:auctionId/reserve-price`
 
 ## 4. Design Patterns and Code Architecture
 The project follows a layered architecture:
-- **Controllers**: HTTP request handlers and response management
-- **Services**: Business logic for auction, auth, bidding, and user management
-- **Repositories**: Data access layer abstracting Sequelize queries and Auth0 calls
-- **Models**: Sequelize ORM models for database entities
-- **Middleware**: Authentication, validation, and error handling
-- **Utilities**: Helper functions, logging, and error factory
+- **Controllers**: HTTP request handlers and response management;
+- **Services**: Business logic for auctions, authentication, bids, and users;
+- **Repositories**: Data access layer abstracting Sequelize queries and Auth0 calls;
+- **Models**: Sequelize ORM models for database entities;
+- **Middleware**: Authentication, validation, and error handling;
+- **Utilities**: Helper functions, logging, and error factory.
 
 ### Design Patterns Used
-- **Controller-Service-Repository (CSR)**: Separation of concerns between HTTP handling, business logic, and data access
+- **Controller-Service-Repository (CSR)**: Separation of concerns between HTTP handling, business logic and data access
 - **Repository Pattern**: Abstraction of database operations behind a consistent interface
-- **Dependency Injection**: Awilix-managed container for wiring controllers, services, repositories, and their dependencies
+- **Dependency Injection**: Awilix-managed container for wiring controllers, services, repositories and their dependencies
 - **Factory Pattern**: Abstract factory for constructing typed application errors and their messages
 - **Cache-Aside Pattern**: Redis used to cache repository reads, with registry-based invalidation on writes
-- **Job Queue Pattern**: Asynchronous auction settlement processing with BullMQ
-- **Chain of Responsibility (COR)**: Request pipeline through routes &rarr; middleware &rarr; controllers &rarr; services &rarr; repositories
+- **Job Queue Pattern**: Asynchronous auction closing processed with BullMQ
+- **Chain of Responsibility (COR)**: Request pipeline through routes &rarr; middlewares &rarr; controllers &rarr; services &rarr; repositories
 
 ## 5. Installation and usage
 
@@ -184,11 +184,13 @@ cd Progetto_PA26
 
 The following files are required for the system to run correctly and are not included in the repository:
 
-- `.env`
-- `.env.development`
-- `.env.production`
-- `postman_environment.json`
-- `seeds/users.json`
+- `/.env`
+- `/.env.development`
+- `/.env.production`
+- `/postman_environment.json`
+- `/seeds/users.json`
+
+In `/templates/` folder there are some templates files useful as a reference. 
 
 #### 3. Usage
 
@@ -205,29 +207,30 @@ The following commands are available in development:
 
 | Command | Description |
 |---|---|
-| `docker compose exec node npm run seed` | Seeds the database with default test users, auctions, and bids |
+| `docker compose exec node npm run seed` | Seeds the database with default test users and random auctions and bids |
 | `docker compose exec node npm run lint` | Runs ESLint on `src/` and `tests/` |
 | `docker compose exec node npm run build` | Builds the project |
 | `docker compose exec node npm run test` | Runs the Jest test suite |
 
 ## 6. Testing
 
-### Jest
-
-In development it's possible to run the tests using: `docker compose exec node npm run test`
-
+### Jest Unit Tests
 The test suite covers all request-validation and authorization middlewares with unit tests that mock `Request`/`Response`/`next` and assert both the success path (correct `res.locals` population and a single `next()` call) and the failure path (a thrown `ValidationError`/`ForbiddenError` with the expected `details`).
 
 - **AuctionMiddlewares** (`auctionMiddlewares.test.ts`)
+
   Covers auction creation for all four auction types (English, Dutch, First-Price, Second-Price), verifying correct payload shaping in `res.locals.auction` (including `creatorId` injection and the default `delayBeforeEnding` for English auctions) and rejection of an invalid payload with per-field error details. Also covers auction listing filters (comma-separated `creatorIds`/`statuses`/`types` parsing, including the empty-query case), reserve price updates (numeric coercion of `auctionId`/`reservePrice` and rejection of negative values), and auction stats filters (type list parsing, `fromDate`/`toDate` normalization, and rejection when `toDate` precedes `fromDate`).
 
 - **AuthMiddlewares** (`authMiddlewares.test.ts`)
+
   Covers JWT-based permission checks (`checkPermission`, `checkSelfOrAllPermission`, including self-vs-all logic and `ForbiddenError` on mismatch/missing permissions), JWT authorization failure handling (`checkJwtAuthorization`), and `resolveUserIdParam` (`"me"` resolves to the authenticated user's id). Also covers signup validation (username normalization, allowed roles, and password strength — including a case producing four distinct password errors) and login validation (username normalization and `WrongCredentialsErrors` on missing fields).
 
 - **BidMiddlewares** (`bidMiddlewares.test.ts`)
+
   Covers auction-bid retrieval (`auctionId` param extraction) and bid creation (`res.locals.bid` shaping with injected `userId`/`auctionId`, and rejection of a non-numeric `bidPrice`).
 
 - **UserMiddlewares** (`userMiddlewares.test.ts`)
+
   Covers wallet top-up (positive token validation and rejection of zero/negative amounts), auction report filters (`won` boolean coercion, `types` list parsing, `participantId` injection, date range validation with rejection of a `fromDate` in the future), and wallet report filters (`participantId` injection and rejection when `toDate` precedes `fromDate`).
 
 ![Jest output](./docs/images/jest_output.png)
