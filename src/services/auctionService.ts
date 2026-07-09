@@ -9,6 +9,7 @@ import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import type UserRepository from "../repositories/userRepository.ts";
 import type AuctionRepository from "../repositories/auctionRepository.ts";
 import type BidRepository from "../repositories/bidRepository.ts";
+import { createCloseAuctionJob } from "../integrations/BullMQ.ts";
 
 export interface AuctionFilters {
   creatorIds?: string[];
@@ -117,12 +118,14 @@ class AuctionService {
   }
 
   /**
-   * Creates a new Auction.
+   * Creates a new Auction and creates a BullMQ Job.
    * @param data The Auction creation attributes.
    * @returns The created Auction instance.
    */
   public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
-    return this.auctionRepository.create(data);
+    const auction = await this.auctionRepository.create(data);
+    await createCloseAuctionJob(auction.id);
+    return auction;
   }
 
   /**
