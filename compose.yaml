@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_PORT_CONTAINER}
+      - ${POSTGRES_PORT}:5432
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -29,7 +29,7 @@ services:
     environment:
       REDIS_ARGS: --requirepass ${REDIS_PASSWORD} --appendonly yes
     ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+      - ${REDIS_PORT}:6379
 
   node:
     build: 
@@ -40,8 +40,8 @@ services:
       - .env
       - .env.development
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT_CONTAINER}/${POSTGRES_DB}
-      REDIS_URL: redis://${REDIS_PASSWORD}@redis:${REDIS_PORT}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://${REDIS_PASSWORD}@redis:6379
       NODE_OPTIONS: "--experimental-vm-modules"
     ports:
       - ${NODE_PORT}:3000

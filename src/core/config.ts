@@ -25,7 +25,6 @@ const logFormat = z.string()
   .default('[%timestamp%] %level%: %message%');
 
 const configSchema = z.object({
-  NODE_PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
   AUTH0_DOMAIN: z.string(),
@@ -40,7 +39,7 @@ const configSchema = z.object({
   FILE_LOG_LEVEL: logLevel.default("info"),
   LOG_FORMAT: logFormat,
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
-  USERS_BY_ROLE_SEED_PATH: z.string()
+  USERS_SEED_PATH: z.string()
 })
 
 const result = configSchema.safeParse(process.env);

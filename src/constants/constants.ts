@@ -1,5 +1,7 @@
 import { MINUTES } from "../utils/dateUtils.ts";
 
+export const PORT = 3000;
+
 export const queueName = "auctionQueue";
 export const closeAuctionJobName = "close-auction";
 

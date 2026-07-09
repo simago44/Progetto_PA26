@@ -280,7 +280,7 @@ export async function seed() {
 
   await sequelize.sync({ force: true });
 
-  const usersByRole = loadUsersByRole(env.USERS_BY_ROLE_SEED_PATH);
+  const usersByRole = loadUsersByRole(env.USERS_SEED_PATH);
 
   //Generates statics users only in the DataBase
   await generateUsersArray(usersByRole, RoleName.Admin);
