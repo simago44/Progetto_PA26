@@ -1,0 +1,130 @@
+# Made with https://sequencediagram.org/
+
+entryspacing 0.8
+
+title Update Auction Reserve Price
+
+actor AuctionCreator
+
+AuctionCreator->AuctionRouter: POST /api/v1/auctions/:auctionId/reserve-price
+activate AuctionCreator
+activate AuctionRouter
+AuctionRouter->Middleware: validateRequest(req)
+activate Middleware
+alt User not authenticated
+AuctionRouter<--Middleware: UnauthorizedError
+deactivate Middleware
+AuctionCreator<--AuctionRouter: 401 Unauthorized
+deactivate AuctionRouter
+deactivate AuctionCreator
+else User doesn't have permission
+activate AuctionCreator
+activate AuctionRouter
+activate Middleware
+AuctionRouter<--Middleware: ForbiddenError
+deactivate Middleware
+AuctionCreator<--AuctionRouter: 403 Forbidden
+deactivate AuctionRouter
+deactivate AuctionCreator
+else Validation errors
+activate AuctionCreator
+activate AuctionRouter
+activate Middleware
+AuctionRouter<--Middleware: ValidationError
+deactivate Middleware
+AuctionCreator<--AuctionRouter: 400 Bad Request
+deactivate AuctionRouter
+deactivate AuctionCreator
+else Data validated
+activate AuctionCreator
+activate AuctionRouter
+activate Middleware
+AuctionRouter<--Middleware: data
+deactivate Middleware
+AuctionRouter->AuctionController: updateReservePrice(data)
+activate AuctionController
+AuctionController->AuctionService: updateReservePrice(data)
+activate AuctionService
+AuctionService->AuctionRepository: findByPk(data.auctionId)
+activate AuctionRepository
+alt Auction not found
+AuctionService<--AuctionRepository: null
+deactivate AuctionRepository
+AuctionController<--AuctionService: AuctionNotFoundError
+deactivate AuctionService
+AuctionRouter<--AuctionController: AuctionNotFoundError
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 404 Not Found
+deactivate AuctionRouter
+deactivate AuctionCreator
+else Auction found
+activate AuctionCreator
+activate AuctionRouter
+activate AuctionController
+activate AuctionService
+activate AuctionRepository
+AuctionService<--AuctionRepository: auction
+deactivate AuctionRepository
+alt auction.creatorId != data.userId
+AuctionController<--AuctionService: ForbiddenError
+deactivate AuctionService
+AuctionRouter<--AuctionController: ForbiddenError
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 403 Forbidden
+deactivate AuctionRouter
+deactivate AuctionCreator
+else auction.type in ["first-price", "second-price"]
+activate AuctionCreator
+activate AuctionRouter
+activate AuctionController
+activate AuctionService
+AuctionController<--AuctionService: AuctionTypeNotSupported
+deactivate AuctionService
+AuctionRouter<--AuctionController: AuctionTypeNotSupported
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 403 Forbidden
+deactivate AuctionRouter
+deactivate AuctionCreator
+else auction.endedAt != null
+activate AuctionCreator
+activate AuctionRouter
+activate AuctionController
+activate AuctionService
+AuctionController<--AuctionService: AuctionEndedError
+deactivate AuctionService
+AuctionRouter<--AuctionController: AuctionEndedError
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 403 Forbidden
+deactivate AuctionRouter
+deactivate AuctionCreator
+else data.reservePrice >= auction.reservePrice
+activate AuctionCreator
+activate AuctionRouter
+activate AuctionController
+activate AuctionService
+AuctionController<--AuctionService: ReservePriceTooHighError
+deactivate AuctionService
+AuctionRouter<--AuctionController: ReservePriceTooHighError
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 400 Bad Request
+deactivate AuctionRouter
+deactivate AuctionCreator
+else Update valid
+activate AuctionCreator
+activate AuctionRouter
+activate AuctionController
+activate AuctionService
+AuctionService->AuctionRepository: updateReservePrice(auction, reservePrice)
+activate AuctionRepository
+AuctionService<--AuctionRepository: updatedAuction
+deactivate AuctionRepository
+AuctionController<--AuctionService: void
+deactivate AuctionService
+AuctionRouter<--AuctionController: void
+deactivate AuctionController
+AuctionCreator<--AuctionRouter: 200 OK
+deactivate AuctionRouter
+deactivate AuctionCreator
+end
+end
+end

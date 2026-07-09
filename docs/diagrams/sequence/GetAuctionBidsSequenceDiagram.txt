@@ -1,0 +1,51 @@
+# Made with https://sequencediagram.org/
+
+title Get Auction Bids
+
+actor Guest
+
+Guest->BidRouter: GET /api/v1/auctions/:auctionId/bids
+activate Guest
+activate BidRouter
+BidRouter->BidController: getAuctionBids(auctionId)
+activate BidController
+BidController->BidService: getAuctionBids(auctionId)
+activate BidService
+alt Auction not found
+BidController<--BidService: AuctionNotFoundError
+deactivate BidService
+BidRouter<--BidController: AuctionNotFoundError
+deactivate BidController
+Guest<--BidRouter: 404 Not Found
+deactivate BidRouter
+deactivate Guest
+else Auction type not supported
+activate Guest
+activate BidRouter
+activate BidController
+activate BidService
+note over BidService: Sealed bid auctions are not supported
+BidController<--BidService: AuctionTypeNotSupportedError
+deactivate BidService
+BidRouter<--BidController: AuctionTypeNotSupportedError
+deactivate BidController
+Guest<--BidRouter: 403 Forbidden
+deactivate BidRouter
+deactivate Guest
+else
+activate Guest
+activate BidRouter
+activate BidController
+activate BidService
+BidService->BidRepository: getAuctionBids(auctionId)
+activate BidRepository
+BidService<--BidRepository: bids
+deactivate BidRepository
+BidController<--BidService: bids
+deactivate BidService
+BidRouter<--BidController: bids
+deactivate BidController
+Guest<--BidRouter: 200 OK (bids)
+deactivate BidRouter
+deactivate Guest
+end

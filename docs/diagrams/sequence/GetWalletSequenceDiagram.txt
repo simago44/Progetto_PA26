@@ -1,0 +1,94 @@
+# Made with https://sequencediagram.org/
+
+title Get Wallet
+
+actor User
+
+User->UserRouter: GET /api/v1/users/:userId/wallet
+activate User
+activate UserRouter
+UserRouter->Middleware: validateRequest(req)
+activate Middleware
+alt User not authenticated
+UserRouter<--Middleware: UnauthorizedError
+deactivate Middleware
+User<--UserRouter: 401 Unauthorized
+deactivate UserRouter
+deactivate User
+else User doesn't have permission
+activate User
+activate UserRouter
+activate Middleware
+UserRouter<--Middleware: ForbiddenError
+deactivate Middleware
+User<--UserRouter: 403 Forbidden
+deactivate UserRouter
+deactivate User
+else Request validated
+activate User
+activate UserRouter
+activate Middleware
+UserRouter<--Middleware: userId
+deactivate Middleware
+UserRouter->UserController: getWallet(userId)
+activate UserController
+UserController->UserService: getWallet(userId)
+activate UserService
+UserService->UserRepository: findByPk(userId)
+activate UserRepository
+alt User not found
+UserService<--UserRepository: null
+deactivate UserRepository
+UserController<--UserService: UserNotFoundError
+deactivate UserService
+UserRouter<--UserController: UserNotFoundError
+deactivate UserController
+User<--UserRouter: 404 Not Found
+deactivate UserRouter
+deactivate User
+else user.tokens = null
+activate User
+activate UserRouter
+activate UserController
+activate UserService
+activate UserRepository
+UserService<--UserRepository: user
+deactivate UserRepository
+UserController<--UserService: WalletNotFoundError
+deactivate UserService
+UserRouter<--UserController: WalletNotFoundError
+deactivate UserController
+User<--UserRouter: 404 Not Found
+deactivate UserRouter
+deactivate User
+else User with wallet found
+activate User
+activate UserRouter
+activate UserController
+activate UserService
+note over UserService: tokens = user.tokens
+UserService->AuctionService: getAuction(filters: "in-progress")
+activate AuctionService
+ref over AuctionService: Get Auctions
+UserService<--AuctionService: auctions
+deactivate AuctionService
+loop for each auction in auctions
+UserService->AuctionService: getWinningBid(auction)
+activate AuctionService
+UserService<--AuctionService: winningBid
+deactivate AuctionService
+opt winningBid.userId = userId
+note over UserService: tokens -= winningBid.bidPrice
+end
+end
+UserController<--UserService: tokens
+deactivate UserService
+UserRouter<--UserController: tokens
+deactivate UserController
+User<--UserRouter: 200 OK (tokens)
+deactivate UserRouter
+deactivate User
+end
+end
+
+

@@ -1,0 +1,100 @@
+# Made with https://sequencediagram.org/
+
+entryspacing 0.8
+
+title Create Bid
+
+actor AuctionParticipant
+
+AuctionParticipant->BidRouter: POST /api/v1/auctions/:auctionId/bids
+activate AuctionParticipant
+activate BidRouter
+BidRouter->Middleware: validateRequest(req)
+activate Middleware
+alt User not authenticated
+BidRouter<--Middleware: UnauthorizedError
+deactivate Middleware
+AuctionParticipant<--BidRouter: 401 Unauthorized
+deactivate BidRouter
+deactivate AuctionParticipant
+else User doesn't have permission
+activate AuctionParticipant
+activate BidRouter
+activate Middleware
+BidRouter<--Middleware: ForbiddenError
+deactivate Middleware
+AuctionParticipant<--BidRouter: 403 Forbidden
+deactivate BidRouter
+deactivate AuctionParticipant
+else Validation errors
+activate AuctionParticipant
+activate BidRouter
+activate Middleware
+BidRouter<--Middleware: ValidationError
+deactivate Middleware
+AuctionParticipant<--BidRouter: 400 Bad Request
+deactivate BidRouter
+deactivate AuctionParticipant
+else Bid data validated
+activate AuctionParticipant
+activate BidRouter
+activate Middleware
+BidRouter<--Middleware: bidData
+deactivate Middleware
+BidRouter->BidController: createBid(bidData)
+activate BidController
+BidController->BidService: createBid(bidData)
+activate BidService
+BidService->AuctionRepository: findByPk(bidData.auctionId)
+activate AuctionRepository
+alt Auction not found
+BidService<--AuctionRepository: null
+deactivate AuctionRepository
+BidController<--BidService: AuctionNotFoundError
+deactivate BidService
+BidRouter<--BidController: AuctionNotFoundError
+deactivate BidController
+AuctionParticipant<--BidRouter: 404 Not Found
+deactivate BidRouter
+deactivate AuctionParticipant
+else Auction found
+activate AuctionParticipant
+activate BidRouter
+activate BidController
+activate BidService
+activate AuctionRepository
+BidService<--AuctionRepository: auction
+deactivate AuctionRepository
+BidService->BidRepository: buildBid(bidData)
+activate BidRepository
+BidService<--BidRepository: bid
+deactivate BidRepository
+BidService->BidService: CheckIsBidValid(bid)
+ref over BidService: CheckIsBidValid
+alt Bid invalid
+BidController<--BidService: BidNotValidError
+deactivate BidService
+BidRouter<--BidController: BidNotValidError
+deactivate BidController
+AuctionParticipant<--BidRouter: 403 Forbidden
+deactivate BidRouter
+deactivate AuctionParticipant
+else Bid valid
+activate AuctionParticipant
+activate BidRouter
+activate BidController
+activate BidService
+BidService->BidRepository: createBid(bid)
+activate BidRepository
+BidService<--BidRepository: createdBid
+deactivate BidRepository
+BidController<--BidService: createdBid
+deactivate BidService
+BidRouter<--BidController: bidId
+deactivate BidController
+AuctionParticipant<--BidRouter: 201 Created (bidId)
+deactivate BidRouter
+deactivate AuctionParticipant
+end
+end
+end

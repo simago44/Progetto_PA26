@@ -1,0 +1,39 @@
+# Made with https://sequencediagram.org/
+
+title Get Auctions
+
+actor Guest
+
+Guest->AuctionRouter: GET /api/v1/auctions
+activate Guest
+activate AuctionRouter
+AuctionRouter->Middleware: validateRequest(req)
+activate Middleware
+alt Validation Error
+AuctionRouter<--Middleware: ValidationError
+deactivate Middleware
+Guest<--AuctionRouter: 400 Bad Request
+deactivate Guest
+deactivate AuctionRouter
+else Filters validated
+activate Guest
+activate AuctionRouter
+activate Middleware
+AuctionRouter<--Middleware: filters
+deactivate Middleware
+AuctionRouter->AuctionController: getAuctions(filters)
+activate AuctionController
+AuctionController->AuctionService: getAuctions(filters)
+activate AuctionService
+AuctionService->AuctionRepository: getAuctions(filters)
+activate AuctionRepository
+AuctionService<--AuctionRepository: auctions
+deactivate AuctionRepository
+AuctionController<--AuctionService: auctions
+deactivate AuctionService
+AuctionRouter<--AuctionController: auctions
+deactivate AuctionController
+Guest<--AuctionRouter: 200 OK (auctions)
+deactivate AuctionRouter
+deactivate Guest
+end
