@@ -10,7 +10,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "signup",
+          "name": "Signup",
           "event": [
             {
               "listen": "test",
@@ -74,7 +74,7 @@
           "response": []
         },
         {
-          "name": "login",
+          "name": "Login",
           "event": [
             {
               "listen": "test",
@@ -121,7 +121,7 @@
           "response": []
         },
         {
-          "name": "login auction-participant",
+          "name": "Login auction-participant",
           "event": [
             {
               "listen": "test",
@@ -169,7 +169,7 @@
           "response": []
         },
         {
-          "name": "login auction-creator",
+          "name": "Login auction-creator",
           "event": [
             {
               "listen": "test",
@@ -217,7 +217,7 @@
           "response": []
         },
         {
-          "name": "login admin",
+          "name": "Login admin",
           "event": [
             {
               "listen": "test",
@@ -270,7 +270,7 @@
       "name": "Bids",
       "item": [
         {
-          "name": "Create bid",
+          "name": "Create Bid",
           "event": [
             {
               "listen": "prerequest",
@@ -798,49 +798,7 @@
           "response": []
         },
         {
-          "name": "Updated User Wallet",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{JWT_TOKEN_ADMIN}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"tokens\": 100\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_PARTICIPANT_ID}}/wallet",
-              "protocol": "http",
-              "host": [
-                "{{HOST}}"
-              ],
-              "port": "{{PORT}}",
-              "path": [
-                "api",
-                "v1",
-                "users",
-                "{{AUCTION_PARTICIPANT_ID}}",
-                "wallet"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Auctions report",
+          "name": "Auctions Report",
           "request": {
             "auth": {
               "type": "bearer",
@@ -897,7 +855,7 @@
           "response": []
         },
         {
-          "name": "Wallet report",
+          "name": "Wallet Report",
           "request": {
             "auth": {
               "type": "bearer",
@@ -936,6 +894,72 @@
                   "value": "2026-07-10T23:59",
                   "disabled": true
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Top Up User Wallet",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{JWT_TOKEN_ADMIN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tokens\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_PARTICIPANT_ID}}/wallet",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{AUCTION_PARTICIPANT_ID}}",
+                "wallet"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Utils",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{HOST}}:{{PORT}}/health",
+              "protocol": "http",
+              "host": [
+                "{{HOST}}"
+              ],
+              "port": "{{PORT}}",
+              "path": [
+                "health"
               ]
             }
           },
