@@ -5,6 +5,7 @@ import type UserRepository from "../repositories/userRepository.ts";
 import env from '../core/config.ts'
 import type { ManagementClient } from "auth0";
 import logger from "../core/logger.ts";
+import jwt from 'jsonwebtoken';
 
 interface AuthServiceDeps {
   userRepository: UserRepository;
@@ -54,7 +55,7 @@ class AuthService {
    * @param password The user password.
    * @returns The user access token.
    */
-  public async getAuthenticationToken(username: string, password: string): Promise<string> {
+  public async getAuthenticationToken(username: string, password: string): Promise<{ id: string, accessToken: string }> {
     const user = await this.authenticationClient.oauth.passwordGrant({
       realm: env.AUTH0_CONNECTION,
       audience: env.AUTH0_AUDIENCE,
@@ -62,7 +63,12 @@ class AuthService {
       password
     });
 
-    return user.data.access_token;
+    const decoded = jwt.decode(user.data.access_token);
+    if (!decoded || typeof decoded === "string" || typeof decoded.sub !== "string") {
+      throw new Errors.InvalidCredentials();
+    }
+
+    return { id: decoded.sub, accessToken: user.data.access_token };
   }
 
   /**
@@ -78,12 +84,19 @@ class AuthService {
     const user = await this.userRepository.findByUsername(username);
     if (!user) throw new Errors.InvalidCredentials();
 
+    let auth0UserId: string;
+    let accessToken: string;
+
     try {
-      const accessToken = await this.getAuthenticationToken(username, password);
-      return { userId: user.id, accessToken };
+      const result = await this.getAuthenticationToken(username, password);
+      auth0UserId = result.id;
+      accessToken = result.accessToken;
     } catch (err) {
       throw createAuth0Error(err);
     }
+
+    if (user.id != auth0UserId) throw new Errors.InvalidCredentials();
+    return { userId: user.id, accessToken };
   }
 
   /**
