@@ -390,17 +390,21 @@ class AuctionService {
    * Updates the reserve price of an auction.
    * @param auctionId The auction ID.
    * @param reservePrice The new reserve price.
+   * @param userID The user ID of the user that wants to make the update.
    * @throws {AuctionNotFoundError} If the auction does not exist.
    * @throws {AuctionTypeNotSupportedError} If the auction type does not support reserve price updates.
    * @throws {AuctionEndedError} If the auction has already ended.
    * @throws {ReservePriceTooHighError} If the new reserve price is greater than or equal to the current reserve price.
    * @throws {AuctionHasAlreadyBidError} If the auction already has bids.
    */
-  public async updateAuctionReservePrice(auctionId: number, reservePrice: number): Promise<void> {
+  public async updateAuctionReservePrice(auctionId: number, userId: string, reservePrice: number): Promise<void> {
     // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
     await sequelize.transaction(async (t: Transaction) => {
       const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
       if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+     
+      // Only the auction creator can update the reserve price
+      if (auction.creatorId != userId) throw new Errors.ForbiddenError();
 
       switch (auction.type) {
         case AuctionType.English:

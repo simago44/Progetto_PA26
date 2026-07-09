@@ -68,15 +68,16 @@ class AuctionController {
    * 
    * 'res.locals' must contain:
    *  - `auctionId`: is the ID of the auction to update.
+   *  - `userId`: is the ID of the logged user.
    *  - `reservePrice`: is the new reservePrice.
    * 
    * Returns `200 OK`.
    */
   public async updateAuctionReservePrice(
     _req: Request,
-    res: Response<unknown, { auctionId: number, reservePrice: number }>
+    res: Response<unknown, { auctionId: number, authId: string, reservePrice: number }>
   ) {
-    await auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.reservePrice);
+    await auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.authId, res.locals.reservePrice);
     res.status(StatusCodes.OK).json({});
   }
 }

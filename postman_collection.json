@@ -352,9 +352,9 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "pm.collectionVariables.set('futureDate1', futureDate1);\r",
                   "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  "pm.collectionVariables.set('futureDate2', futureDate2);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -406,7 +406,7 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);"
+                  "pm.collectionVariables.set('futureDate1', futureDate1);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -458,9 +458,9 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "pm.collectionVariables.set('futureDate1', futureDate1);\r",
                   "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  "pm.collectionVariables.set('futureDate2', futureDate2);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -512,9 +512,9 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "pm.collectionVariables.set('futureDate1', futureDate1);\r",
                   "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  "pm.collectionVariables.set('futureDate2', futureDate2);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -565,10 +565,7 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
-                  "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  ""
                 ],
                 "type": "text/javascript",
                 "packages": {},
