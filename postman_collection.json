@@ -83,7 +83,7 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.access_token);",
+                  "    pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
                   "});"
                 ],
                 "type": "text/javascript",

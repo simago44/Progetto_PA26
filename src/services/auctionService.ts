@@ -4,7 +4,7 @@ import { addInterval } from "../utils/dateUtils.ts";
 import logger from "../core/logger.ts";
 import type { Bid } from "../models/Bid.ts";
 import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factories/errorFactory.ts";
-import type { Auction, DutchAuction, EnglishAuction, FirstPriceAuction, SecondPriceAuction, TypedAuction } from "../models/Auction.ts";
+import { Auction, type DutchAuction, type EnglishAuction, type FirstPriceAuction, type SecondPriceAuction, type TypedAuction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import type UserRepository from "../repositories/userRepository.ts";
 import type AuctionRepository from "../repositories/auctionRepository.ts";
@@ -149,6 +149,12 @@ class AuctionService {
         const endsAt = await this.getEndsAt(auction);
 
         let currentPrice = null;
+        let totalBids = null;
+
+        if (auction.type == AuctionType.English && auction.status != AuctionStatus.NotStarted) {
+          totalBids = (await this.bidRepository.findAuctionBids(auction.id)).length;
+        }
+
         if (auction.status == AuctionStatus.InProgress) {
           const typedAuction = this.toTypedAuction(auction);
           switch (typedAuction.type) {
@@ -161,7 +167,7 @@ class AuctionService {
           }
         }
 
-        return omit(omitBy({ ...auction.dataValues, endsAt, status: auction.status, currentPrice }, isNil), ["createdAt", "updatedAt"]);
+        return omit(omitBy({ ...auction.dataValues, totalBids, endsAt, status: auction.status, currentPrice }, isNil), ["createdAt", "updatedAt"]);
       })
     );
   }
@@ -352,7 +358,9 @@ class AuctionService {
    */
   public async getWinningBid(auction: Auction, transaction: Transaction | null = null): Promise<{ bid: Bid; bidPrice: number; } | null> {
     const bids = await this.bidRepository.findAuctionBids(auction.id, transaction);
-    bids.sort((a, b) => b.bidPrice - a.bidPrice);
+    // Ordering by id necessary for sealed bid auctions tiebreak. With the same price
+    // we pick the oldest one.
+    bids.sort((a, b) => b.bidPrice - a.bidPrice || a.id - b.id);
 
     const higherBid = bids[0];
     const secondHigherBid = bids[1];
@@ -423,7 +431,7 @@ class AuctionService {
     await this.sequelize.transaction(async (t: Transaction) => {
       const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
       if (!auction) throw new Errors.AuctionNotFound({ auctionId });
-     
+
       // Only the auction creator can update the reserve price
       if (auction.creatorId != userId) throw new Errors.Forbidden();
 

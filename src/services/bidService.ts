@@ -185,6 +185,9 @@ class BidService {
       case AuctionType.SecondPrice: {
         const userHasBidsInAuction = await this.bidRepository.userHasBidsInAuction(auction.id, user.id, transaction);
         if (userHasBidsInAuction) throw new Errors.BidAlreadyPlaced();
+
+        if (bid.bidPrice < auction.reservePrice) throw new Errors.BidTooLow({ minimumBid: auction.reservePrice });
+
         break;
       }
     }
