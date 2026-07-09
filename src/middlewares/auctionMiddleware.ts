@@ -6,6 +6,12 @@ import { AuctionConstants } from "../constants/constants.ts";
 import { MINUTES } from "../utils/dateUtils.ts";
 import { dateRangeSchema } from "./commonSchemas.ts";
 
+export const intIdSchema = z
+  .string()
+  .regex(/^\d+$/, "Invalid input: expected non negative int")
+  .transform(Number)
+  .pipe(z.int().nonnegative());
+
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
   startsAt: z.coerce.date().refine((date) => date > new Date(), {
@@ -61,8 +67,8 @@ const getAuctionStatsSchema = dateRangeSchema.extend({
 });
 
 const updateReservePriceMiddleware = z.object({
-  auctionId: z.coerce.number().nonnegative(),
-  reservePrice: z.number().min(AuctionConstants.minReservePrice),
+  auctionId: intIdSchema,
+  reservePrice: z.int().min(AuctionConstants.minReservePrice),
 });
 
 export function validateAuctionMiddleware(req: Request, res: Response, next: NextFunction) {

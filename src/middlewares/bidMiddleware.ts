@@ -1,15 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
 import { createZodError } from "../factories/errorFactory.ts";
 import z from "zod";
+import { intIdSchema } from "./auctionMiddleware.ts";
 
 const BidSchema = z.object({
   userId: z.string(),
-  auctionId: z.string(),
+  auctionId: intIdSchema,
   bidPrice: z.int().min(1).optional()
 });
 
 /** Middleware which validates the bid in the request body */
-export function validateBidMiddleware(req: Request, res: Response, next: NextFunction) {
+export function validateCreateBid(req: Request, res: Response, next: NextFunction) {
   const bid = {
     userId: res.locals.authId,
     auctionId: req.params.auctionId,
@@ -24,7 +25,17 @@ export function validateBidMiddleware(req: Request, res: Response, next: NextFun
   next();
 }
 
+const validateGetAuctionBidsSchema = z.object({
+  auctionId: intIdSchema
+})
+
 export function validateGetAuctionBids(req: Request, res: Response, next: NextFunction) {
-  res.locals.auctionId = req.params.auctionId;
+  const auctionId = req.params.auctionId;
+
+  const result = validateGetAuctionBidsSchema.safeParse({ auctionId });
+  if (!result.success) throw createZodError(result.error, "validateGetAuctionBids");
+
+  res.locals.auctionId = result.data.auctionId;
+
   next();
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from "@jest/globals";
-import { validateGetAuctionBids, validateBidMiddleware } from "../src/middlewares/bidMiddleware.ts";
+import { validateGetAuctionBids, validateCreateBid } from "../src/middlewares/bidMiddleware.ts";
 import type { Request, Response } from "express";
 import { Errors } from "../src/factories/errorFactory.ts";
 import { ErrorMessages } from "../src/factories/messageStrings.ts";
@@ -19,16 +19,16 @@ describe("Unit Tests - bidMiddleware", () => {
 
       validateGetAuctionBids(req, res, next);
 
-      expect(res.locals.auctionId).toBe("12345");
+      expect(res.locals.auctionId).toBe(12345);
       expect(next).toHaveBeenCalledTimes(1);
       expect(next).toHaveBeenCalledWith();
     });
   });
 
-  describe("validateBidMiddleware", () => {
+  describe("validateCreateBid", () => {
     it("should validate the bid object, save it to res.locals, and call next", async () => {
       const req = {
-        params: { auctionId: "auction-123" },
+        params: { auctionId: "123" },
         body: { bidPrice: 150 }
       } as unknown as Request;
 
@@ -38,11 +38,11 @@ describe("Unit Tests - bidMiddleware", () => {
 
       const next = jest.fn();
 
-      validateBidMiddleware(req, res, next);
+      validateCreateBid(req, res, next);
 
       expect(res.locals.bid).toEqual({
         userId: "user-999",
-        auctionId: "auction-123",
+        auctionId: 123,
         bidPrice: 150
       });
       expect(next).toHaveBeenCalledTimes(1);
@@ -61,7 +61,7 @@ describe("Unit Tests - bidMiddleware", () => {
 
       const next = jest.fn();
 
-      expect(() => validateBidMiddleware(req, res, next)).toThrow(
+      expect(() => validateCreateBid(req, res, next)).toThrow(
         expect.objectContaining({
           name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateBidMiddleware" }),

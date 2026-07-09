@@ -5,7 +5,8 @@ import { AuctionType } from "../enums/enums.ts";
 import { dateRangeSchema } from "./commonSchemas.ts";
 
 export const topUpWalletSchema = z.object({
-  tokens: z.number().positive()
+  userId: z.string(),
+  tokens: z.int().positive()
 });
 
 const auctionReportFiltersSchema = dateRangeSchema.extend({
@@ -19,13 +20,14 @@ const walletReportFiltersSchema = dateRangeSchema.extend({
 });
 
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
-  res.locals.userId = req.params.userId;
+  const userId = req.params.userId;
   const tokens = req.body?.tokens;
 
-  const result = topUpWalletSchema.safeParse({ tokens });
+  const result = topUpWalletSchema.safeParse({ userId, tokens });
   if (!result.success) throw createZodError(result.error, "validateTopUpWallet");
 
   res.locals.tokens = result.data.tokens;
+  res.locals.userId = result.data.userId;
 
   next();
 }
