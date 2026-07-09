@@ -1,38 +1,6 @@
 # Auction Platform API
 ### Progetto Programmazione Avanzata 2025/2026
 
-## Table of contents
-
-- [Auction Platform API](#auction-platform-api)
-    - [Progetto Programmazione Avanzata 2025/2026](#progetto-programmazione-avanzata-20252026)
-  - [Table of contents](#table-of-contents)
-  - [1. Project description and objectives](#1-project-description-and-objectives)
-    - [User functionality](#user-functionality)
-    - [API endpoints](#api-endpoints)
-    - [Auth](#auth)
-    - [Users](#users)
-    - [Auctions](#auctions)
-    - [Bids](#bids)
-    - [Utilities](#utilities)
-  - [2. Technology stack](#2-technology-stack)
-  - [3. Design and UML](#3-design-and-uml)
-    - [Use case diagrams](#use-case-diagrams)
-      - [Authentication Management](#authentication-management)
-      - [User Management](#user-management)
-      - [Auction Management](#auction-management)
-      - [Bid Management](#bid-management)
-    - [Sequence diagrams](#sequence-diagrams)
-  - [4. Design Patterns and Code Architecture](#4-design-patterns-and-code-architecture)
-    - [Design Patterns Used](#design-patterns-used)
-  - [5. Installation and usage](#5-installation-and-usage)
-    - [Setup Instructions](#setup-instructions)
-      - [1. Clone the repository](#1-clone-the-repository)
-      - [2. Load the necessary files](#2-load-the-necessary-files)
-      - [3. Usage](#3-usage)
-  - [6. Testing](#6-testing)
-    - [Jest](#jest)
-    - [Postman Collection](#postman-collection)
-
 ---
 
 ## 1. Project description and objectives
@@ -184,13 +152,15 @@ cd Progetto_PA26
 
 The following files are required for the system to run correctly and are not included in the repository:
 
-- `/.env`
-- `/.env.development`
-- `/.env.production`
-- `/postman_environment.json`
-- `/seeds/users.json`
+- `/.env`;
+- `/.env.development`: specialization .env file for development. Could also be empty;
+- `/.env.production`: specialization .env file for production. Could also be empty;
+- `/postman_environment.json`: necessary to run postman collection;
+- `/seeds/users.json`: necessary for seeding script to load pre-existing auth0 users into the database.
 
 In `/templates/` folder there are some templates files useful as a reference. 
+
+It's necessary to create an Auth0 API, application and database with correct roles and permissions.
 
 #### 3. Usage
 
