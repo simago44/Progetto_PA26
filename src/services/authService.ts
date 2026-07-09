@@ -8,19 +8,20 @@ class AuthService {
    * Registers a new user in Auth0 and the application database.
    * @param username The username of the new user.
    * @param password The user password.
+   * @param role The user role.
    * @returns The ID of the created user.
    * @throws {AppError} If the user cannot be created in Auth0 or in the database.
    */
-  public async signup(username: string, password: string): Promise<string> {
+  public async signup(username: string, password: string, role: RoleName): Promise<string> {
     let userId: string;
     try {
-      userId = await userRepository.createAuth0User({ username, password, role: RoleName.AuctionParticipant });
+      userId = await userRepository.createAuth0User({ username, password, role });
     } catch (err) {
       throw createAuth0Error(err);
     }
 
     try {
-      const user = await userRepository.create({ userId, username, tokens: NewUserTokens[RoleName.AuctionParticipant] });
+      const user = await userRepository.create({ userId, username, tokens: NewUserTokens[role] });
       return user.id;
     } catch (err) {
       await userRepository.deleteFromAuth0(userId);

@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import env from '../core/config.ts';
 import { createZodError, Errors } from '../factory/errorFactory.ts';
 import z from 'zod';
+import { RoleName } from '../enums/enums.ts';
 
 const checkJwt = auth({
   issuerBaseURL: `https://${env.AUTH0_DOMAIN}`,
@@ -77,7 +78,9 @@ export const signupSchema = z.object({
     .regex(/[a-z]/, "Password must contain a lowercase letter")
     .regex(/[A-Z]/, "Password must contain an uppercase letter")
     .regex(/[0-9]/, "Password must contain a number")
-    .regex(/[!@#$%^&*]/, "Password must contain a special character (!@#$%^&*)")
+    .regex(/[!@#$%^&*]/, "Password must contain a special character (!@#$%^&*)"),
+
+  role: z.enum([RoleName.AuctionParticipant, RoleName.AuctionCreator])
 });
 
 /** Zod schema for validating login request body. */
@@ -109,6 +112,7 @@ export function validateSignup(req: Request, res: Response, next: NextFunction) 
   // Overwrite req.body with the safely parsed/sanitized fields
   res.locals.username = result.data.username;
   res.locals.password = result.data.password;
+  res.locals.role = result.data.role;
 
   next();
 };

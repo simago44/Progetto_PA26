@@ -10,6 +10,7 @@ import {
 import type { Request, Response } from "express";
 import { Errors } from "../src/factory/errorFactory.ts";
 import { ErrorMessages } from "../src/factory/messageStrings.ts";
+import { RoleName } from "../src/enums/enums.ts";
 
 describe("Unit Tests - authMiddleware", () => {
   describe("checkPermission", () => {
@@ -138,7 +139,8 @@ describe("Unit Tests - authMiddleware", () => {
       const req = {
         body: {
           username: "ValidUser123",
-          password: "Password123!"
+          password: "Password123!",
+          role: RoleName.AuctionCreator
         }
       } as unknown as Request;
       const res = { locals: {} } as unknown as Response;
@@ -148,14 +150,41 @@ describe("Unit Tests - authMiddleware", () => {
 
       expect(res.locals.username).toBe("validuser123");
       expect(res.locals.password).toBe("Password123!");
+      expect(res.locals.role).toBe(RoleName.AuctionCreator);
       expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error if role is not auction-participant or auction-creator", () => {
+      const req = {
+        body: {
+          username: "ValidUser",
+          password: "Short1!",
+          role: RoleName.Admin
+        }
+      } as unknown as Request;
+      const res = { locals: {} } as unknown as Response;
+      const next = jest.fn();
+
+      expect(() => validateSignup(req, res, next)).toThrow(
+        expect.objectContaining({
+          name: Errors.ValidationError.name,
+          message: ErrorMessages.Validation({ form: "signup" }),
+          details: expect.objectContaining({
+            role: [
+              expect.any(String)
+            ]
+          })
+        })
+      );
+      expect(next).not.toHaveBeenCalled();
     });
 
     it("should throw an error if password is too short", () => {
       const req = {
         body: {
           username: "ValidUser",
-          password: "Short1!"
+          password: "Short1!",
+          role: RoleName.AuctionParticipant
         }
       } as unknown as Request;
       const res = { locals: {} } as unknown as Response;
@@ -179,7 +208,8 @@ describe("Unit Tests - authMiddleware", () => {
       const req = {
         body: {
           username: "ValidUser",
-          password: "a"
+          password: "a",
+          role: RoleName.AuctionParticipant
         }
       } as unknown as Request;
       const res = { locals: {} } as unknown as Response;

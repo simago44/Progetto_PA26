@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import authService from "../services/authService.ts";
+import type { RoleName } from "../enums/enums.ts";
 
 class AuthController {
   /**
@@ -9,14 +10,15 @@ class AuthController {
    * 'res.locals' must contain:
    *  - `username`: the username of the user.
    *  - `password`: the password of the user.
+   *  - `role`: the role of the user.
    * 
    * Returns `201 Created` with the ID of the created user.
    */
   public async signup(
     _req: Request,
-    res: Response<unknown, { username: string, password: string }>
+    res: Response<unknown, { username: string, password: string, role: RoleName }>
   ) {
-    const userId = await authService.signup(res.locals.username, res.locals.password);
+    const userId = await authService.signup(res.locals.username, res.locals.password, res.locals.role);
     res.status(StatusCodes.CREATED).json({ id: userId });
   };
 

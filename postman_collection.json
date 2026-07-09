@@ -50,7 +50,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
+              "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\",\n    \"role\": \"auction-participant\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

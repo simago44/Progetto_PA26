@@ -21,6 +21,7 @@ const router = Router();
  *             required:
  *               - username
  *               - password
+ *               - role
  *             properties:
  *               username:
  *                 type: string
@@ -29,6 +30,11 @@ const router = Router();
  *                 type: string
  *                 format: password
  *                 description: The user's password.
+ *               role:
+ *                 type: string
+ *                 enum:
+ *                   - auction-participant
+ *                   - auction-creator
  *     responses:
  *       201:
  *         description: User created successfully.
