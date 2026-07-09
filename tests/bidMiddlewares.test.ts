@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import { validateGetAuctionBids, validateBidMiddleware } from "../src/middlewares/bidMiddleware.ts";
 import type { Request, Response } from "express";
-import { Errors } from "../src/factory/errorFactory.ts";
-import { ErrorMessages } from "../src/factory/messageStrings.ts";
+import { Errors } from "../src/factories/errorFactory.ts";
+import { ErrorMessages } from "../src/factories/messageStrings.ts";
 
 describe("Unit Tests - bidMiddleware", () => {
   describe("validateGetAuctionBids", () => {

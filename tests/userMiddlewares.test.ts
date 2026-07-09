@@ -6,8 +6,8 @@ import {
 } from "../src/middlewares/userMiddlewares.ts";
 import { AuctionType } from "../src/enums/enums.ts";
 import type { Request, Response } from "express";
-import { Errors } from "../src/factory/errorFactory.ts";
-import { ErrorMessages } from "../src/factory/messageStrings.ts";
+import { Errors } from "../src/factories/errorFactory.ts";
+import { ErrorMessages } from "../src/factories/messageStrings.ts";
 
 describe("Unit Tests - userMiddleware", () => {
   describe("validateTopUpWallet", () => {

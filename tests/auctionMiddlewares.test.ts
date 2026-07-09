@@ -9,8 +9,8 @@ import { AuctionType, AuctionStatus } from "../src/enums/enums.ts";
 import type { Request, Response } from "express";
 import { AuctionConstants } from "../src/constants/constants.ts";
 import { MINUTES } from "../src/utils/dateUtils.ts";
-import { Errors } from "../src/factory/errorFactory.ts";
-import { ErrorMessages } from "../src/factory/messageStrings.ts";
+import { Errors } from "../src/factories/errorFactory.ts";
+import { ErrorMessages } from "../src/factories/messageStrings.ts";
 
 describe("Unit Tests - auctionMiddleware", () => {
   describe("validateAuctionMiddleware", () => {

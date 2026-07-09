@@ -8,8 +8,8 @@ import {
   resolveUserIdParam
 } from "../src/middlewares/authMiddleware.ts";
 import type { Request, Response } from "express";
-import { Errors } from "../src/factory/errorFactory.ts";
-import { ErrorMessages } from "../src/factory/messageStrings.ts";
+import { Errors } from "../src/factories/errorFactory.ts";
+import { ErrorMessages } from "../src/factories/messageStrings.ts";
 import { RoleName } from "../src/enums/enums.ts";
 
 describe("Unit Tests - authMiddleware", () => {

@@ -3,18 +3,35 @@
 
 ## Table of contents
 
-- [Auction Management System](#progetto-programmazione-avanzata-20252026)
-  - [Indice](#indice)
+- [Auction Platform API](#auction-platform-api)
+    - [Progetto Programmazione Avanzata 2025/2026](#progetto-programmazione-avanzata-20252026)
+  - [Table of contents](#table-of-contents)
   - [1. Project description and objectives](#1-project-description-and-objectives)
-    - [Key Features](#key-features)
+    - [User functionality](#user-functionality)
+    - [API endpoints](#api-endpoints)
+    - [Auth](#auth)
+    - [Users](#users)
+    - [Auctions](#auctions)
+    - [Bids](#bids)
+    - [Utilities](#utilities)
   - [2. Technology stack](#2-technology-stack)
   - [3. Design and UML](#3-design-and-uml)
-    - [Core Entities](#core-entities)
+    - [Use case diagrams](#use-case-diagrams)
+      - [Authentication Management](#authentication-management)
+      - [User Management](#user-management)
+      - [Auction Management](#auction-management)
+      - [Bid Management](#bid-management)
+    - [Sequence diagrams](#sequence-diagrams)
   - [4. Design Patterns and Code Architecture](#4-design-patterns-and-code-architecture)
     - [Design Patterns Used](#design-patterns-used)
   - [5. Installation and usage](#5-installation-and-usage)
-    - [Prerequisites](#prerequisites)
     - [Setup Instructions](#setup-instructions)
+      - [1. Clone the repository](#1-clone-the-repository)
+      - [2. Load the necessary files](#2-load-the-necessary-files)
+      - [3. Usage](#3-usage)
+  - [6. Testing](#6-testing)
+    - [Jest](#jest)
+    - [Postman Collection](#postman-collection)
 
 ---
 
@@ -37,38 +54,38 @@ The system provides three types of users:
 ### API endpoints
 
 ### Auth
-| Method | Endpoint | Description | Authorization |
-|---------|----------|-------------|---------------|
-| `POST` | `/api/v1/signup` | Signup of a new user | Public |
-| `POST` | `/api/v1/login` | User authentication | Public |
+| Method | Endpoint         | Description          | Authorization |
+| ------ | ---------------- | -------------------- | ------------- |
+| `POST` | `/api/v1/signup` | Signup of a new user | Public        |
+| `POST` | `/api/v1/login`  | User authentication  | Public        |
 
 ### Users
-| Method | Endpoint | Description | Authorization |
-|---------|----------|-------------|---------------|
-| `GET` | `/api/v1/users/:userId/wallet` | Get a user wallet balance | _Admin_ **OR** _User_ with `userId` |
-| `GET` | `/api/v1/users/:userId/auction-report` | Get a user's auctions report | _Admin_ **OR** _User_ with `userId` |
-| `GET` | `/api/v1/users/:userId/wallet-report` | Get a user's wallet report | _Admin_ **OR** _User_ with `userId` |
-| `PUT` | `/api/v1/users/:userId/wallet` | Top up a user's wallet | _Admin_ |
+| Method | Endpoint                               | Description                  | Authorization                       |
+| ------ | -------------------------------------- | ---------------------------- | ----------------------------------- |
+| `GET`  | `/api/v1/users/:userId/wallet`         | Get a user wallet balance    | _Admin_ **OR** _User_ with `userId` |
+| `GET`  | `/api/v1/users/:userId/auction-report` | Get a user's auctions report | _Admin_ **OR** _User_ with `userId` |
+| `GET`  | `/api/v1/users/:userId/wallet-report`  | Get a user's wallet report   | _Admin_ **OR** _User_ with `userId` |
+| `PUT`  | `/api/v1/users/:userId/wallet`         | Top up a user's wallet       | _Admin_                             |
 
 ### Auctions
-| Method | Endpoint | Description | Authorization |
-|---------|----------|-------------|---------------|
-| `POST` | `/api/v1/auctions` | Create a new auction | _AuctionCreator_ |
-| `GET` | `/api/v1/auctions` | List auctions filtered by the provided criteria | Public |
-| `GET` | `/api/v1/auctions/stats` | Get auction statistics grouped by auction type | _Admin_ |
-| `PUT` | `/auctions/:auctionId/reserve-price` | Update an auction reserve price | _AuctionCreator_ |
+| Method | Endpoint                             | Description                                     | Authorization    |
+| ------ | ------------------------------------ | ----------------------------------------------- | ---------------- |
+| `POST` | `/api/v1/auctions`                   | Create a new auction                            | _AuctionCreator_ |
+| `GET`  | `/api/v1/auctions`                   | List auctions filtered by the provided criteria | Public           |
+| `GET`  | `/api/v1/auctions/stats`             | Get auction statistics grouped by auction type  | _Admin_          |
+| `PUT`  | `/auctions/:auctionId/reserve-price` | Update an auction reserve price                 | _AuctionCreator_ |
 
 ### Bids
-| Method | Endpoint | Description | Authorization |
-|---------|----------|-------------|---------------|
-| `POST` | `/api/v1/auctions/:auctionId/bids` | Create a bid for the specified auction | _AuctionParticipant_ |
-| `GET` | `/api/v1/auctions/:auctionId/bids` | List all the bids for the specified auctions | Public |
+| Method | Endpoint                           | Description                                  | Authorization        |
+| ------ | ---------------------------------- | -------------------------------------------- | -------------------- |
+| `POST` | `/api/v1/auctions/:auctionId/bids` | Create a bid for the specified auction       | _AuctionParticipant_ |
+| `GET`  | `/api/v1/auctions/:auctionId/bids` | List all the bids for the specified auctions | Public               |
 
 ### Utilities
-| Method | Endpoint | Description | Authorization |
-|---------|----------|-------------|---------------|
-| `GET` | `/health` | Health check | Public |
-| `GET` | `/api-docs` | Swagger documentation for the API | Public |
+| Method | Endpoint    | Description                       | Authorization |
+| ------ | ----------- | --------------------------------- | ------------- |
+| `GET`  | `/health`   | Health check                      | Public        |
+| `GET`  | `/api-docs` | Swagger documentation for the API | Public        |
 
 
 ## 2. Technology stack
@@ -156,7 +173,59 @@ The project follows a layered architecture:
 
 ### Setup Instructions
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/simago44/Progetto_PA26.git
-   cd Progetto_PA26
+#### 1. Clone the repository
+```bash
+git clone https://github.com/simago44/Progetto_PA26.git
+cd Progetto_PA26
+```
+
+#### 2. Load the necessary files
+The necessary files for the correct operation of the system are the following:
+- .env
+- .env.development
+- .env.production
+- postman_environment.json
+- seeds/users.json
+
+#### 3. Usage
+
+To run the development version use: `docker compose up --build -d`
+
+To run the production version use: `docker compose -f compose.yaml -f compose.production.yaml up --build -d`
+
+In development it's possible to seed the database using: `docker compose exec node npm run seed`
+
+In development it's possible to run eslint on src/ and tests/ using: `docker compose exec node npm run lint`
+
+In development it's possible to build the code using: `docker compose exec node npm run build`
+
+## 6. Testing
+
+### Jest
+
+In development it's possible to run the tests using: `docker compose exec node npm run test`
+
+The test suite covers all request-validation and authorization middlewares with unit tests that mock `Request`/`Response`/`next` and assert both the success path (correct `res.locals` population and a single `next()` call) and the failure path (a thrown `ValidationError`/`ForbiddenError` with the expected `details`).
+
+- **AuctionMiddlewares** (`auctionMiddlewares.test.ts`)
+  Covers auction creation for all four auction types (English, Dutch, First-Price, Second-Price), verifying correct payload shaping in `res.locals.auction` (including `creatorId` injection and the default `delayBeforeEnding` for English auctions) and rejection of an invalid payload with per-field error details. Also covers auction listing filters (comma-separated `creatorIds`/`statuses`/`types` parsing, including the empty-query case), reserve price updates (numeric coercion of `auctionId`/`reservePrice` and rejection of negative values), and auction stats filters (type list parsing, `fromDate`/`toDate` normalization, and rejection when `toDate` precedes `fromDate`).
+
+- **AuthMiddlewares** (`authMiddlewares.test.ts`)
+  Covers JWT-based permission checks (`checkPermission`, `checkSelfOrAllPermission`, including self-vs-all logic and `ForbiddenError` on mismatch/missing permissions), JWT authorization failure handling (`checkJwtAuthorization`), and `resolveUserIdParam` (`"me"` resolves to the authenticated user's id). Also covers signup validation (username normalization, allowed roles, and password strength — including a case producing four distinct password errors) and login validation (username normalization and `WrongCredentialsErrors` on missing fields).
+
+- **BidMiddlewares** (`bidMiddlewares.test.ts`)
+  Covers auction-bid retrieval (`auctionId` param extraction) and bid creation (`res.locals.bid` shaping with injected `userId`/`auctionId`, and rejection of a non-numeric `bidPrice`).
+
+- **UserMiddlewares** (`userMiddlewares.test.ts`)
+  Covers wallet top-up (positive token validation and rejection of zero/negative amounts), auction report filters (`won` boolean coercion, `types` list parsing, `participantId` injection, date range validation with rejection of a `fromDate` in the future), and wallet report filters (`participantId` injection and rejection when `toDate` precedes `fromDate`).
+
+![Jest output](./docs/images/jest_output.png)
+
+### Postman Collection
+Alongside the automated test suite, the repository includes a Postman collection for manual/exploratory testing of the live API. It contains a request for every endpoint, plus a set of setup requests to streamline debugging:
+
+- **Auth setup requests** — `login auction-participant`, `login auction-creator`, `login admin`, one for each user role, which populate the JWT token needed to authorize subsequent requests.
+- **Auction setup requests** — one per auction type (`create english auction`, `create dutch auction`, `create first-price auction`, `create second-price auction`), for quickly spinning up auctions to bid on or test against.
+
+Before running the Postman collection it's necessary to import the `postman_environment.json` file.
+Furthermore, it's also necessary to run the database seeding, which loads the default test users along with some sample auction and bids.
