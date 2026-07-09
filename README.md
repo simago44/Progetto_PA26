@@ -72,32 +72,67 @@ The system provides three types of users:
 
 
 ## 2. Technology stack
- - **Node.js**
- - **Express**
- - **Sequelize**
- - **Auth0**
- - **Redis**
- - **BullMQ**
- - **Jest**
- - **Winston**
- - **Swagger**
- - **Docker & Docker compose**
- - **Postman**
+ - **Node.js**: JavaScript runtime environment
+ - **TypeScript**: Static typing for the codebase
+ - **Express**: Web framework for the REST API backend
+ - **Sequelize**: ORM for PostgreSQL
+ - **Zod**: Schema validation and type inference
+ - **Auth0**: JWT-based authentication and authorization
+ - **Redis**: In-memory store used for query caching
+ - **BullMQ**: Redis-backed job queue used for auction settlement/closing
+ - **Jest**: Unit and integration testing framework
+ - **Winston**: Structured application logging
+ - **Awilix**: Dependency injection container
+ - **ESLint**: Static code analysis / linting
+ - **Swagger**: OpenAPI documentation for the API
+ - **Docker & Docker Compose**: Containerization and local orchestration
+ - **Postman**: Manual/exploratory API testing
 
 ## 3. Design and UML
 
 ### Use case diagrams
+The following diagrams illustrate the main use cases supported by the system and the interactions between actors and application functionalities. Each diagram focuses on a specific domain area, providing a high-level overview of the available operations and the permissions associated with each actor.
+
+#### Authentication Management
+This diagram illustrates the authentication operations supported by the system. All users can log in, while only non-administrator users can sign up.
+
 ![Use cases diagram: AuthManagement](./docs/images/useCase/AuthManagementUseCase.drawio.png)
+
+#### User Management
+This diagram illustrates the user-related operations supported by the system. Auction participants, auction creators, and administrators can view wallets. Auction participants and administrators can also view auction and wallet reports, while administrators can top up wallets.
+
 ![Use cases diagram: UserManagement](./docs/images/useCase/UserManagementUseCase.drawio.png)
+
+#### Auction Management
+This diagram illustrates the auction-related operations supported by the system. All users can view auctions, auction creators can create auctions and update reserve prices, and administrators can access auction statistics.
+
 ![Use cases diagram: AuctionManagement](./docs/images/useCase/AuctionManagementUseCase.drawio.png)
+
+#### Bid Management
+This diagram illustrates the bid-related operations supported by the system. All users can view auction bids, while only auction participants can place bids.
+
 ![Use cases diagram: BidManagement](./docs/images/useCase/BidManagementUseCase.drawio.png)
 
+### Sequence diagrams
+Route: `GET /api/v1/auctions`
 
-### Core Entities
-- **Users**: Bidders and auctioneers authenticated via Auth0
-- **Auctions**: Auction instances with metadata and configuration
-- **Bids**: Bid records with amounts, timestamps, and bid history
-- **AuctionTypes**: Enumerated auction mechanisms
+![Sequence diagram: GetAuction](./docs/images/sequence/GetAuctionsSequenceDiagram.png)
+
+Route: `GET /api/v1/auctions/:auctionId/bids`
+
+![Sequence diagram: GetAuctionBids](./docs/images/sequence/GetAuctionBidsSequenceDiagram.png)
+
+Route: `GET /api/v1/users/:userId/wallet`
+
+![Sequence diagram: GetWallet](./docs/images/sequence/GetWalletSequenceDiagram.png)
+
+Route: `POST /api/v1/auctions/:auctionId/bids`
+
+![Sequence diagram: CreateBid](./docs/images/sequence/CreateBidSequenceDiagram.png)
+
+Route: `PUT /api/v1/auctions/:auctionId/reserve-price`
+
+![Sequence diagram: UpdateAuctionReservePrice](./docs/images/sequence/UpdateAuctionReservePriceSequenceDiagram.png)
 
 ## 4. Design Patterns and Code Architecture
 

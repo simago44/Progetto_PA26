@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Pagina-1" id="ahXVmOKEu6miEEmpS0yc">
-    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="495" dy="413" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -10,16 +10,10 @@
         <mxCell id="0RGTJ1kcWxQguQa-8f6I-11" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.015;entryY=0.354;entryDx=0;entryDy=0;endArrow=none;endFill=0;entryPerimeter=0;" target="0RGTJ1kcWxQguQa-8f6I-10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0RGTJ1kcWxQguQa-8f6I-12" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.037;entryY=0.361;entryDx=0;entryDy=0;endArrow=none;endFill=0;entryPerimeter=0;" target="0RGTJ1kcWxQguQa-8f6I-9">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="eZGcs2O2zaFd76c9ZGBA-2" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="eZGcs2O2zaFd76c9ZGBA-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="9Kz90V72tp-HNPner3oC-5" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.028;entryY=0.372;entryDx=0;entryDy=0;endArrow=none;endFill=0;entryPerimeter=0;" target="0RGTJ1kcWxQguQa-8f6I-7">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="0RGTJ1kcWxQguQa-8f6I-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Auction Participant" vertex="1">
+        <mxCell id="0RGTJ1kcWxQguQa-8f6I-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Auction Creator" vertex="1">
           <mxGeometry height="60" width="30" x="90" y="290" as="geometry" />
         </mxCell>
         <mxCell id="0RGTJ1kcWxQguQa-8f6I-13" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="0RGTJ1kcWxQguQa-8f6I-9">
@@ -31,7 +25,7 @@
         <mxCell id="9Kz90V72tp-HNPner3oC-7" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="0RGTJ1kcWxQguQa-8f6I-10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="0RGTJ1kcWxQguQa-8f6I-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Auction Creator" vertex="1">
+        <mxCell id="0RGTJ1kcWxQguQa-8f6I-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Auction Participant" vertex="1">
           <mxGeometry height="60" width="30" x="90" y="450" as="geometry" />
         </mxCell>
         <mxCell id="0RGTJ1kcWxQguQa-8f6I-8" edge="1" parent="1" source="0RGTJ1kcWxQguQa-8f6I-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;entryX=0.007;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" target="0RGTJ1kcWxQguQa-8f6I-7">
