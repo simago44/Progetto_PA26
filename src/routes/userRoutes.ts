@@ -74,6 +74,30 @@ router.get("/:userId/wallet", getWalletMiddlewares, userController.getWallet);
  *         schema:
  *           type: boolean
  *         description: Filter only won or lost auctions.
+ *       - in: query
+ *         name: statuses
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum:
+ *               - not-started
+ *               - in-progress
+ *               - ended
+ *         style: form
+ *         explode: true
+ *         description: Filter auctions by status.
+ *       - in: query
+ *         name: types
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum:
+ *               - english
+ *               - dutch
+ *               - first-price
+ *               - second-price
  *     responses:
  *       200:
  *         description: Auctions report retrieved successfully.

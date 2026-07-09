@@ -1,18 +1,18 @@
 import z from "zod";
 import type { Request, Response, NextFunction } from "express";
 import { createZodError } from "../factories/errorFactory.ts";
-import { AuctionType } from "../enums/enums.ts";
+import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { dateRangeSchema } from "./commonSchemas.ts";
+import { getAuctionsSchema } from "./auctionMiddleware.ts";
 
 export const topUpWalletSchema = z.object({
   userId: z.string(),
   tokens: z.int().positive()
 });
 
-const auctionReportFiltersSchema = dateRangeSchema.extend({
+const auctionReportFiltersSchema = getAuctionsSchema.extend({
   participantId: z.string(),
-  won: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
-  types: z.array(z.enum(AuctionType)).optional()
+  won: z.enum(['true', 'false']).transform((val) => val === 'true').optional()
 });
 
 const walletReportFiltersSchema = dateRangeSchema.extend({
@@ -35,6 +35,8 @@ export function validateTopUpWallet(req: Request, res: Response, next: NextFunct
 export function validateAuctionReportFilters(req: Request, res: Response, next: NextFunction) {
   const filters = req.query;
   filters.participantId = res.locals.userId;
+  if (typeof filters.creatorIds === "string") filters.creatorIds = filters.creatorIds.split(',');
+  if (typeof filters.statuses === "string") filters.statuses = filters.statuses.split(',');
   if (typeof filters.types === "string") filters.types = filters.types.split(',');
 
   const result = auctionReportFiltersSchema.safeParse(filters);

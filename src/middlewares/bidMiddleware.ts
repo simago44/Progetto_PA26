@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { createZodError } from "../factories/errorFactory.ts";
 import z from "zod";
-import { intIdSchema } from "./auctionMiddleware.ts";
+import { intIdSchema } from "./commonSchemas.ts";
 
 const BidSchema = z.object({
   userId: z.string(),

@@ -12,9 +12,15 @@ export const dateRangeSchema = z.object({
   // We add midnight of the next day as the default time if time is missing
   toDate: z.preprocess(
     (val) => (isDateOnly(val) ? `${val}T23:59:59.999Z` : val),
-    z.coerce.date().default(() => new Date())
+    z.coerce.date().optional()
   ),
-}).refine((data) => data.toDate >= data.fromDate, {
+}).refine((data) => !data.toDate || data.toDate >= data.fromDate, {
   message: "toDate must be after fromDate",
   path: ["toDate"],
 });
+
+export const intIdSchema = z
+  .string()
+  .regex(/^\d+$/, "Invalid input: expected non negative int")
+  .transform(Number)
+  .pipe(z.int().nonnegative());

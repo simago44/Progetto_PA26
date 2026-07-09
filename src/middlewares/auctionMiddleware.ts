@@ -4,13 +4,7 @@ import z from 'zod';
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { AuctionConstants } from "../constants/constants.ts";
 import { MINUTES } from "../utils/dateUtils.ts";
-import { dateRangeSchema } from "./commonSchemas.ts";
-
-export const intIdSchema = z
-  .string()
-  .regex(/^\d+$/, "Invalid input: expected non negative int")
-  .transform(Number)
-  .pipe(z.int().nonnegative());
+import { dateRangeSchema, intIdSchema } from "./commonSchemas.ts";
 
 const BaseAuctionSchema = z.object({
   creatorId: z.string(),
@@ -56,7 +50,7 @@ export const AuctionSchema = z.discriminatedUnion("type", [
   SealedAuctionSchema,
 ]);
 
-const getAuctionsSchema = z.object({
+export const getAuctionsSchema = z.object({
   creatorIds: z.array(z.string()).optional(),
   statuses: z.array(z.enum(AuctionStatus)).optional(),
   types: z.array(z.enum(AuctionType)).optional()
@@ -77,19 +71,18 @@ export function validateAuctionMiddleware(req: Request, res: Response, next: Nex
 
   const result = AuctionSchema.safeParse(auction);
   if (!result.success) throw createZodError(result.error, "validateAuctionMiddleware");
-
   res.locals.auction = result.data;
 
   next();
 }
 
 export function validateGetAuctionsMiddleware(req: Request, res: Response, next: NextFunction) {
-  const data = req.query;
-  if (typeof data.creatorIds === "string") data.creatorIds = data.creatorIds.split(',');
-  if (typeof data.statuses === "string") data.statuses = data.statuses.split(',');
-  if (typeof data.types === "string") data.types = data.types.split(',');
+  const filters = req.query;
+  if (typeof filters.creatorIds === "string") filters.creatorIds = filters.creatorIds.split(',');
+  if (typeof filters.statuses === "string") filters.statuses = filters.statuses.split(',');
+  if (typeof filters.types === "string") filters.types = filters.types.split(',');
 
-  const result = getAuctionsSchema.safeParse(data);
+  const result = getAuctionsSchema.safeParse(filters);
   if (!result.success) throw createZodError(result.error, "validateAuctionStatus");
 
   res.locals.filters = result.data;

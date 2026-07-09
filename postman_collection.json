@@ -848,6 +848,18 @@
                   "value": "english",
                   "type": "text",
                   "disabled": true
+                },
+                {
+                  "key": "creatorIds",
+                  "value": "{{AUCTION_CREATOR_ID}}",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "statuses",
+                  "value": "in-progress",
+                  "type": "text",
+                  "disabled": true
                 }
               ]
             }
