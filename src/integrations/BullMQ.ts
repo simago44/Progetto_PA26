@@ -1,10 +1,14 @@
 import { Queue, Worker, createNodeRedisClient } from 'bullmq';
 import redis from './redis.ts';
-import auctionRepository from '../repositories/auctionRepository.ts';
-import auctionService from '../services/auctionService.ts';
 import { closeAuctionJobName, queueName } from '../constants/constants.ts';
 import { AuctionStatus } from '../enums/enums.ts';
 import { createInternalServerError } from '../factory/errorFactory.ts';
+import container from '../core/container.ts';
+import type AuctionService from '../services/auctionService.ts';
+import type AuctionRepository from '../repositories/auctionRepository.ts';
+
+const auctionService = container.resolve<AuctionService>("auctionService");
+const auctionRepository = container.resolve<AuctionRepository>("auctionRepository");
 
 export const connection = createNodeRedisClient(redis);
 

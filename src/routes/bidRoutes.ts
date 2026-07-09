@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { createBidMiddlewares, getAuctionBidsMiddlewares } from "../middlewares/middlewareChains.ts";
-import bidController from "../controllers/bidController.ts";
+import container from "../core/container.ts";
+import type BidController from "../controllers/bidController.ts";
+
+const bidController = container.resolve<BidController>("bidController");
 
 const router = Router();
 

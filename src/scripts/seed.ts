@@ -2,7 +2,6 @@ import logger from "../core/logger.ts";
 import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
 import { createInternalServerError, createSequelizeError } from "../factory/errorFactory.ts";
 import type { User } from "../models/User.ts";
-import userRepository from "../repositories/userRepository.ts";
 import env from "../core/config.ts";
 import sequelize from "../integrations/sequelize.ts";
 import "../models/relationships.ts";
@@ -13,16 +12,22 @@ import { Auction } from "../models/Auction.ts";
 import { addInterval, HOURS, MINUTES, SECONDS, tomorrow } from "../utils/dateUtils.ts";
 import z from "zod";
 import { readFileSync } from "node:fs";
-import auctionService from "../services/auctionService.ts";
-import bidService from "../services/bidService.ts";
 import { clearRedis } from "../integrations/redis.ts";
 import { initBullMQ } from "../integrations/BullMQ.ts";
+import container from "../core/container.ts";
+import type UserRepository from "../repositories/userRepository.ts";
+import type AuctionService from "../services/auctionService.ts";
+import type BidService from "../services/bidService.ts";
 
 const MIN_AUCTIONS = 5;
 const MAX_AUCTIONS = 20;
 
 const MIN_BIDS = 5;
 const MAX_BIDS = 20;
+
+const auctionService = container.resolve<AuctionService>("auctionService");
+const bidService = container.resolve<BidService>("bidService");
+const userRepository = container.resolve<UserRepository>("userRepository");
 
 const SeedUserSchema = z.object({
   userId: z.string(),

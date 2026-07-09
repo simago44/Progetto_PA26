@@ -1,6 +1,9 @@
 import { Router } from "express";
-import auctionController from "../controllers/auctionController.ts";
 import { createAuctionMiddlewares, getAuctionStatsMiddlewares, getAuctionsMiddlewares, updateAuctionReservePriceMiddlewares } from "../middlewares/middlewareChains.ts";
+import container from "../core/container.ts";
+import type AuctionController from "../controllers/auctionController.ts";
+
+const auctionController = container.resolve<AuctionController>("auctionController");
 
 const router = Router();
 
@@ -227,6 +230,7 @@ router.get("/stats", getAuctionStatsMiddlewares, auctionController.getAuctionSta
  *         description: User is not authorized to update this auction.
  *       404:
  *         description: Auction not found.
- */router.put("/:auctionId/reserve-price", updateAuctionReservePriceMiddlewares, auctionController.updateAuctionReservePrice);
+ */
+router.put("/:auctionId/reserve-price", updateAuctionReservePriceMiddlewares, auctionController.updateAuctionReservePrice);
 
 export default router;

@@ -1,10 +1,21 @@
+import type { RedisClientType } from "redis";
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import { Bid } from "../models/Bid.ts";
-import redis from "../integrations/redis.ts";
 import type { CreationAttributes, Transaction } from "sequelize";
 
+interface BidRepositoryDeps {
+  redis: RedisClientType;
+}
+
 class BidRepository {
+  private redis: BidRepositoryDeps["redis"];
+
+  constructor({ redis }: BidRepositoryDeps) {
+    this.redis = redis;
+  }
+
   /**
+   * 
    * Builds the Redis key for an auction's bids.
    * @param auctionId The auction ID.
    * @returns The Redis key for the auction's bids.
@@ -19,7 +30,7 @@ class BidRepository {
    * @returns A list of cached Bid instances, or `null` if no cache exists.
    */
   private async getCachedBids(auctionId: number): Promise<Bid[] | null> {
-    const cached = await redis.get(this.auctionBidsKey(auctionId));
+    const cached = await this.redis.get(this.auctionBidsKey(auctionId));
     if (cached == null) return null;
 
     const bids = [];
@@ -57,7 +68,7 @@ class BidRepository {
       const created_bid = await bid.save({ transaction });
 
       // we invalidate cache for the auction
-      await redis.del(this.auctionBidsKey(created_bid.auctionId));
+      await this.redis.del(this.auctionBidsKey(created_bid.auctionId));
       return created_bid;
     } catch (err) {
       throw createSequelizeError(err, "createBid");
@@ -94,8 +105,8 @@ class BidRepository {
     if (cached_bids) return cached_bids;
 
     const bids = await Bid.findAll({ where: { auctionId }, transaction });
-    if (!transaction) await redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
-    else await redis.del(this.auctionBidsKey(auctionId));
+    if (!transaction) await this.redis.set(this.auctionBidsKey(auctionId), JSON.stringify(bids));
+    else await this.redis.del(this.auctionBidsKey(auctionId));
     return bids;
   }
 
@@ -122,6 +133,4 @@ class BidRepository {
   }
 }
 
-const bidRepository = new BidRepository();
-
-export default bidRepository;
+export default BidRepository;

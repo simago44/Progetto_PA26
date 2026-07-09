@@ -1,9 +1,19 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import authService from "../services/authService.ts";
 import type { RoleName } from "../enums/enums.ts";
+import type AuthService from "../services/authService.ts";
+
+interface AuthControllerDeps {
+  authService: AuthService;
+}
 
 class AuthController {
+  private authService: AuthControllerDeps["authService"];
+
+  constructor({ authService }: AuthControllerDeps) {
+    this.authService = authService;
+  }
+  
   /**
    * Create an user from validated payload on `res.locals`.
    * 
@@ -14,11 +24,11 @@ class AuthController {
    * 
    * Returns `201 Created` with the ID of the created user.
    */
-  public async signup(
+  public signup = async (
     _req: Request,
     res: Response<unknown, { username: string, password: string, role: RoleName }>
-  ) {
-    const userId = await authService.signup(res.locals.username, res.locals.password, res.locals.role);
+  ) => {
+    const userId = await this.authService.signup(res.locals.username, res.locals.password, res.locals.role);
     res.status(StatusCodes.CREATED).json({ id: userId });
   };
 
@@ -31,15 +41,13 @@ class AuthController {
    * 
    * Returns `200 OK` with the ID of the logged user and the relative access token.
    */
-  public async login(
+  public login = async (
     _req: Request,
     res: Response<unknown, { username: string, password: string }>
-  ) {
-    const { userId, accessToken } = await authService.login(res.locals.username, res.locals.password);
+  ) => {
+    const { userId, accessToken } = await this.authService.login(res.locals.username, res.locals.password);
     res.status(StatusCodes.OK).json({ id: userId, accessToken });
   };
 }
 
-const authController = new AuthController();
-
-export default authController;
+export default AuthController;

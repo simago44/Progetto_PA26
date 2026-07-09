@@ -1,10 +1,20 @@
 import { Auction } from "../models/Auction.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
 import { col, fn, Transaction, type CreationAttributes, type FindOptions, type WhereOptions } from "sequelize";
-import redis from "../integrations/redis.ts";
 import type { AuctionType } from "../enums/enums.ts";
+import type { RedisClientType } from "redis";
+
+interface AuctionRepositoryDeps {
+  redis: RedisClientType;
+}
 
 class AuctionRepository {
+  private redis: AuctionRepositoryDeps["redis"];
+  
+  constructor({ redis }: AuctionRepositoryDeps) {
+    this.redis = redis;
+  }
+
   /**
    * Builds the Redis key for an auction.
    * @param auctionId The auction ID.
@@ -36,7 +46,7 @@ class AuctionRepository {
   public async save(auction: Auction, transaction: Transaction | null = null): Promise<Auction> {
     try {
       const created_auction = await auction.save({ transaction });
-      await redis.set(this.idKey(auction.id), JSON.stringify(created_auction));
+      await this.redis.set(this.idKey(auction.id), JSON.stringify(created_auction));
       return auction;
     } catch (err) {
       throw createSequelizeError(err, "createAuction");
@@ -62,7 +72,7 @@ class AuctionRepository {
    */
   public async findByPk(auctionId: number, options: FindOptions = {}): Promise<Auction | null> {
     if (!options.transaction && !options.lock) {
-      const cached = await redis.get(this.idKey(auctionId));
+      const cached = await this.redis.get(this.idKey(auctionId));
       if (cached) {
         const auction = Auction.build(JSON.parse(cached));
         // necessary to save it without errors on unique id
@@ -73,7 +83,7 @@ class AuctionRepository {
     }
 
     const auction = await Auction.findByPk(auctionId, options);
-    if (auction) await redis.set(this.idKey(auction.id), JSON.stringify(auction));
+    if (auction) await this.redis.set(this.idKey(auction.id), JSON.stringify(auction));
     return auction;
   }
 
@@ -158,10 +168,8 @@ class AuctionRepository {
       throw createSequelizeError(err, "closeAuction");
     }
 
-    await redis.del(this.idKey(auctionId));
+    await this.redis.del(this.idKey(auctionId));
   }
 }
 
-const auctionRepository = new AuctionRepository();
-
-export default auctionRepository;
+export default AuctionRepository;

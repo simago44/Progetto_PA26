@@ -1,8 +1,18 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import userService from "../services/userService.ts";
+import type UserService from "../services/userService.ts";
+
+interface UserControllerDeps {
+  userService: UserService;
+}
 
 class UserController {
+  private userService: UserControllerDeps["userService"];
+
+  constructor({ userService }: UserControllerDeps) {
+    this.userService = userService;
+  }
+  
   /**
    * Get tokens for the user specified in the validated payload on `res.locals`.
    * 
@@ -10,11 +20,11 @@ class UserController {
    * 
    * Returns `200 OK` with the user's tokens.
    */
-  public async getWallet(
+  public getWallet = async (
     _req: Request,
     res: Response<unknown, { userId: string }>
-  ) {
-    const tokens = await userService.getWallet(res.locals.userId);
+  ) => {
+    const tokens = await this.userService.getWallet(res.locals.userId);
     res.status(StatusCodes.OK).json({ tokens });
   }
 
@@ -31,11 +41,11 @@ class UserController {
    * 
    * Returns `200 OK` with the list of auctions the user participated to.
    */
-  public async getAuctionsReport(
+  public getAuctionsReport = async (
     _req: Request,
     res: Response<unknown, { filters: { participantId: string, won: boolean, fromDate: Date, toDate: Date } }>
-  ) {
-    const auctions = await userService.getAuctionReport(res.locals.filters);
+  ) => {
+    const auctions = await this.userService.getAuctionReport(res.locals.filters);
     res.status(StatusCodes.OK).json(auctions);
   }
 
@@ -53,11 +63,11 @@ class UserController {
    * 
    * Returns `200 OK` with the total spending in the date interval.
    */
-  public async getWalletReport(
+  public getWalletReport = async (
     _req: Request,
     res: Response<unknown, { filters: { participantId: string, fromDate: Date, toDate: Date } }>
-  ) {
-    const userSpending = await userService.getWalletReport(res.locals.filters);
+  ) => {
+    const userSpending = await this.userService.getWalletReport(res.locals.filters);
     res.status(StatusCodes.OK).json({ total: userSpending });
   }
 
@@ -70,15 +80,13 @@ class UserController {
    * 
    * Returns `200 OK`.
    */
-  public async topUpWallet(
+  public topUpWallet = async (
     _req: Request,
     res: Response<unknown, { userId: string, tokens: number }>
-  ) {
-    await userService.topUpWallet(res.locals.userId, res.locals.tokens);
+  ) => {
+    await this.userService.topUpWallet(res.locals.userId, res.locals.tokens);
     res.status(StatusCodes.OK).json({});
   }
 }
 
-const userController = new UserController();
-
-export default userController;
+export default UserController;

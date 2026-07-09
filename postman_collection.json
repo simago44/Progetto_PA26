@@ -31,12 +31,12 @@
                 "exec": [
                   "pm.collectionVariables.set(",
                   "    \"USERNAME\",",
-                  "    pm.variables.replaceIn(\"{{$randomUserName}}\")",
+                  "    pm.collectionVariables.replaceIn(\"{{$randomUserName}}\")",
                   ");",
                   "",
                   "pm.collectionVariables.set(",
                   "    \"PASSWORD\",",
-                  "    pm.variables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+                  "    pm.collectionVariables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
                   ");"
                 ],
                 "type": "text/javascript",
@@ -277,9 +277,9 @@
               "script": {
                 "exec": [
                   "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate1', futureDate1);\r",
+                  "pm.collectionVariables.set('futureDate1', futureDate1);\r",
                   "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
-                  "pm.environment.set('futureDate2', futureDate2);"
+                  "pm.collectionVariables.set('futureDate2', futureDate2);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -1003,6 +1003,14 @@
     },
     {
       "key": "ADMIN_ID",
+      "value": ""
+    },
+    {
+      "key": "futureDate1",
+      "value": ""
+    },
+    {
+      "key": "futureDate2",
       "value": ""
     }
   ]

@@ -1,18 +1,43 @@
-import type { CreationAttributes, Transaction } from "sequelize";
+import type { CreationAttributes, Sequelize, Transaction } from "sequelize";
 import { Errors } from "../factory/errorFactory.ts";
 import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
-import auctionRepository from "../repositories/auctionRepository.ts";
-import bidRepository from "../repositories/bidRepository.ts";
-import userRepository from "../repositories/userRepository.ts";
-import auctionService from "./auctionService.ts";
 import { omit } from "lodash-es";
-import userService from "./userService.ts";
 import { AuctionType } from "../enums/enums.ts";
-import sequelize from "../integrations/sequelize.ts";
+import type AuctionRepository from "../repositories/auctionRepository.ts";
+import type BidRepository from "../repositories/bidRepository.ts";
+import type UserRepository from "../repositories/userRepository.ts";
+import type AuctionService from "./auctionService.ts";
+import type UserService from "./userService.ts";
+
+
+interface BidServiceDeps {
+  auctionRepository: AuctionRepository;
+  bidRepository: BidRepository;
+  userRepository: UserRepository;
+  auctionService: AuctionService;
+  userService: UserService;
+  sequelize: Sequelize;
+}
 
 class BidService {
+  private auctionRepository: BidServiceDeps["auctionRepository"];
+  private bidRepository: BidServiceDeps["bidRepository"];
+  private userRepository: BidServiceDeps["userRepository"];
+  private auctionService: BidServiceDeps["auctionService"];
+  private userService: BidServiceDeps["userService"];
+  private sequelize: BidServiceDeps["sequelize"];
+
+  constructor({ auctionRepository, bidRepository, userRepository, auctionService, userService, sequelize }: BidServiceDeps) {
+    this.auctionRepository = auctionRepository;
+    this.bidRepository = bidRepository;
+    this.userRepository = userRepository;
+    this.auctionService = auctionService;
+    this.userService = userService;
+    this.sequelize = sequelize;
+  }
+
   /**
    * Formats bids by removing unnecessary attributes.
    * @param bids The bids to format.
@@ -41,14 +66,14 @@ class BidService {
     rawAuction: Auction,
     transaction: Transaction | null = null
   ) {
-    const auction = auctionService.toTypedAuction(rawAuction);
+    const auction = this.auctionService.toTypedAuction(rawAuction);
     switch (auction.type) {
       case AuctionType.English:
-        if (bid.bidPrice == null) bid.bidPrice = await auctionService.getEnglishCurrentBidPrice(auction, transaction);
+        if (bid.bidPrice == null) bid.bidPrice = await this.auctionService.getEnglishCurrentBidPrice(auction, transaction);
         break;
       case AuctionType.Dutch: {
         if (bid.bidPrice != null) throw new Errors.BidCantHavePriceError({ auctionType: auction.type });
-        bid.bidPrice = auctionService.getDutchCurrentBidPrice(auction);
+        bid.bidPrice = this.auctionService.getDutchCurrentBidPrice(auction);
         break;
       }
       case AuctionType.FirstPrice:
@@ -76,24 +101,24 @@ class BidService {
 
     // We use transaction with UPDATE lock to prevent multiple bid creations simultaneously
     // and to prevent other queries relative to the auctionId/userId during the bid creation.
-    return sequelize.transaction(async (t) => {
-      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+    return this.sequelize.transaction(async (t) => {
+      const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
       if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
-      const user = await userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
+      const user = await this.userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
       // should not happen because we validated the JWT token. We throw a generic error
       if (!user) throw new Errors.UnauthorizedError();
 
       const data = await this.handleBidPriceMissing(bidData, auction, t);
 
-      const bid: Bid = bidRepository.build(data);
+      const bid: Bid = this.bidRepository.build(data);
 
       await this.checkIsBidValid(bid, auction, user, t);
 
-      const createdBid = await bidRepository.save(bid, t);
+      const createdBid = await this.bidRepository.save(bid, t);
 
       //If the auction is dutch must be closed when the first bid arrives
-      if (auction.type == AuctionType.Dutch) await auctionService.closeAuction(auction.id, t);
+      if (auction.type == AuctionType.Dutch) await this.auctionService.closeAuction(auction.id, t);
 
       return createdBid;
     });
@@ -107,14 +132,14 @@ class BidService {
    * @throws {AuctionTypeNotSupportedError} If the auction type does not support bid retrieval.
    */
   public async getAuctionBids(auctionId: number): Promise<Record<string, unknown>[]> {
-    const auction = await auctionRepository.findByPk(auctionId);
+    const auction = await this.auctionRepository.findByPk(auctionId);
     if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
     if (auction.type != AuctionType.English && auction.type != AuctionType.Dutch) {
       throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
     }
 
-    const bids = await bidRepository.findAuctionBids(auction.id);
+    const bids = await this.bidRepository.findAuctionBids(auction.id);
     return this.formatBids(bids);
   }
 
@@ -130,14 +155,14 @@ class BidService {
    * @throws {InsufficientTokensError} If the user does not have enough tokens.
    */
   public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User, transaction: Transaction | null = null): Promise<void> {
-    const auction = auctionService.toTypedAuction(rawAuction);
-    const auctionEndsAt = await auctionService.getEndsAt(auction, transaction);
+    const auction = this.auctionService.toTypedAuction(rawAuction);
+    const auctionEndsAt = await this.auctionService.getEndsAt(auction, transaction);
     if (auction.startsAt > new Date()) throw new Errors.AuctionNotStartedError({ auctionId: auction.id });
     if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError({ auctionId: auction.id });
 
     switch (auction.type) {
       case AuctionType.English: {
-        const winningBid = await auctionService.getWinningBid(auction, transaction);
+        const winningBid = await this.auctionService.getWinningBid(auction, transaction);
 
         // if no bid is found, we check that the bid is at least equal to the reservePrice
         // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement
@@ -158,17 +183,15 @@ class BidService {
 
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice: {
-        const userHasBidsInAuction = await bidRepository.userHasBidsInAuction(auction.id, user.id, transaction);
+        const userHasBidsInAuction = await this.bidRepository.userHasBidsInAuction(auction.id, user.id, transaction);
         if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
         break;
       }
     }
 
-    const realUserTokens = await userService.getRealUserTokens(user, auction.id, transaction);
+    const realUserTokens = await this.userService.getRealUserTokens(user, auction.id, transaction);
     if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
   }
 }
 
-const bidService = new BidService();
-
-export default bidService;
+export default BidService;

@@ -1,15 +1,14 @@
-import { Op, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
-import auctionRepository from "../repositories/auctionRepository.ts";
+import { Op, Sequelize, Transaction, type CreationAttributes, type WhereOptions } from "sequelize";
 import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval } from "../utils/dateUtils.ts";
 import logger from "../core/logger.ts";
-import sequelize from "../integrations/sequelize.ts";
 import type { Bid } from "../models/Bid.ts";
-import userRepository from "../repositories/userRepository.ts";
-import bidRepository from "../repositories/bidRepository.ts";
 import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factory/errorFactory.ts";
-import { Auction, type DutchAuction, type EnglishAuction, type FirstPriceAuction, type SecondPriceAuction, type TypedAuction } from "../models/Auction.ts";
+import type { Auction, DutchAuction, EnglishAuction, FirstPriceAuction, SecondPriceAuction, TypedAuction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
+import type UserRepository from "../repositories/userRepository.ts";
+import type AuctionRepository from "../repositories/auctionRepository.ts";
+import type BidRepository from "../repositories/bidRepository.ts";
 
 export interface AuctionFilters {
   creatorIds?: string[];
@@ -21,7 +20,26 @@ export interface AuctionFilters {
   participantId?: string; // If the user participated to the auction
 }
 
+interface AuctionServiceDeps {
+  auctionRepository: AuctionRepository;
+  bidRepository: BidRepository;
+  userRepository: UserRepository;
+  sequelize: Sequelize;
+}
+
 class AuctionService {
+  private auctionRepository: AuctionServiceDeps["auctionRepository"];
+  private bidRepository: AuctionServiceDeps["bidRepository"];
+  private userRepository: AuctionServiceDeps["userRepository"];
+  private sequelize: AuctionServiceDeps["sequelize"];
+
+  constructor({ auctionRepository, bidRepository, userRepository, sequelize }: AuctionServiceDeps) {
+    this.auctionRepository = auctionRepository;
+    this.bidRepository = bidRepository;
+    this.userRepository = userRepository;
+    this.sequelize = sequelize;
+  }
+
   /**
    * Builds Sequelize filters for auctions by status.
    * @param status The auction status.
@@ -104,7 +122,7 @@ class AuctionService {
    * @returns The created Auction instance.
    */
   public async createAuction(data: CreationAttributes<Auction>): Promise<Auction> {
-    return auctionRepository.create(data);
+    return this.auctionRepository.create(data);
   }
 
   /**
@@ -114,7 +132,7 @@ class AuctionService {
    * @returns A list of matching Auction instances.
    */
   public async getAuctions(filters: AuctionFilters, transaction: Transaction | null = null) {
-    return await auctionRepository.findAll(this.buildFilters(filters), transaction);
+    return await this.auctionRepository.findAll(this.buildFilters(filters), transaction);
   }
 
   /**
@@ -129,13 +147,13 @@ class AuctionService {
 
         let currentPrice = null;
         if (auction.status == AuctionStatus.InProgress) {
-          const typedAuction = auctionService.toTypedAuction(auction);
+          const typedAuction = this.toTypedAuction(auction);
           switch (typedAuction.type) {
             case AuctionType.English:
-              currentPrice = await auctionService.getEnglishCurrentBidPrice(typedAuction);
+              currentPrice = await this.getEnglishCurrentBidPrice(typedAuction);
               break;
             case AuctionType.Dutch:
-              currentPrice = auctionService.getDutchCurrentBidPrice(typedAuction);
+              currentPrice = this.getDutchCurrentBidPrice(typedAuction);
               break;
           }
         }
@@ -161,7 +179,7 @@ class AuctionService {
    */
   public async getAuctionStats(filters: Required<Pick<AuctionFilters, 'fromDate' | 'toDate' | 'types'>>) {
     const finalFilters = this.buildFilters(filters);
-    const participantsPerAuction = await auctionRepository.getParticipantsPerAuction(finalFilters);
+    const participantsPerAuction = await this.auctionRepository.getParticipantsPerAuction(finalFilters);
 
     // if filters.types is null, we replace it with all the types (see below)
     const types = filters.types ?? (Object.values(AuctionType) as AuctionType[]);
@@ -306,7 +324,7 @@ class AuctionService {
     let auction: Auction;
 
     if (typeof auctionOrId === "number") {
-      const foundAuction = await Auction.findByPk(auctionOrId);
+      const foundAuction = await this.auctionRepository.findByPk(auctionOrId);
 
       if (foundAuction == null) {
         throw new Errors.AuctionNotFoundError({
@@ -330,7 +348,7 @@ class AuctionService {
    * @returns The winning bid with its final price, or `null` if no bids exist.
    */
   public async getWinningBid(auction: Auction, transaction: Transaction | null = null): Promise<{ bid: Bid; bidPrice: number; } | null> {
-    const bids = await bidRepository.findAuctionBids(auction.id, transaction);
+    const bids = await this.bidRepository.findAuctionBids(auction.id, transaction);
     bids.sort((a, b) => b.bidPrice - a.bidPrice);
 
     const higherBid = bids[0];
@@ -354,7 +372,7 @@ class AuctionService {
     // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
     const run_transaction = async (t: Transaction) => {
       // create lock on auction
-      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+      const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
       if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
 
       // if it was already closed or is not ended yet, we return
@@ -369,19 +387,19 @@ class AuctionService {
         const winnerId = winningBid.bid.userId;
         const finalPrice = winningBid.bidPrice;
 
-        await auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);
+        await this.auctionRepository.closeAuction(auction.id, { winnerId, finalPrice }, t);
         // remove tokens from winner
-        await userRepository.decrementTokens(winnerId, finalPrice, t);
+        await this.userRepository.decrementTokens(winnerId, finalPrice, t);
         // and add tokens to auction creator
-        await userRepository.incrementTokens(auction.creatorId, finalPrice, t);
+        await this.userRepository.incrementTokens(auction.creatorId, finalPrice, t);
 
       } else {
-        await auctionRepository.closeAuction(auction.id, null, t);
+        await this.auctionRepository.closeAuction(auction.id, null, t);
       }
     };
 
     if (transaction) await run_transaction(transaction);
-    else await sequelize.transaction(run_transaction);
+    else await this.sequelize.transaction(run_transaction);
 
     return true;
   };
@@ -399,8 +417,8 @@ class AuctionService {
    */
   public async updateAuctionReservePrice(auctionId: number, userId: string, reservePrice: number): Promise<void> {
     // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
-    await sequelize.transaction(async (t: Transaction) => {
-      const auction = await auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
+    await this.sequelize.transaction(async (t: Transaction) => {
+      const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
       if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
      
       // Only the auction creator can update the reserve price
@@ -411,7 +429,7 @@ class AuctionService {
           if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError({ auctionId: auction.id });
           if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
           // Because it's useless to lower the reservePrice when there is already a bid that it's higher than it.
-          if (await bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyAbBidError();
+          if (await this.bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyAbBidError();
 
           break;
         case AuctionType.Dutch:
@@ -426,11 +444,9 @@ class AuctionService {
       }
 
       auction.reservePrice = reservePrice;
-      await auctionRepository.save(auction, t);
+      await this.auctionRepository.save(auction, t);
     });
   }
 }
 
-const auctionService = new AuctionService();
-
-export default auctionService;
+export default AuctionService;

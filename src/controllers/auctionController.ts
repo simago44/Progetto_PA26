@@ -3,9 +3,19 @@ import { StatusCodes } from "http-status-codes";
 import type { CreationAttributes } from "sequelize";
 import type { Auction } from "../models/Auction.ts";
 import type { AuctionStatus, AuctionType } from "../enums/enums.ts";
-import auctionService from "../services/auctionService.ts";
+import type AuctionService from "../services/auctionService.ts";
+
+interface AuctionControllerDeps {
+  auctionService: AuctionService;
+}
 
 class AuctionController {
+  private auctionService: AuctionControllerDeps["auctionService"];
+
+  constructor({ auctionService }: AuctionControllerDeps) {
+    this.auctionService = auctionService;
+  }
+
   /**
    * Creates an auction from the validated payload on `res.locals`.
    * 
@@ -13,13 +23,13 @@ class AuctionController {
    * 
    * Returns `201 Created` with the ID of the created auction.
    */
-  public async createAuction(
+  public createAuction = async (
     _req: Request,
     res: Response<unknown, { auction: CreationAttributes<Auction> }>
-  ) {
+  ) => {
     // No validation necessary. The creatorId is guaranteed to exists thanks to validation
     // The other fields are validated in middleware
-    const auction = await auctionService.createAuction(res.locals.auction);
+    const auction = await this.auctionService.createAuction(res.locals.auction);
     res.status(StatusCodes.CREATED).json({ id: auction.id });
   }
 
@@ -35,11 +45,11 @@ class AuctionController {
    * 
    * Returns `200 OK` with the list of auctions.
    */
-  public async getAuctions(
+  public getAuctions = async (
     _req: Request,
     res: Response<unknown, { filters: { creatorIds: string[], statuses: AuctionStatus[], types: AuctionType[] } }>
-  ) {
-    const auctions = await auctionService.getFilteredAuctions(res.locals.filters);
+  )  => {
+    const auctions = await this.auctionService.getFilteredAuctions(res.locals.filters);
     res.status(StatusCodes.OK).json({ auctions });
   }
 
@@ -55,11 +65,11 @@ class AuctionController {
    * 
    * Returns `200 OK` with the list of auctions.
    */
-  public async getAuctionStats(
+  public getAuctionStats = async (
     _req: Request,
     res: Response<unknown, { filters: { types: AuctionType[], fromDate: Date, toDate: Date } }>
-  ) {
-    const stats = await auctionService.getAuctionStats(res.locals.filters);
+  ) => {
+    const stats = await this.auctionService.getAuctionStats(res.locals.filters);
     res.status(StatusCodes.OK).json(stats);
   }
 
@@ -73,15 +83,13 @@ class AuctionController {
    * 
    * Returns `200 OK`.
    */
-  public async updateAuctionReservePrice(
+  public updateAuctionReservePrice = async (
     _req: Request,
     res: Response<unknown, { auctionId: number, authId: string, reservePrice: number }>
-  ) {
-    await auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.authId, res.locals.reservePrice);
+  ) => {
+    await this.auctionService.updateAuctionReservePrice(res.locals.auctionId, res.locals.authId, res.locals.reservePrice);
     res.status(StatusCodes.OK).json({});
   }
 }
 
-const auctionController = new AuctionController();
-
-export default auctionController;
+export default AuctionController;

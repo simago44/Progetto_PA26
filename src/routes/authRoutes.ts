@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { loginMiddlewares, signupMiddlewares } from "../middlewares/middlewareChains.ts";
-import authController from "../controllers/authController.ts";
+import container from '../core/container.ts';
+import type AuthController from '../controllers/authController.ts';
+
+const authController = container.resolve<AuthController>("authController");
 
 const router = Router();
 

@@ -1,12 +1,26 @@
 import env from "../core/config.ts";
 import { User } from "../models/User.ts";
-import { Auth0Roles, managementClient } from "../integrations/auth0.ts";
+import { Auth0Roles } from "../integrations/auth0.ts";
 import { createSequelizeError } from "../factory/errorFactory.ts";
-import redis from "../integrations/redis.ts";
 import type { FindOptions, Transaction } from "sequelize";
 import type { RoleName } from "../enums/enums.ts";
+import type { RedisClientType } from "redis";
+import type { ManagementClient } from "auth0";
+
+interface UserRepositoryDeps {
+  redis: RedisClientType;
+  managementClient: ManagementClient;
+}
 
 class UserRepository {
+  private redis: UserRepositoryDeps["redis"];
+  private managementClient: UserRepositoryDeps["managementClient"];
+
+  constructor({ redis, managementClient }: UserRepositoryDeps) {
+    this.redis = redis;
+    this.managementClient = managementClient;
+  }
+  
   /**
    * Builds the Redis key for a user by ID.
    * @param userId The user ID.
@@ -31,8 +45,8 @@ class UserRepository {
    */
   private async cacheUser(user: User): Promise<void> {
     await Promise.all([
-      redis.set(this.idKey(user.id), JSON.stringify(user)),
-      redis.set(this.usernameKey(user.username), user.id),
+      this.redis.set(this.idKey(user.id), JSON.stringify(user)),
+      this.redis.set(this.usernameKey(user.username), user.id),
     ]);
   }
   /**
@@ -59,13 +73,13 @@ class UserRepository {
     { username, password, role }: { username: string, password: string, role: RoleName; }
   ): Promise<string> {
 
-    const user = await managementClient.users.create({
+    const user = await this.managementClient.users.create({
       connection: env.AUTH0_CONNECTION,
       username,
       password
     });
     const userId = user.user_id as string;
-    await managementClient.users.roles.assign(userId, {
+    await this.managementClient.users.roles.assign(userId, {
       roles: [Auth0Roles[role].id]
     });
     return userId;
@@ -79,7 +93,7 @@ class UserRepository {
    */
   public async findByPk(userId: string, options: FindOptions = {}): Promise<User | null> {
     if (!options.transaction && !options.lock) {
-      const cached = await redis.get(this.idKey(userId));
+      const cached = await this.redis.get(this.idKey(userId));
       if (cached) {
         const user = User.build(JSON.parse(cached));
         // necessary to save it without errors on unique id
@@ -101,7 +115,7 @@ class UserRepository {
    * @returns The User instance if found, `null` otherwise.
    */
   public async findByUsername(username: string): Promise<User | null> {
-    const id = await redis.get(this.usernameKey(username));
+    const id = await this.redis.get(this.usernameKey(username));
     if (id) return this.findByPk(id);
 
     const user = await User.findOne({ where: { username } });
@@ -143,7 +157,7 @@ class UserRepository {
     }
 
     // invalidate cache
-    await redis.del(this.idKey(userId));
+    await this.redis.del(this.idKey(userId));
   }
 
   /**
@@ -164,7 +178,7 @@ class UserRepository {
     }
 
     // invalidate cache
-    await redis.del(this.idKey(userId));
+    await this.redis.del(this.idKey(userId));
   }
 
   /**
@@ -175,8 +189,8 @@ class UserRepository {
     try {
       await user.destroy();
       await Promise.all([
-        redis.del(this.idKey(user.id)),
-        redis.del(this.usernameKey(user.username)),
+        this.redis.del(this.idKey(user.id)),
+        this.redis.del(this.usernameKey(user.username)),
       ]);
     } catch (err) {
       throw createSequelizeError(err, "deleteUser");
@@ -188,10 +202,8 @@ class UserRepository {
    * @param userId The Auth0 user ID.
    */
   public async deleteFromAuth0(userId: string): Promise<void> {
-    return await managementClient.users.delete(userId).catch(() => { });
+    return await this.managementClient.users.delete(userId).catch(() => { });
   }
 }
 
-const userRepository = new UserRepository();
-
-export default userRepository;
+export default UserRepository;

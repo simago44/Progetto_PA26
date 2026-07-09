@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { getAuctionsReportMiddlewares, getWalletMiddlewares, getWalletReportMiddlewares, topUpWalletMiddlewares } from "../middlewares/middlewareChains.ts";
-import userController from "../controllers/userController.ts";
+import container from "../core/container.ts";
+import type UserController from "../controllers/userController.ts";
+
+const userController = container.resolve<UserController>("userController");
 
 const router = Router();
 
