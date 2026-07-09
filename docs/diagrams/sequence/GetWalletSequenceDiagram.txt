@@ -1,6 +1,6 @@
 # Made with https://sequencediagram.org/
 
-title Get Wallet
+frame GetWallet
 
 actor User
 

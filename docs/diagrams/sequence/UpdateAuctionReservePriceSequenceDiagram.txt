@@ -2,7 +2,7 @@
 
 entryspacing 0.8
 
-title Update Auction Reserve Price
+frame UpdateAuctionReservePrice
 
 actor AuctionCreator
 

@@ -2,7 +2,7 @@
 
 entryspacing 0.8
 
-title Create Bid
+frame CreateBid
 
 actor AuctionParticipant
 
