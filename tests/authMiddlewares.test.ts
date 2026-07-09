@@ -4,7 +4,8 @@ import {
   checkSelfOrAllPermission,
   checkJwtAuthorization,
   validateSignup,
-  validateLogin
+  validateLogin,
+  resolveUserIdParam
 } from "../src/middlewares/authMiddleware.ts";
 import type { Request, Response } from "express";
 import { Errors } from "../src/factory/errorFactory.ts";
@@ -38,6 +39,39 @@ describe("Unit Tests - authMiddleware", () => {
       expect(next).not.toHaveBeenCalled();
     });
   });
+
+  describe("resolveUserIdParam", () => {
+    it("should resolve 'me' to res.locals.authId and call next", () => {
+      const req = {
+        params: { userId: "me" }
+      } as unknown as Request;
+      const res = {
+        locals: { authId: "authenticated-user-123" }
+      } as unknown as Response;
+      const next = jest.fn();
+
+      resolveUserIdParam(req, res, next);
+
+      expect(res.locals.userId).toBe("authenticated-user-123");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it("should resolve specific userId directly and call next", () => {
+      const req = {
+        params: { userId: "target-user-456" }
+      } as unknown as Request;
+      const res = {
+        locals: { authId: "authenticated-user-123" }
+      } as unknown as Response;
+      const next = jest.fn();
+
+      resolveUserIdParam(req, res, next);
+
+      expect(res.locals.userId).toBe("target-user-456");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
 
   describe("checkSelfOrAllPermission", () => {
     it("should call next if allPermission is present", () => {

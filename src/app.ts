@@ -16,12 +16,15 @@ export const app = express();
 // Middleware for parsing json bodies
 app.use(express.json());
 
-//routes used by the app
+const v1 = express.Router();
+v1.use("/", authRoutes);
+v1.use("/users", userRoutes);
+v1.use("/auctions", auctionRoutes);
+v1.use("/auctions", bidRoutes);
+
+app.use("/api/v1", v1);
+
 app.use("/", healthRoute);
-app.use("/", authRoutes);
-app.use("/users", userRoutes);
-app.use("/auctions", auctionRoutes);
-app.use("/auctions", bidRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerJsdoc(swaggerJsdocOptions)));
 
 app.use((req) => {

@@ -26,6 +26,13 @@ export function checkPermission(permission: string) {
   };
 }
 
+export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
+  const userId = req.params.userId == "me" ? res.locals.authId : req.params.userId;
+  res.locals.userId = userId;
+
+  next();
+};
+
 export function checkSelfOrAllPermission(selfPermission: string, allPermission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const permissions = (req.auth?.payload.permissions as string[]) ?? [];

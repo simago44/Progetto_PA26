@@ -18,13 +18,6 @@ const walletReportFiltersSchema = dateRangeSchema.extend({
   participantId: z.string()
 });
 
-export function resolveUserIdParam(req: Request, res: Response, next: NextFunction) {
-  const userId = req.params.userId == "self" ? res.locals.authId : req.params.userId;
-  res.locals.userId = userId;
-
-  next();
-};
-
 export function validateTopUpWallet(req: Request, res: Response, next: NextFunction) {
   res.locals.userId = req.params.userId;
   const tokens = req.body?.tokens;

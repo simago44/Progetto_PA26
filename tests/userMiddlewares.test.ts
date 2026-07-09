@@ -1,6 +1,5 @@
 import { describe, it, expect, jest } from "@jest/globals";
 import {
-  resolveUserIdParam,
   validateTopUpWallet,
   validateAuctionReportFilters,
   validateWalletReportFilters
@@ -11,38 +10,6 @@ import { Errors } from "../src/factory/errorFactory.ts";
 import { ErrorMessages } from "../src/factory/messageStrings.ts";
 
 describe("Unit Tests - userMiddleware", () => {
-  describe("resolveUserIdParam", () => {
-    it("should resolve 'self' to res.locals.authId and call next", () => {
-      const req = {
-        params: { userId: "self" }
-      } as unknown as Request;
-      const res = {
-        locals: { authId: "authenticated-user-123" }
-      } as unknown as Response;
-      const next = jest.fn();
-
-      resolveUserIdParam(req, res, next);
-
-      expect(res.locals.userId).toBe("authenticated-user-123");
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-
-    it("should resolve specific userId directly and call next", () => {
-      const req = {
-        params: { userId: "target-user-456" }
-      } as unknown as Request;
-      const res = {
-        locals: { authId: "authenticated-user-123" }
-      } as unknown as Response;
-      const next = jest.fn();
-
-      resolveUserIdParam(req, res, next);
-
-      expect(res.locals.userId).toBe("target-user-456");
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe("validateTopUpWallet", () => {
     it("should validate positive tokens, assign parameters, and call next", () => {
       const req = {

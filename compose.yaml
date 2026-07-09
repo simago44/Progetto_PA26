@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:18
-    # container_name: postgres_pa26
     restart: unless-stopped
     env_file:
       - .env

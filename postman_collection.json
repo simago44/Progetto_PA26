@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "0e4813ae-7777-4770-9e3c-09b9200fac95",
-    "name": "PA-Agnostinelli-Vagnarelli",
+    "name": "Auction Platform API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "33317774"
   },
@@ -58,13 +58,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/signup",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/signup",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "signup"
               ]
             }
@@ -103,13 +105,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "login"
               ]
             }
@@ -149,13 +153,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "login"
               ]
             }
@@ -195,13 +201,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "login"
               ]
             }
@@ -241,13 +249,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/login",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "login"
               ]
             }
@@ -300,13 +310,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/1/bids",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions",
                 "1",
                 "bids"
@@ -324,13 +336,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/bids",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/1/bids",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions",
                 "1",
                 "bids"
@@ -385,13 +399,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions"
               ]
             }
@@ -437,13 +453,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions"
               ]
             }
@@ -491,13 +509,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions"
               ]
             }
@@ -545,13 +565,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions"
               ]
             }
@@ -596,13 +618,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/1/reserve-price",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/1/reserve-price",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions",
                 "1",
                 "reserve-price"
@@ -620,13 +644,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions"
               ],
               "query": [
@@ -667,13 +693,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/auctions/stats",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/stats",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "auctions",
                 "stats"
               ],
@@ -719,15 +747,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/self/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/me/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "users",
-                "self",
+                "me",
                 "wallet"
               ]
             }
@@ -750,13 +780,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_CREATOR_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_CREATOR_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "users",
                 "{{AUCTION_CREATOR_ID}}",
                 "wallet"
@@ -790,13 +822,15 @@
               }
             },
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_PARTICIPANT_ID}}/wallet",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "users",
                 "{{AUCTION_PARTICIPANT_ID}}",
                 "wallet"
@@ -821,13 +855,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/auctions-report",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_PARTICIPANT_ID}}/auctions-report",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "users",
                 "{{AUCTION_PARTICIPANT_ID}}",
                 "auctions-report"
@@ -876,13 +912,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{HOST}}:{{PORT}}/users/{{AUCTION_PARTICIPANT_ID}}/wallet-report",
+              "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{AUCTION_PARTICIPANT_ID}}/wallet-report",
               "protocol": "http",
               "host": [
                 "{{HOST}}"
               ],
               "port": "{{PORT}}",
               "path": [
+                "api",
+                "v1",
                 "users",
                 "{{AUCTION_PARTICIPANT_ID}}",
                 "wallet-report"
