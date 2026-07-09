@@ -1,0 +1,17 @@
+[
+  {
+    "userId": "example-admin-user-id",
+    "username": "admin-username",
+    "role": "admin"
+  },
+  {
+    "userId": "example-auction-creator-user-id",
+    "username": "creator-username",
+    "role": "auction-creator"
+  },
+  {
+    "userId": "example-auction-participant-user-id",
+    "username": "participant-username",
+    "role": "auction-participant"
+  }
+]
