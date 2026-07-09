@@ -72,13 +72,13 @@ class BidService {
         if (bid.bidPrice == null) bid.bidPrice = await this.auctionService.getEnglishCurrentBidPrice(auction, transaction);
         break;
       case AuctionType.Dutch: {
-        if (bid.bidPrice != null) throw new Errors.BidCantHavePriceError({ auctionType: auction.type });
+        if (bid.bidPrice != null) throw new Errors.BidCantHavePrice({ auctionType: auction.type });
         bid.bidPrice = this.auctionService.getDutchCurrentBidPrice(auction);
         break;
       }
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice:
-        if (bid.bidPrice == null) throw new Errors.BidMustHavePriceError({ auctionType: auction.type });
+        if (bid.bidPrice == null) throw new Errors.BidMustHavePrice({ auctionType: auction.type });
         break;
     }
     return bid as CreationAttributes<Bid>;
@@ -103,11 +103,11 @@ class BidService {
     // and to prevent other queries relative to the auctionId/userId during the bid creation.
     return this.sequelize.transaction(async (t) => {
       const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+      if (!auction) throw new Errors.AuctionNotFound({ auctionId });
 
       const user = await this.userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
       // should not happen because we validated the JWT token. We throw a generic error
-      if (!user) throw new Errors.UnauthorizedError();
+      if (!user) throw new Errors.Unauthorized();
 
       const data = await this.handleBidPriceMissing(bidData, auction, t);
 
@@ -133,10 +133,10 @@ class BidService {
    */
   public async getAuctionBids(auctionId: number): Promise<Record<string, unknown>[]> {
     const auction = await this.auctionRepository.findByPk(auctionId);
-    if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+    if (!auction) throw new Errors.AuctionNotFound({ auctionId });
 
     if (auction.type != AuctionType.English && auction.type != AuctionType.Dutch) {
-      throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
+      throw new Errors.AuctionTypeNotSupported({ type: auction.type });
     }
 
     const bids = await this.bidRepository.findAuctionBids(auction.id);
@@ -157,8 +157,8 @@ class BidService {
   public async checkIsBidValid(bid: Bid, rawAuction: Auction, user: User, transaction: Transaction | null = null): Promise<void> {
     const auction = this.auctionService.toTypedAuction(rawAuction);
     const auctionEndsAt = await this.auctionService.getEndsAt(auction, transaction);
-    if (auction.startsAt > new Date()) throw new Errors.AuctionNotStartedError({ auctionId: auction.id });
-    if (auctionEndsAt <= new Date()) throw new Errors.AuctionEndedError({ auctionId: auction.id });
+    if (auction.startsAt > new Date()) throw new Errors.AuctionNotStarted({ auctionId: auction.id });
+    if (auctionEndsAt <= new Date()) throw new Errors.AuctionEnded({ auctionId: auction.id });
 
     switch (auction.type) {
       case AuctionType.English: {
@@ -168,11 +168,11 @@ class BidService {
         // otherwise, we check if the bid is at least equal to winningBid + minimumIncrement
         if (!winningBid) {
           if (bid.bidPrice < auction.reservePrice) {
-            throw new Errors.BidTooLowError({ minimumBid: auction.reservePrice });
+            throw new Errors.BidTooLow({ minimumBid: auction.reservePrice });
           }
         } else {
           if (bid.bidPrice < winningBid.bidPrice + auction.minimumIncrement) {
-            throw new Errors.BidTooLowError({ minimumBid: winningBid.bidPrice + auction.minimumIncrement });
+            throw new Errors.BidTooLow({ minimumBid: winningBid.bidPrice + auction.minimumIncrement });
           }
         }
         break;
@@ -184,13 +184,13 @@ class BidService {
       case AuctionType.FirstPrice:
       case AuctionType.SecondPrice: {
         const userHasBidsInAuction = await this.bidRepository.userHasBidsInAuction(auction.id, user.id, transaction);
-        if (userHasBidsInAuction) throw new Errors.BidAlreadyPlacedError();
+        if (userHasBidsInAuction) throw new Errors.BidAlreadyPlaced();
         break;
       }
     }
 
     const realUserTokens = await this.userService.getRealUserTokens(user, auction.id, transaction);
-    if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokensError();
+    if (realUserTokens < bid.bidPrice) throw new Errors.InsufficientTokens();
   }
 }
 

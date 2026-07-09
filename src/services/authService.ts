@@ -76,7 +76,7 @@ class AuthService {
   public async login(username: string, password: string): Promise<{ userId: string; accessToken: string; }> {
     // check that username exists in db!
     const user = await this.userRepository.findByUsername(username);
-    if (!user) throw new Errors.WrongCredentialsErrors();
+    if (!user) throw new Errors.InvalidCredentials();
 
     try {
       const accessToken = await this.getAuthenticationToken(username, password);

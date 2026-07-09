@@ -41,7 +41,7 @@ class UserService {
    * @throws {WalletNotFoundError} If the user does not have a wallet.
    */
   public async getRealUserTokens(user: User, bidAuctionId: number | null = null, transaction: Transaction | null = null): Promise<number> {
-    if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId: user.id });
+    if (user.tokens == null) throw new Errors.WalletNotFound({ userId: user.id });
 
     const openAuctions = await this.auctionService.getAuctions({ statuses: [AuctionStatus.InProgress] }, transaction);
     const bidsPerAuction = await Promise.all(
@@ -86,9 +86,9 @@ class UserService {
    */
   public async getWallet(userId: string): Promise<number> {
     const user = await this.userRepository.findByPk(userId);
-    if (user == null) throw new Errors.UserNotFoundError({ userId });
+    if (user == null) throw new Errors.UserNotFound({ userId });
 
-    if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId });
+    if (user.tokens == null) throw new Errors.WalletNotFound({ userId });
 
     return await this.getRealUserTokens(user);
   }
@@ -100,7 +100,7 @@ class UserService {
    */
   public async getAuctionReport(filters: Required<Pick<AuctionFilters, 'won' | 'participantId' | 'fromDate' | 'toDate'>>) {
     const user = await this.userRepository.findByPk(filters.participantId);
-    if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
+    if (!user) throw new Errors.UserNotFound({ userId: filters.participantId });
 
     const where = this.auctionService.buildFilters(filters);
     const auctions = await this.auctionRepository.findUserAuctions(filters.participantId, where);
@@ -115,7 +115,7 @@ class UserService {
    */
   public async getWalletReport(filters: { participantId: string, fromDate: Date, toDate: Date; }) {
     const user = await this.userRepository.findByPk(filters.participantId);
-    if (!user) throw new Errors.UserNotFoundError({ userId: filters.participantId });
+    if (!user) throw new Errors.UserNotFound({ userId: filters.participantId });
 
     const auctionFilters = {
       ...filters,
@@ -136,9 +136,9 @@ class UserService {
     // Transaction and lock needed to prevent other queries relative to the userId during the wallet update.
     await this.sequelize.transaction(async (t: Transaction) => {
       const user = await this.userRepository.findByPk(userId, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!user) throw new Errors.UserNotFoundError({ userId });
+      if (!user) throw new Errors.UserNotFound({ userId });
 
-      if (user.tokens == null) throw new Errors.WalletNotFoundError({ userId });
+      if (user.tokens == null) throw new Errors.WalletNotFound({ userId });
 
       await this.userRepository.incrementTokens(userId, tokens, t);
     });

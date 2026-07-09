@@ -36,7 +36,7 @@ describe("Unit Tests - userMiddleware", () => {
 
       expect(() => validateTopUpWallet(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateTopUpWallet" }),
           details: expect.objectContaining({
             tokens: [
@@ -90,7 +90,7 @@ describe("Unit Tests - userMiddleware", () => {
 
       expect(() => validateAuctionReportFilters(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateAuctionReportFilters" }),
           details: expect.objectContaining({
             toDate: [
@@ -138,7 +138,7 @@ describe("Unit Tests - userMiddleware", () => {
 
       expect(() => validateWalletReportFilters(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateWalletReportFilters" }),
           details: expect.objectContaining({
             toDate: [

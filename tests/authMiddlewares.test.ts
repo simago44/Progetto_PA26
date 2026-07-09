@@ -35,7 +35,7 @@ describe("Unit Tests - authMiddleware", () => {
       const next = jest.fn();
 
       expect(() => checkPermission("read:users")(req, res, next)).toThrow(
-        new Errors.ForbiddenError()
+        new Errors.Forbidden()
       );
       expect(next).not.toHaveBeenCalled();
     });
@@ -113,7 +113,7 @@ describe("Unit Tests - authMiddleware", () => {
       const next = jest.fn();
 
       expect(() => checkSelfOrAllPermission("manage:self", "manage:all")(req, res, next)).toThrow(
-        new Errors.ForbiddenError()
+        new Errors.Forbidden()
       );
       expect(next).not.toHaveBeenCalled();
     });
@@ -167,7 +167,7 @@ describe("Unit Tests - authMiddleware", () => {
 
       expect(() => validateSignup(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "signup" }),
           details: expect.objectContaining({
             role: [
@@ -192,7 +192,7 @@ describe("Unit Tests - authMiddleware", () => {
 
       expect(() => validateSignup(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "signup" }),
           details: expect.objectContaining({
             password: [
@@ -217,7 +217,7 @@ describe("Unit Tests - authMiddleware", () => {
 
       expect(() => validateSignup(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "signup" }),
           details: expect.objectContaining({
             password: [
@@ -261,7 +261,7 @@ describe("Unit Tests - authMiddleware", () => {
       const next = jest.fn();
 
       expect(() => validateLogin(req, res, next)).toThrow(
-        new Errors.WrongCredentialsErrors()
+        new Errors.InvalidCredentials()
       );
       expect(next).not.toHaveBeenCalled();
     });

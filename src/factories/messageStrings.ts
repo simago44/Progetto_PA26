@@ -19,7 +19,7 @@ export const ErrorMessages = {
   Unauthorized: "Unauthorized",
   Forbidden: "Forbidden",
   InternalServer: "Internal server error",
-  WrongCredentials: "Wrong username or password",
+  InvalidCredentials: "Invalid username or password",
   AuctionNotFound: ({ auctionId }: { auctionId: string | number; }) => `Auction with id '${auctionId}' not found`,
   FieldAlreadyUsed: ({ field, value }: { field: string, value: string; }) => `Field '${field}' with value '${value}' already used`,
   Validation: ({ form }: { form: string; }) => `Validation failed on ${form}`,

@@ -46,7 +46,7 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 userId:
+ *                 id:
  *                   type: string
  *                   description: The ID of the created user.
  *       400:
@@ -89,7 +89,7 @@ router.post('/signup', signupMiddlewares, authController.signup);
  *             schema:
  *               type: object
  *               properties:
- *                 userId:
+ *                 id:
  *                   type: string
  *                   description: The ID of the authenticated user.
  *                 accessToken:

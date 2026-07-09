@@ -28,7 +28,7 @@ app.use("/", healthRoute);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerJsdoc(swaggerJsdocOptions)));
 
 app.use((req) => {
-  throw new Errors.RouteNotFoundError({ path: req.path });
+  throw new Errors.RouteNotFound({ path: req.path });
 });
 
 app.use(errorHandler);

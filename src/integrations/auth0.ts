@@ -24,7 +24,7 @@ async function fetchRoles(): Promise<Record<RoleName, Role>> {
       if (!found?.id) {
         //throw new Error(`Auth0 role not found: ${name}`);
         logger.error(`Auth0 role not found: ${name}`);
-        throw new Errors.InternalServerError();
+        throw new Errors.InternalServer();
       }
       return [name, { name, id: found.id }];
     })

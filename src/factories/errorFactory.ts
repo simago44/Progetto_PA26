@@ -74,26 +74,26 @@ function buildErrors<M extends Record<string, ErrorSpec<never>>>(specs: M) {
 }
 
 export const Errors = buildErrors({
-  MalformedPayloadError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.MalformedPayload },
-  UserNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.UserNotFound },
-  WalletNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.WalletNotFound },
-  UnauthorizedError: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.Unauthorized },
-  ForbiddenError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.Forbidden },
-  InternalServerError: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InternalServer },
-  AuctionNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.AuctionNotFound },
-  FieldAlreadyUsedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.FieldAlreadyUsed },
-  WrongCredentialsErrors: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.WrongCredentials },
-  ValidationError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.Validation, details: ErrorDetails.Validation },
-  AuctionEndedError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionEnded },
-  AuctionNotStartedError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionNotStarted },
-  BidTooLowError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
-  BidAlreadyPlacedError: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
-  AuctionTypeNotSupportedError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionTypeNotSupported },
-  RouteNotFoundError: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
-  InsufficientTokensError: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.InsufficientTokens },
-  AuctionHasAlreadyAbBidError: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionHasAlreadyABid },
-  BidCantHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice },
-  BidMustHavePriceError: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice }
+  MalformedPayload: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.MalformedPayload },
+  UserNotFound: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.UserNotFound },
+  WalletNotFound: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.WalletNotFound },
+  Unauthorized: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.Unauthorized },
+  Forbidden: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.Forbidden },
+  InternalServer: { status: StatusCodes.INTERNAL_SERVER_ERROR, message: ErrorMessages.InternalServer },
+  AuctionNotFound: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.AuctionNotFound },
+  FieldAlreadyUsed: { status: StatusCodes.CONFLICT, message: ErrorMessages.FieldAlreadyUsed },
+  InvalidCredentials: { status: StatusCodes.UNAUTHORIZED, message: ErrorMessages.InvalidCredentials },
+  Validation: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.Validation, details: ErrorDetails.Validation },
+  AuctionEnded: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionEnded },
+  AuctionNotStarted: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionNotStarted },
+  BidTooLow: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.BidTooLow, details: ErrorDetails.BidTooLow },
+  BidAlreadyPlaced: { status: StatusCodes.CONFLICT, message: ErrorMessages.BidAlreadyPlaced },
+  AuctionTypeNotSupported: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.AuctionTypeNotSupported },
+  RouteNotFound: { status: StatusCodes.NOT_FOUND, message: ErrorMessages.RouteNotFound },
+  InsufficientTokens: { status: StatusCodes.FORBIDDEN, message: ErrorMessages.InsufficientTokens },
+  AuctionHasAlreadyABid: { status: StatusCodes.CONFLICT, message: ErrorMessages.AuctionHasAlreadyABid },
+  BidCantHavePrice: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidCantHavePrice },
+  BidMustHavePrice: { status: StatusCodes.BAD_REQUEST, message: ErrorMessages.BidMustHavePrice }
 });
 
 export function createZodError(error: ZodError, form: string): AppError {
@@ -104,7 +104,7 @@ export function createZodError(error: ZodError, form: string): AppError {
     details[path].push(issue.message);
   }
 
-  return new Errors.ValidationError({
+  return new Errors.Validation({
     form,
     errors: details,
   });
@@ -114,7 +114,7 @@ export function createSequelizeError(error: unknown, form: string): AppError {
   if (error instanceof UniqueConstraintError) {
     const field = error.errors[0]?.path ?? "field";
     const value = error.errors[0]?.value ?? "value";
-    return new Errors.FieldAlreadyUsedError({ field, value });
+    return new Errors.FieldAlreadyUsed({ field, value });
   }
 
   if (error instanceof ValidationError) {
@@ -124,16 +124,16 @@ export function createSequelizeError(error: unknown, form: string): AppError {
       if (!details[path]) details[path] = [];
       details[path].push(issue.message);
     }
-    return new Errors.ValidationError({ form, errors: details });
+    return new Errors.Validation({ form, errors: details });
   }
 
   if (error instanceof Error && error.name == 'SequelizeDatabaseError') {
     logger.error(`Database error: ${error.stack}`);
-    return new Errors.InternalServerError();
+    return new Errors.InternalServer();
   }
 
   // Not a Sequelize error we recognize — let the caller decide what to do.
-  return new Errors.InternalServerError();
+  return new Errors.InternalServer();
 }
 
 /**
@@ -157,7 +157,7 @@ export function createAuth0Error(error: unknown): AppError {
     return new AppError(statusCode, error.message, error.name);
   }
 
-  return new Errors.InternalServerError();
+  return new Errors.InternalServer();
 }
 
 export function createAuctionMissingFieldError(auction: Auction, fieldName: string): AppError {
@@ -167,11 +167,11 @@ export function createAuctionMissingFieldError(auction: Auction, fieldName: stri
 export function createInternalServerError(message: string) {
   logger.error(message);
   // we don't want to leak programming errors;
-  return new Errors.InternalServerError();
+  return new Errors.InternalServer();
 }
 
 export function createReservePriceTooHighError(form: string): AppError {
-  return new Errors.ValidationError({
+  return new Errors.Validation({
     form, errors: {
       reservePrice: ["Reserve price too high: must be lower than the current auction reserve price."],
     }

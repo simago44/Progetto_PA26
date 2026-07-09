@@ -327,7 +327,7 @@ class AuctionService {
       const foundAuction = await this.auctionRepository.findByPk(auctionOrId);
 
       if (foundAuction == null) {
-        throw new Errors.AuctionNotFoundError({
+        throw new Errors.AuctionNotFound({
           auctionId: auctionOrId,
         });
       }
@@ -373,7 +373,7 @@ class AuctionService {
     const run_transaction = async (t: Transaction) => {
       // create lock on auction
       const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+      if (!auction) throw new Errors.AuctionNotFound({ auctionId });
 
       // if it was already closed or is not ended yet, we return
       const endsAt = await this.getEndsAt(auction, t);
@@ -419,28 +419,28 @@ class AuctionService {
     // Transaction and lock needed to prevent other queries relative to the auctionId during the auction update.
     await this.sequelize.transaction(async (t: Transaction) => {
       const auction = await this.auctionRepository.findByPk(auctionId, { transaction: t, lock: t.LOCK.UPDATE });
-      if (!auction) throw new Errors.AuctionNotFoundError({ auctionId });
+      if (!auction) throw new Errors.AuctionNotFound({ auctionId });
      
       // Only the auction creator can update the reserve price
-      if (auction.creatorId != userId) throw new Errors.ForbiddenError();
+      if (auction.creatorId != userId) throw new Errors.Forbidden();
 
       switch (auction.type) {
         case AuctionType.English:
-          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError({ auctionId: auction.id });
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEnded({ auctionId: auction.id });
           if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
           // Because it's useless to lower the reservePrice when there is already a bid that it's higher than it.
-          if (await this.bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyAbBidError();
+          if (await this.bidRepository.auctionHasBids(auction.id, t)) throw new Errors.AuctionHasAlreadyABid();
 
           break;
         case AuctionType.Dutch:
-          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEndedError({ auctionId: auction.id });
+          if (auction.status == AuctionStatus.Ended) throw new Errors.AuctionEnded({ auctionId: auction.id });
           // It's useless to check for bids because the auction has bids only if it's ended.
           if (reservePrice >= auction.reservePrice) throw createReservePriceTooHighError("updateAuctionReservePrice");
 
           break;
         case AuctionType.FirstPrice:
         case AuctionType.SecondPrice:
-          throw new Errors.AuctionTypeNotSupportedError({ type: auction.type });
+          throw new Errors.AuctionTypeNotSupported({ type: auction.type });
       }
 
       auction.reservePrice = reservePrice;

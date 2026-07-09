@@ -21,7 +21,7 @@ export function checkPermission(permission: string) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const permissions = req.auth?.payload.permissions;
     if (!Array.isArray(permissions) || !permissions.includes(permission)) {
-      throw new Errors.ForbiddenError();
+      throw new Errors.Forbidden();
     }
     next();
   };
@@ -40,7 +40,7 @@ export function checkSelfOrAllPermission(selfPermission: string, allPermission: 
     if (permissions.includes(allPermission)) return next();
 
     const isSelf = res.locals.userId === res.locals.authId;
-    if (!permissions.includes(selfPermission) || !isSelf) throw new Errors.ForbiddenError();
+    if (!permissions.includes(selfPermission) || !isSelf) throw new Errors.Forbidden();
 
     next();
   };
@@ -52,7 +52,7 @@ export function checkSelfOrAllPermission(selfPermission: string, allPermission: 
  */
 export function checkJwtAuthorization(req: Request, res: Response, next: NextFunction) {
   checkJwt(req, res, (err) => {
-    if (err instanceof UnauthorizedError) return next(new Errors.UnauthorizedError());
+    if (err instanceof UnauthorizedError) return next(new Errors.Unauthorized());
     if (err) return next(err);
     res.locals.authId = req.auth?.payload.sub;
     next();
@@ -126,7 +126,7 @@ export function validateSignup(req: Request, res: Response, next: NextFunction) 
  */
 export function validateLogin(req: Request, res: Response, next: NextFunction) {
   const result = loginSchema.safeParse(req.body);
-  if (!result.success) throw new Errors.WrongCredentialsErrors();
+  if (!result.success) throw new Errors.InvalidCredentials();
 
   // Overwrite req.body with the safely parsed/sanitized fields
   res.locals.username = result.data.username;

@@ -63,7 +63,7 @@ describe("Unit Tests - bidMiddleware", () => {
 
       expect(() => validateBidMiddleware(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateBidMiddleware" }),
           details: expect.objectContaining({
             bidPrice: [expect.any(String)]

@@ -17,7 +17,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     err = new AppError(err.status, err.message, err.name);
   }
 
-  const error = err instanceof AppError ? err : new Errors.InternalServerError();
+  const error = err instanceof AppError ? err : new Errors.InternalServer();
 
   if (!(err instanceof AppError)) {
     logger.error(`${err.stack}`); // log original error stack

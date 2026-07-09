@@ -100,10 +100,8 @@ router.post("/:auctionId/bids", createBidMiddlewares, bidController.createBid);
  *                   createdAt:
  *                     type: string
  *                     format: date-time
- *       401:
- *         description: User authentication required.
  *       403:
- *         description: User is not allowed to view bids.
+ *         description: Auction type not supported.
  *       404:
  *         description: Auction not found.
  */

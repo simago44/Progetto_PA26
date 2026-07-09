@@ -162,7 +162,7 @@ describe("Unit Tests - auctionMiddleware", () => {
 
       expect(() => validateAuctionMiddleware(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateAuctionMiddleware" }),
           details: expect.objectContaining({
             startsAt: [expect.any(String)],
@@ -240,7 +240,7 @@ describe("Unit Tests - auctionMiddleware", () => {
 
       expect(() => validateUpdateReservePriceMiddleware(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateUpdateReservePrice" }),
           details: expect.objectContaining({
             auctionId: [expect.any(String)],
@@ -290,7 +290,7 @@ describe("Unit Tests - auctionMiddleware", () => {
 
       expect(() => validateGetAuctionStatsMiddleware(req, res, next)).toThrow(
         expect.objectContaining({
-          name: Errors.ValidationError.name,
+          name: Errors.Validation.name,
           message: ErrorMessages.Validation({ form: "validateGetAuctionStats" }),
           details: expect.objectContaining({
             toDate: [
