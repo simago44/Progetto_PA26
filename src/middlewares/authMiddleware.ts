@@ -106,7 +106,7 @@ export const loginSchema = z.object({
  * @param zodObject - The Zod schema to validate against
  */
 export function validateSignup(req: Request, res: Response, next: NextFunction) {
-  const result = signupSchema.safeParse(req.body);
+  const result = signupSchema.safeParse(req.body ?? {});
   if (!result.success) throw createZodError(result.error, "signup");
 
   // Overwrite req.body with the safely parsed/sanitized fields
@@ -125,7 +125,7 @@ export function validateSignup(req: Request, res: Response, next: NextFunction) 
  * @param zodObject - The Zod schema to validate against
  */
 export function validateLogin(req: Request, res: Response, next: NextFunction) {
-  const result = loginSchema.safeParse(req.body);
+  const result = loginSchema.safeParse(req.body ?? {});
   if (!result.success) throw new Errors.InvalidCredentials();
 
   // Overwrite req.body with the safely parsed/sanitized fields
