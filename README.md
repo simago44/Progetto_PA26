@@ -174,30 +174,41 @@ The project follows a layered architecture:
 ### Setup Instructions
 
 #### 1. Clone the repository
+
 ```bash
 git clone https://github.com/simago44/Progetto_PA26.git
 cd Progetto_PA26
 ```
 
 #### 2. Load the necessary files
-The necessary files for the correct operation of the system are the following:
-- .env
-- .env.development
-- .env.production
-- postman_environment.json
-- seeds/users.json
+
+The following files are required for the system to run correctly and are not included in the repository:
+
+- `.env`
+- `.env.development`
+- `.env.production`
+- `postman_environment.json`
+- `seeds/users.json`
 
 #### 3. Usage
 
-To run the development version use: `docker compose up --build -d`
+- Run the **development** version:
+```bash
+  docker compose up --build -d
+```
+- Run the **production** version:
+```bash
+  docker compose -f compose.yaml -f compose.production.yaml up --build -d
+```
 
-To run the production version use: `docker compose -f compose.yaml -f compose.production.yaml up --build -d`
+The following commands are available in development:
 
-In development it's possible to seed the database using: `docker compose exec node npm run seed`
-
-In development it's possible to run eslint on src/ and tests/ using: `docker compose exec node npm run lint`
-
-In development it's possible to build the code using: `docker compose exec node npm run build`
+| Command | Description |
+|---|---|
+| `docker compose exec node npm run seed` | Seeds the database with default test users, auctions, and bids |
+| `docker compose exec node npm run lint` | Runs ESLint on `src/` and `tests/` |
+| `docker compose exec node npm run build` | Builds the project |
+| `docker compose exec node npm run test` | Runs the Jest test suite |
 
 ## 6. Testing
 
