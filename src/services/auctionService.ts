@@ -3,7 +3,7 @@ import { isNil, omit, omitBy } from "lodash-es";
 import { addInterval } from "../utils/dateUtils.ts";
 import logger from "../core/logger.ts";
 import type { Bid } from "../models/Bid.ts";
-import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factory/errorFactory.ts";
+import { createAuctionMissingFieldError, createReservePriceTooHighError, Errors } from "../factories/errorFactory.ts";
 import type { Auction, DutchAuction, EnglishAuction, FirstPriceAuction, SecondPriceAuction, TypedAuction } from "../models/Auction.ts";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import type UserRepository from "../repositories/userRepository.ts";

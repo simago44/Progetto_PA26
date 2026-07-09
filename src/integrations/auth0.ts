@@ -2,7 +2,7 @@ import { AuthenticationClient, ManagementClient } from "auth0";
 import env from "../core/config.ts";
 import logger from "../core/logger.ts";
 import { RoleName, type Role } from "../enums/enums.ts";
-import { Errors } from "../factory/errorFactory.ts";
+import { Errors } from "../factories/errorFactory.ts";
 
 export const managementClient = new ManagementClient({
   domain: env.AUTH0_DOMAIN,

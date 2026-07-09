@@ -1,5 +1,5 @@
 import type { RedisClientType } from "redis";
-import { createSequelizeError } from "../factory/errorFactory.ts";
+import { createSequelizeError } from "../factories/errorFactory.ts";
 import { Bid } from "../models/Bid.ts";
 import type { CreationAttributes, Transaction } from "sequelize";
 

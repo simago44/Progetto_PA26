@@ -1,6 +1,6 @@
 import type { Sequelize, Transaction } from "sequelize";
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
-import { Errors } from "../factory/errorFactory.ts";
+import { Errors } from "../factories/errorFactory.ts";
 import type { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";
 import type AuctionService from "./auctionService.ts";
@@ -63,6 +63,8 @@ class UserService {
     );
     const bidsInProgessAuctions = bidsPerAuction.flat().filter(bid => bid.userId === user.id);
 
+    // Gets the highest user bid regardless of auction type because it shouldn't know about
+    // other offers (especially in sealed bid auctions)
     const highestByAuction = new Map<number, Bid>();
     for (const bid of bidsInProgessAuctions) {
       const current = highestByAuction.get(bid.auctionId);

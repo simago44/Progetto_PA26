@@ -1,5 +1,5 @@
 import { Auction } from "../models/Auction.ts";
-import { createSequelizeError } from "../factory/errorFactory.ts";
+import { createSequelizeError } from "../factories/errorFactory.ts";
 import { col, fn, Transaction, type CreationAttributes, type FindOptions, type WhereOptions } from "sequelize";
 import type { AuctionType } from "../enums/enums.ts";
 import type { RedisClientType } from "redis";

@@ -1,6 +1,6 @@
 // middleware/errorHandler.ts
 import type { NextFunction, Request, Response } from "express";
-import { AppError, Errors } from "../factory/errorFactory.ts";
+import { AppError, Errors } from "../factories/errorFactory.ts";
 import logger from "../core/logger.ts";
 import { StatusCodes } from "http-status-codes";
 

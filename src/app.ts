@@ -7,7 +7,7 @@ import bidRoutes from "./routes/bidRoutes.ts";
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerJsdocOptions } from "./constants/constants.ts";
-import { Errors } from "./factory/errorFactory.ts";
+import { Errors } from "./factories/errorFactory.ts";
 import { errorHandler } from "./middlewares/errorHandler.ts";
 
 // Initialize Express app

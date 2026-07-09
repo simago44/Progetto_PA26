@@ -135,21 +135,22 @@ Route: `PUT /api/v1/auctions/:auctionId/reserve-price`
 ![Sequence diagram: UpdateAuctionReservePrice](./docs/images/sequence/UpdateAuctionReservePriceSequenceDiagram.png)
 
 ## 4. Design Patterns and Code Architecture
-
 The project follows a layered architecture:
-
 - **Controllers**: HTTP request handlers and response management
-- **Services**: Business logic for auction management and bidding
+- **Services**: Business logic for auction, auth, bidding, and user management
+- **Repositories**: Data access layer abstracting Sequelize queries and Auth0 calls
 - **Models**: Sequelize ORM models for database entities
 - **Middleware**: Authentication, validation, and error handling
-- **Utilities**: Helper functions, logging, and error definitions
+- **Utilities**: Helper functions, logging, and error factory
 
 ### Design Patterns Used
-- **CSR Pattern**: Separation of concerns between controllers, services and repositories
-- **Repository Pattern**: Abstraction of database operations
-- **Job Queue Pattern**: Asynchronous processing with BullMQ
-- **Singleton Pattern**: Redis and database connections
-- **Chain of Responsibility**: Trough routes, middlewares and controllers, services and repositories.
+- **Controller-Service-Repository (CSR)**: Separation of concerns between HTTP handling, business logic, and data access
+- **Repository Pattern**: Abstraction of database operations behind a consistent interface
+- **Dependency Injection**: Awilix-managed container for wiring controllers, services, repositories, and their dependencies
+- **Factory Pattern**: Abstract factory for constructing typed application errors and their messages
+- **Cache-Aside Pattern**: Redis used to cache repository reads, with registry-based invalidation on writes
+- **Job Queue Pattern**: Asynchronous auction settlement processing with BullMQ
+- **Chain of Responsibility (COR)**: Request pipeline through routes &rarr; middleware &rarr; controllers &rarr; services &rarr; repositories
 
 ## 5. Installation and usage
 

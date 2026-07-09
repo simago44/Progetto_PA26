@@ -1,6 +1,6 @@
 import type { AuthenticationClient } from "auth0";
 import { NewUserTokens, RoleName } from "../enums/enums.ts";
-import { createAuth0Error, createSequelizeError, Errors } from "../factory/errorFactory.ts";
+import { createAuth0Error, createSequelizeError, Errors } from "../factories/errorFactory.ts";
 import type UserRepository from "../repositories/userRepository.ts";
 import env from '../core/config.ts'
 import type { ManagementClient } from "auth0";

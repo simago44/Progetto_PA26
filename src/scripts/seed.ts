@@ -1,6 +1,6 @@
 import logger from "../core/logger.ts";
 import { AuctionStatus, AuctionType, NewUserTokens, RoleName } from "../enums/enums.ts";
-import { createInternalServerError, createSequelizeError } from "../factory/errorFactory.ts";
+import { createInternalServerError, createSequelizeError } from "../factories/errorFactory.ts";
 import type { User } from "../models/User.ts";
 import env from "../core/config.ts";
 import sequelize from "../integrations/sequelize.ts";

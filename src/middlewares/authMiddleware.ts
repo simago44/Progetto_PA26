@@ -1,7 +1,7 @@
 import { auth, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import type { Request, Response, NextFunction } from 'express';
 import env from '../core/config.ts';
-import { createZodError, Errors } from '../factory/errorFactory.ts';
+import { createZodError, Errors } from '../factories/errorFactory.ts';
 import z from 'zod';
 import { RoleName } from '../enums/enums.ts';
 

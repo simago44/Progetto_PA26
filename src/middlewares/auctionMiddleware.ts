@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { createZodError } from "../factory/errorFactory.ts";
+import { createZodError } from "../factories/errorFactory.ts";
 import z from 'zod';
 import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { AuctionConstants } from "../constants/constants.ts";

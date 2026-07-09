@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { createZodError } from "../factory/errorFactory.ts";
+import { createZodError } from "../factories/errorFactory.ts";
 import z from "zod";
 
 const BidSchema = z.object({

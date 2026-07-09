@@ -1,5 +1,5 @@
 import type { CreationAttributes, Sequelize, Transaction } from "sequelize";
-import { Errors } from "../factory/errorFactory.ts";
+import { Errors } from "../factories/errorFactory.ts";
 import { type Auction } from "../models/Auction.ts";
 import { Bid } from "../models/Bid.ts";
 import type { User } from "../models/User.ts";

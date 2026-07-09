@@ -1,7 +1,7 @@
 import env from "../core/config.ts";
 import { User } from "../models/User.ts";
 import { Auth0Roles } from "../integrations/auth0.ts";
-import { createSequelizeError } from "../factory/errorFactory.ts";
+import { createSequelizeError } from "../factories/errorFactory.ts";
 import type { FindOptions, Transaction } from "sequelize";
 import type { RoleName } from "../enums/enums.ts";
 import type { RedisClientType } from "redis";
