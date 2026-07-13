@@ -1,7 +1,6 @@
 import z from "zod";
 import type { Request, Response, NextFunction } from "express";
 import { createZodError } from "../factories/errorFactory.ts";
-import { AuctionStatus, AuctionType } from "../enums/enums.ts";
 import { dateRangeSchema } from "./commonSchemas.ts";
 import { getAuctionsSchema } from "./auctionMiddleware.ts";
 
