@@ -1,0 +1,1421 @@
+{
+  "info": {
+    "_postman_id": "80ead865-be39-40a5-9f0f-957ca735a0dc",
+    "name": "DEMO_Auction_Platform_API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53270120"
+  },
+  "item": [
+    {
+      "name": "Get Auction Stats (unauthorized)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401\", function () {\r",
+              "    pm.response.to.have.status(401);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/stats",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions",
+            "stats"
+          ],
+          "query": [
+            {
+              "key": "types",
+              "value": "english",
+              "disabled": true
+            },
+            {
+              "key": "fromDate",
+              "value": "2026-07-08T20:20:50",
+              "disabled": true
+            },
+            {
+              "key": "toDate",
+              "value": "2027-07-12",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Signup participant",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"user_id\",",
+              "    pm.response.json().id",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set(",
+              "    \"USERNAME\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomUserName}}\")",
+              ");",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"PASSWORD\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\",\n    \"role\": \"auction-participant\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/signup",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "signup"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login participant",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"JWT_TOKEN\", jsonData.accessToken);",
+              "",
+              "pm.test(\"correct user id\", function () {",
+              "    var expectedUserId = pm.collectionVariables.get(\"user_id\");",
+              "    pm.expect(jsonData.id).to.eql(expectedUserId);",
+              "});",
+              "",
+              "",
+              "",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME}}\",\n    \"password\": \"{{PASSWORD}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Auction Stats (forbidden)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 403\", function () {\r",
+              "    pm.response.to.have.status(403);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/stats",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions",
+            "stats"
+          ],
+          "query": [
+            {
+              "key": "types",
+              "value": "english",
+              "disabled": true
+            },
+            {
+              "key": "fromDate",
+              "value": "2026-07-08T20:20:50",
+              "disabled": true
+            },
+            {
+              "key": "toDate",
+              "value": "2027-07-12",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})\r",
+              "\r",
+              "pm.collectionVariables.set(\"userTokens\", pm.response.json().tokens);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/me/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{user_id}}/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "{{user_id}}",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Signup participant 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"user_id_2\",",
+              "    pm.response.json().id",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set(",
+              "    \"USERNAME_2\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomUserName}}\")",
+              ");",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"PASSWORD_2\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME_2}}\",\n    \"password\": \"{{PASSWORD_2}}\",\n    \"role\": \"auction-participant\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/signup",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "signup"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login participant 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"JWT_TOKEN_2\", jsonData.accessToken);",
+              "",
+              "pm.test(\"correct user id\", function () {",
+              "    var expectedUserId = pm.collectionVariables.get(\"user_id_2\");",
+              "    pm.expect(jsonData.id).to.eql(expectedUserId);",
+              "});",
+              "",
+              "",
+              "",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME_2}}\",\n    \"password\": \"{{PASSWORD_2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Wallet (forbidden)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 403\", function () {\r",
+              "    pm.response.to.have.status(403);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_2}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{user_id}}/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "{{user_id}}",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Wallet Second Account",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_2}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{user_id_2}}/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "{{user_id_2}}",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Signup creator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"user_id_creator\",",
+              "    pm.response.json().id",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set(",
+              "    \"USERNAME_CREATOR\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomUserName}}\")",
+              ");",
+              "",
+              "pm.collectionVariables.set(",
+              "    \"PASSWORD_CREATOR\",",
+              "    pm.collectionVariables.replaceIn(\"{{$randomPassword}}\") + \"aA@\"",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME_CREATOR}}\",\n    \"password\": \"{{PASSWORD_CREATOR}}\",\n    \"role\": \"auction-creator\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/signup",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "signup"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login creator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"JWT_TOKEN_CREATOR\", jsonData.accessToken);",
+              "",
+              "pm.test(\"correct user id\", function () {",
+              "    var expectedUserId = pm.collectionVariables.get(\"user_id_creator\");",
+              "    pm.expect(jsonData.id).to.eql(expectedUserId);",
+              "});",
+              "",
+              "",
+              "",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"{{USERNAME_CREATOR}}\",\n    \"password\": \"{{PASSWORD_CREATOR}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/login",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Wallet Creator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})\r",
+              "\r",
+              "pm.test(\"Correct tokens\", function () {\r",
+              "    pm.expect(pm.response.json().tokens).to.eql(0)\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_CREATOR}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/{{user_id_creator}}/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "{{user_id_creator}}",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Filtered Auctions",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions"
+          ],
+          "query": [
+            {
+              "key": "statuses",
+              "value": "in-progress",
+              "disabled": true
+            },
+            {
+              "key": "types",
+              "value": "english",
+              "disabled": true
+            },
+            {
+              "key": "creatorIds",
+              "value": "{{user_id_creator}}",
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create English Auction",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 5 * 1000); // 30 seconds from now\r",
+              "pm.collectionVariables.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now\r",
+              "pm.collectionVariables.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.collectionVariables.set(\"auctionId\", pm.response.json().id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_CREATOR}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"english\",\r\n    \"startsAt\": \"{{futureDate1}}\",\r\n    \"endsAt\": \"{{futureDate2}}\",\r\n    \"reservePrice\": 500,\r\n    \"minimumIncrement\": 50,\r\n    \"delayBeforeEnding\": 0,\r\n    \"description\": \"dieci caratteri\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Filtered Auctions",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "length = pm.response.json().auctions.length;\r",
+              "pm.collectionVariables.set(\r",
+              "    \"currentPrice\",\r",
+              "    pm.response.json().auctions[0].currentPrice\r",
+              ");\r",
+              "\r",
+              "pm.test(\"Auction list has 1 auction\", function () {\r",
+              "    pm.expect(length).to.eql(1);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions?creatorIds={{user_id_creator}}",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions"
+          ],
+          "query": [
+            {
+              "key": "statuses",
+              "value": "in-progress",
+              "disabled": true
+            },
+            {
+              "key": "types",
+              "value": "english",
+              "disabled": true
+            },
+            {
+              "key": "creatorIds",
+              "value": "{{user_id_creator}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Bid (too low bid price)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 403\", function () {\r",
+              "    pm.response.to.have.status(403);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"bidPrice\": 100\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/{{auctionId}}/bids",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions",
+            "{{auctionId}}",
+            "bids"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Bid",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/{{auctionId}}/bids",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions",
+            "{{auctionId}}",
+            "bids"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})\r",
+              "\r",
+              "tokens = pm.response.json().tokens;\r",
+              "\r",
+              "pm.test(\"Correct user tokens\", function () {\r",
+              "    pm.expect(tokens).to.eql(\r",
+              "        pm.collectionVariables.get(\"userTokens\") - pm.collectionVariables.get(\"currentPrice\")\r",
+              "    );\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/me/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Bid Second User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const futureDate1 = new Date(Date.now() + 10 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate1', futureDate1);\r",
+              "const futureDate2 = new Date(Date.now() + 20 * 60 * 1000);\r",
+              "pm.collectionVariables.set('futureDate2', futureDate2);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_2}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/auctions/{{auctionId}}/bids",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "auctions",
+            "{{auctionId}}",
+            "bids"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Wallet 2 participant",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN_2}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/me/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "})\r",
+              "\r",
+              "tokens = pm.response.json().tokens;\r",
+              "\r",
+              "pm.test(\"Correct user tokens\", function () {\r",
+              "    pm.expect(tokens).to.eql(\r",
+              "        pm.collectionVariables.get(\"userTokens\")\r",
+              "    );\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{HOST}}:{{PORT}}/api/v1/users/me/wallet",
+          "protocol": "http",
+          "host": [
+            "{{HOST}}"
+          ],
+          "port": "{{PORT}}",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me",
+            "wallet"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "USERNAME",
+      "value": ""
+    },
+    {
+      "key": "PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "userTokens",
+      "value": ""
+    },
+    {
+      "key": "USERNAME_2",
+      "value": ""
+    },
+    {
+      "key": "PASSWORD_2",
+      "value": ""
+    },
+    {
+      "key": "user_id_2",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN_2",
+      "value": ""
+    },
+    {
+      "key": "USERNAME_CREATOR",
+      "value": ""
+    },
+    {
+      "key": "PASSWORD_CREATOR",
+      "value": ""
+    },
+    {
+      "key": "JWT_TOKEN_CREATOR",
+      "value": ""
+    },
+    {
+      "key": "user_id_creator",
+      "value": ""
+    },
+    {
+      "key": "futureDate1",
+      "value": ""
+    },
+    {
+      "key": "futureDate2",
+      "value": ""
+    },
+    {
+      "key": "auctionId",
+      "value": ""
+    },
+    {
+      "key": "currentPrice",
+      "value": ""
+    }
+  ]
+}
